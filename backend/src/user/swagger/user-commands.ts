@@ -1,11 +1,27 @@
 import { ChangeIconCommand, ChangeNicknameCommand, RegisterUserCommand } from '@magic3t/api-types'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsDefined, IsNumber, IsString, Matches, MaxLength, MinLength } from 'class-validator'
+import {
+  IsDefined,
+  IsNumber,
+  IsString,
+  Matches,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator'
 
 export class RegisterUserCommandClass implements RegisterUserCommand {
+  @IsDefined()
+  @IsString()
+  @MinLength(3)
+  @MaxLength(16)
+  @Matches(/^[a-zA-Z0-9áÁâÂãÃàÀäÄéÉêÊèÈëËíÍîÎìÌïÏóÓôÔõÕòÒöÖúÚûÛùÙüÜçÇñÑ\s]*$/)
   @ApiProperty({
     type: 'string',
     description: 'The user nickname',
+    minLength: 3,
+    maxLength: 16,
   })
   nickname: string
 }

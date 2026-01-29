@@ -6,7 +6,13 @@ import {
 } from '@nestjs/websockets'
 import { Socket } from 'socket.io'
 
-@WebSocketGateway({ cors: '*' })
+const ALLOWED_ORIGINS = [
+  'https://magic3t.com.br',
+  'https://www.magic3t.com.br',
+  'http://localhost:3000',
+]
+
+@WebSocketGateway({ cors: { origin: ALLOWED_ORIGINS, credentials: true } })
 export class AppGateway {
   @SubscribeMessage('ping')
   handlePing(@MessageBody() body: unknown, @ConnectedSocket() client: Socket) {

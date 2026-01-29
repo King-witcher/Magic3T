@@ -1,15 +1,15 @@
 import { initializeApp } from 'firebase/app'
 import { GoogleAuthProvider, getAuth } from 'firebase/auth'
 
-// Your web app's Firebase configuration
+// Firebase configuration from environment variables
 const firebaseConfig = {
-  apiKey: 'AIzaSyCl-xdRRlw2sCTGw_s-FcK4aHrsKm_PPdY',
-  authDomain: 'kw-magic3t.firebaseapp.com',
-  projectId: 'kw-magic3t',
-  storageBucket: 'kw-magic3t.appspot.com',
-  messagingSenderId: '586055179641',
-  appId: '1:586055179641:web:a631be38039c386d1723a8',
-  measurementId: 'G-02NLLLF02Z',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 }
 
 // Initialize Firebase

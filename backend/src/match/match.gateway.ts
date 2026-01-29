@@ -24,8 +24,16 @@ import { MatchService } from './match.service'
 import { MatchSocket } from './types'
 import { matchException } from './types/match-error'
 
+const MAX_MESSAGE_LENGTH = 500
+
+const ALLOWED_ORIGINS = [
+  'https://magic3t.com.br',
+  'https://www.magic3t.com.br',
+  'http://localhost:3000',
+]
+
 @UseGuards(AuthGuard, MatchGuard)
-@WebSocketGateway({ cors: '*', namespace: 'match' })
+@WebSocketGateway({ cors: { origin: ALLOWED_ORIGINS, credentials: true }, namespace: 'match' })
 export class MatchGateway implements OnGatewayDisconnect {
   private readonly logger = new Logger(MatchGateway.name, { timestamp: true })
 
@@ -48,14 +56,22 @@ export class MatchGateway implements OnGatewayDisconnect {
     client.emit(MatchServerEvents.StateReport, perspective.getStateReport())
   }
 
-  // Refactor this
   @SubscribeMessage(MatchClientEvents.Message)
-  handleMessage(@UserId() uid: string, @MessageBody() body: string) {
+  handleMessage(@UserId() uid: string, @MessageBody() body: unknown) {
+    // Validate message type and length
+    if (!body || typeof body !== 'string' || body.length > MAX_MESSAGE_LENGTH) {
+      return
+    }
+
     const opponent = this.matchService.getOpponent(uid)
     if (!opponent) matchException(MatchError.MatchNotFound)
 
+    // Sanitize message content
+    const sanitizedMessage = body.trim().slice(0, MAX_MESSAGE_LENGTH)
+    if (!sanitizedMessage) return
+
     const messageData: MessagePayload = {
-      message: body,
+      message: sanitizedMessage,
       sender: uid,
       time: Date.now(),
     }

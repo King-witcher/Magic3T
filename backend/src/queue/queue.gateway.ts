@@ -16,9 +16,15 @@ import { QueueInterceptor } from './queue.interceptor'
 import { QueueService } from './queue.service'
 import { QueueServer, QueueSocket } from './types'
 
+const ALLOWED_ORIGINS = [
+  'https://magic3t.com.br',
+  'https://www.magic3t.com.br',
+  'http://localhost:3000',
+]
+
 @UseGuards(AuthGuard)
 @UseInterceptors(QueueInterceptor)
-@WebSocketGateway({ cors: '*', namespace: 'queue' })
+@WebSocketGateway({ cors: { origin: ALLOWED_ORIGINS, credentials: true }, namespace: 'queue' })
 export class QueueGateway implements OnGatewayDisconnect {
   private readonly logger = new Logger(QueueGateway.name, { timestamp: true })
 
