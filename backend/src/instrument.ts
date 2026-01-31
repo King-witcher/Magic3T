@@ -7,4 +7,6 @@ const result = Sentry.init({
   enableLogs: true,
 })
 
-console.log('Sentry DSN:', result?.getDsn())
+console.log('Sentry DSN:', result?.getOptions().dsn ?? 'not set')
+console.log('Sentry Logs:', result?.getOptions().enableLogs ? 'set' : 'not set')
+console.log('Sentry tracing:', result?.getOptions().tracesSampleRate ? 'set' : 'not set')
