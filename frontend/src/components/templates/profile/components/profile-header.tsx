@@ -1,7 +1,11 @@
 import { GetUserResult } from '@magic3t/api-types'
 import { UserRole } from '@magic3t/database-types'
+import { useState } from 'react'
 import { GiCrown, GiRobotGrab } from 'react-icons/gi'
 import { Tooltip } from '@/components/ui/tooltip'
+import { useAuth } from '@/contexts/auth-context'
+import { EditAvatarOverlay } from './edit-avatar-overlay'
+import { EditIconModal } from './edit-icon-modal'
 import { AvatarDivision, AvatarImage, AvatarRoot, AvatarWing } from './profile-avatar'
 
 interface ProfileHeaderProps {
@@ -9,6 +13,10 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ user }: ProfileHeaderProps) {
+  const auth = useAuth()
+  const isOwnProfile = auth.user?.id === user.id
+  const [editIconOpen, setEditIconOpen] = useState(false)
+
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="flex flex-col items-center gap-6">
@@ -17,6 +25,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
           <AvatarImage icon={user.summonerIcon} />
           <AvatarWing league={user.rating.league} type="wing" />
           {user.rating.division && <AvatarDivision division={user.rating.division} />}
+          {isOwnProfile && <EditAvatarOverlay onClick={() => setEditIconOpen(true)} />}
         </AvatarRoot>
 
         {/* User Info */}
@@ -39,6 +48,15 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
           </div>
         </div>
       </div>
+
+      {isOwnProfile && (
+        <EditIconModal
+          currentIcon={user.summonerIcon}
+          userId={user.id}
+          open={editIconOpen}
+          onOpenChange={setEditIconOpen}
+        />
+      )}
     </div>
   )
 }
