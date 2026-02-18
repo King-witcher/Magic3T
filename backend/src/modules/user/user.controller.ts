@@ -173,7 +173,7 @@ export class UserController {
   async getIcons(@UserId() userId: string) {
     const iconAssigments = await this.userRepository.getIconAssignments(userId)
     const assignedIcons = iconAssigments.map((assigment) => Number.parseInt(assigment.id, 10))
-    return [...assignedIcons, ...baseIcons].sort((a, b) => a - b)
+    return [...assignedIcons, ...baseIcons].sort((a, b) => b - a)
   }
 
   @Patch('me/icon')
