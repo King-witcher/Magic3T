@@ -110,11 +110,7 @@ export function Navbar() {
       </NavLink>
 
       {/* Playground */}
-      <NavLink
-        href="/practice-tool"
-        tooltip="Plan your strategies in the playground"
-        className="hidden xs:flex"
-      >
+      <NavLink href="/practice-tool" tooltip="Plan your strategies in the playground">
         <GiTargetArrows size={20} />
         <span className="hidden lg:inline-block">Playground</span>
       </NavLink>
@@ -177,9 +173,18 @@ export function Navbar() {
                   <IoPerson />
                   My Profile
                 </Link>
+                {authState === AuthState.SignedIn && user.role === UserRole.Creator && (
+                  <Link
+                    to={'/admin' as '/'}
+                    className="flex gap-2 items-center hover:bg-blue-4/20 p-3 cursor-pointer md:hidden"
+                  >
+                    <GiCrown />
+                    Admin
+                  </Link>
+                )}
                 <Link
                   to="/tutorial"
-                  className="flex gap-2 items-center hover:bg-blue-4/20 p-3 cursor-pointer sm:hidden"
+                  className="flex gap-2 items-center hover:bg-blue-4/20 p-3 cursor-pointer"
                 >
                   <GiBookCover />
                   Tutorial
