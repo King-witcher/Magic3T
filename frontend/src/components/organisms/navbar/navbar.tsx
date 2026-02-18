@@ -112,7 +112,7 @@ export function Navbar() {
       {/* Playground */}
       <NavLink
         href="/practice-tool"
-        tooltip="A playground to test new movements"
+        tooltip="Plan your strategies in the playground"
         className="hidden xs:flex"
       >
         <GiTargetArrows size={20} />
