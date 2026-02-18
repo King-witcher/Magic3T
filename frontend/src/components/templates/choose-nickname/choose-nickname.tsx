@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
-import { ChangeEvent, FormEvent, useState } from 'react'
+import { useRouter } from '@tanstack/react-router'
+import { ChangeEvent, SubmitEvent, useState } from 'react'
 import { GiCrystalShine } from 'react-icons/gi'
 import { Button, Input } from '@/components/atoms'
 import { Label } from '@/components/ui/label'
@@ -11,6 +12,7 @@ export function ChooseNicknameTemplate() {
   const [nickname, setNickname] = useState('')
   const auth = useSignedAuth()
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   const changeNickMutation = useMutation({
     mutationKey: ['register', nickname],
@@ -26,6 +28,7 @@ export function ChooseNicknameTemplate() {
     },
     onSuccess() {
       auth.refetchUser()
+      router.navigate({ to: '/tutorial' })
     },
     onError(e) {
       setError(e.message.replace(/^(.)/, (match) => match.toUpperCase()))
@@ -42,7 +45,7 @@ export function ChooseNicknameTemplate() {
     setNickname(value)
   }
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
     changeNickMutation.mutate()
   }
