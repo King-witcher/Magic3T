@@ -1,7 +1,6 @@
 import * as Sentry from '@sentry/react'
 import { router } from './router'
 
-// TODO: https://docs.sentry.io/platforms/javascript/guides/react/#avoid-ad-blockers-with-tunneling-optional
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
   enabled: import.meta.env.PROD,

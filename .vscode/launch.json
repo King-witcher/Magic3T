@@ -19,6 +19,18 @@
       "url": "http://localhost:3000",
       "webRoot": "${workspaceFolder}/frontend"
     },
+    {
+      "cwd": "${workspaceFolder}/frontend",
+      "name": "Launch Stories",
+      "preLaunchTask": "stories",
+      "request": "launch",
+      "skipFiles": [
+        "${workspaceFolder}/node_modules/**/*.js"
+      ],
+      "type": "msedge",
+      "url": "http://localhost:61000",
+      "webRoot": "${workspaceFolder}/frontend"
+    },
   ],
   "version": "0.2.0"
 }

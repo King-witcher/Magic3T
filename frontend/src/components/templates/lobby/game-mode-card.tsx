@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 import { Button, Spinner } from '@/components/atoms'
-import { useQueue } from '@/contexts/queue.context'
+import { useQueue } from '@/contexts/queue-context'
 import { ServerStatus, useServiceStatus } from '@/contexts/service-status.context'
 import { cn } from '@/lib/utils'
 import { QueueMode } from '@/types/queue'

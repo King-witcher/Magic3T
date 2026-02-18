@@ -11,6 +11,7 @@ export default defineConfig({
     tanstackRouter({
       target: 'react',
       autoCodeSplitting: true,
+
       generatedRouteTree: 'src/route-tree.gen.ts',
     }),
     react({
@@ -22,6 +23,7 @@ export default defineConfig({
     sentryVitePlugin({
       org: 'magic3t',
       project: 'magic3t-frontend',
+      disable: process.env.NODE_ENV !== 'production',
     }),
   ],
   server: {

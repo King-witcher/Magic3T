@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'destructive' | 'ghost' | 'outline'
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg' | 'icon'
   asChild?: boolean
 }
 
@@ -59,6 +59,7 @@ const buttonSizes = {
   sm: 'px-5 py-1.5 sm:py-2 text-sm rounded',
   md: 'px-7.5 py-2 sm:py-3 text-base rounded',
   lg: 'px-10 py-3 sm:py-4 text-lg rounded-lg',
+  icon: 'p-2 rounded',
 }
 
 export function Button({

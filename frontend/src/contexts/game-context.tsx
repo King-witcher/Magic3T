@@ -28,7 +28,7 @@ import { AuthState, useAuth } from './auth-context'
 
 type Message = { sender: 'you' | 'him'; content: string; timestamp: number }
 
-type GameContextData = {
+export type GameContextData = {
   matchId: string | null
   isActive: boolean
   turn: Team | null
@@ -61,7 +61,7 @@ interface Props {
   children?: ReactNode
 }
 
-const GameContext = createContext<GameContextData | null>(null)
+export const GameContext = createContext<GameContextData | null>(null)
 
 // Refactor this and use white and black isntead of player and opponent
 export function GameProvider({ children }: Props) {

@@ -1,10 +1,11 @@
 import { Team } from '@magic3t/common-types'
 import { useEffect } from 'react'
 import { GiCrossedSwords } from 'react-icons/gi'
-import { Button, Panel, PanelDivider } from '@/components/atoms'
+import { Button, Panel } from '@/components/atoms'
 import { useGame } from '@/contexts/game-context'
 import { useDialogStore } from '@/contexts/modal-store'
-import { GameBoard } from './components/game-board'
+import { cn } from '@/lib/utils'
+import { GameBoard } from '../../molecules/game-board'
 import { GameResultModal } from './components/game-result-modal'
 import { PlayerPanel } from './components/player-panel'
 import { SurrenderModal } from './components/surrender-modal'
@@ -42,7 +43,7 @@ export function GameTemplate() {
 
   return (
     <div className="flex items-center justify-center min-h-full p-4 md:p-8">
-      <Panel className="max-w-full w-fit self-stretch flex flex-col gap-6">
+      <Panel className="max-w-full w-fit self-stretch flex flex-col gap-4 p-6">
         {/* Main game area */}
         <div className="flex flex-col items-center justify-between gap-4 flex-1">
           {/* Enemy Player Panel */}
@@ -68,8 +69,23 @@ export function GameTemplate() {
             enemyChoices={enemyPlayer.choices}
             isMyTurn={isMyTurn}
             isGameOver={gameCtx.finished}
-            onSelect={gameCtx.pick}
+            onPick={gameCtx.pick}
           />
+
+          {/* Turn indicator */}
+          {!gameCtx.finished && (
+            <div
+              className={cn(
+                'px-6 py-2 rounded-full text-sm font-semibold uppercase tracking-wider',
+                'border-2 transition-all duration-300',
+                isMyTurn
+                  ? 'bg-blue-600/20 border-blue-400/50 text-blue-300'
+                  : 'bg-red-600/20 border-red-400/50 text-red-300'
+              )}
+            >
+              {isMyTurn ? 'Your Turn - Select a Number' : "Waiting for Opponent's Move"}
+            </div>
+          )}
 
           {/* VS Divider */}
           <div className="flex items-center gap-4 w-full max-w-md">
@@ -93,14 +109,11 @@ export function GameTemplate() {
 
         {/* Leave button when game is finished */}
         {gameCtx.finished && (
-          <>
-            <PanelDivider />{' '}
-            <div className="flex justify-center">
-              <Button variant="secondary" size="lg" onClick={gameCtx.disconnect}>
-                Leave Room
-              </Button>
-            </div>
-          </>
+          <div className="flex justify-center">
+            <Button variant="secondary" size="lg" onClick={gameCtx.disconnect}>
+              Leave Room
+            </Button>
+          </div>
         )}
       </Panel>
     </div>

@@ -7,7 +7,7 @@ import {
 } from 'react-icons/gi'
 import { IoMdPeople } from 'react-icons/io'
 import { Panel, PanelDivider } from '@/components/ui/panel'
-import { useQueue } from '@/contexts/queue.context'
+import { useQueue } from '@/contexts/queue-context'
 import { QueueMode } from '@/types/queue'
 import { GameModeCard } from './game-mode-card'
 

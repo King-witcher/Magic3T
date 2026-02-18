@@ -1,12 +1,11 @@
 import type { GetUserResult } from '@magic3t/api-types'
-import { League } from '@magic3t/common-types'
 import { Link } from '@tanstack/react-router'
 import { Flag } from 'lucide-react'
 import { SmoothNumber, TimerValue, Tooltip } from '@/components/atoms'
-import { UserAvatar } from '@/components/molecules'
 import type { Timer } from '@/lib/Timer'
 import { cn } from '@/lib/utils'
 import { divisionMap, leaguesMap } from '@/utils/ranks'
+import { getIconUrl } from '@/utils/utils'
 
 interface PlayerPanelProps {
   profile: GetUserResult | null
@@ -50,14 +49,19 @@ export function PlayerPanel({
         <Link
           to="/users/id/$userId"
           params={{ userId: profile?.id || '' }}
-          className="shrink-0 transition-transform hover:scale-105"
+          className="shrink-0 transition-transform hover:scale-105 border-3 border-gold-7 rounded-full"
         >
-          <UserAvatar
+          <img
+            src={getIconUrl(profile?.summonerIcon || 0)}
+            alt="avatar"
+            className="rounded-full w-16 h-16"
+          />
+          {/* <UserAvatar
             icon={profile?.summonerIcon || 0}
             league={League.Provisional}
             division={profile?.rating.division || null}
             className="text-[60px]"
-          />
+          /> */}
         </Link>
 
         {/* Player Info */}

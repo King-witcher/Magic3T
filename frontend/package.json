@@ -13,6 +13,7 @@
     "@tanstack/react-router-devtools": "^1.150.0",
     "@vercel/analytics": "^1.4.1",
     "@vercel/speed-insights": "^1.1.0",
+    "class-variance-authority": "^0.7.1",
     "firebase": "^12.8.0",
     "framer-motion": "^12.23.24",
     "jotai": "^2.12.0",
@@ -32,6 +33,7 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@ladle/react": "^5.1.1",
     "@magic3t/api-types": "*",
     "@magic3t/common-types": "*",
     "@sentry/vite-plugin": "^4.8.0",
@@ -57,7 +59,7 @@
     "dev": "vite",
     "lint": "biome check src --error-on-warnings --diagnostic-level=warn",
     "preview": "vite preview",
-    "stories": "ladle serve"
+    "stories": "ladle serve -h localhost --viteConfig .ladle/vite.config.ts"
   },
   "type": "module",
   "version": "0.0.0"
