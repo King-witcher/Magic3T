@@ -110,7 +110,7 @@ export function Navbar() {
       </NavLink>
 
       {/* Playground */}
-      <NavLink href="/practice-tool" tooltip="Plan your strategies in the playground">
+      <NavLink href="/playground" tooltip="Plan your strategies in the playground">
         <GiTargetArrows size={20} />
         <span className="hidden lg:inline-block">Playground</span>
       </NavLink>

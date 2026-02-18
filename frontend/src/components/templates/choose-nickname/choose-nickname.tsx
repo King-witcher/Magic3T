@@ -51,7 +51,7 @@ export function ChooseNicknameTemplate() {
   }
 
   return (
-    <div className="center h-full px-4">
+    <div className="flex items-center justify-center h-full px-4">
       <Panel className="max-w-150 w-full">
         <form className="space-y-6" onSubmit={handleSubmit}>
           {/* Icon Header */}

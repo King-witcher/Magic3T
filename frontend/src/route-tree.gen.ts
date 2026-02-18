@@ -14,7 +14,7 @@ import { Route as BiancaRouteImport } from './routes/bianca'
 import { Route as AuthGuardedRouteImport } from './routes/_auth-guarded'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as TutorialRouteRouteImport } from './routes/tutorial/route'
-import { Route as PracticeToolRouteRouteImport } from './routes/practice-tool/route'
+import { Route as PlaygroundRouteRouteImport } from './routes/playground/route'
 import { Route as AuthGuardedIndexRouteImport } from './routes/_auth-guarded/index'
 import { Route as UsersNicknameRouteImport } from './routes/users/$nickname'
 import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
@@ -46,9 +46,9 @@ const TutorialRouteRoute = TutorialRouteRouteImport.update({
   path: '/tutorial',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PracticeToolRouteRoute = PracticeToolRouteRouteImport.update({
-  id: '/practice-tool',
-  path: '/practice-tool',
+const PlaygroundRouteRoute = PlaygroundRouteRouteImport.update({
+  id: '/playground',
+  path: '/playground',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthGuardedIndexRoute = AuthGuardedIndexRouteImport.update({
@@ -88,7 +88,7 @@ const UsersIdUserIdRoute = UsersIdUserIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/practice-tool': typeof PracticeToolRouteRoute
+  '/playground': typeof PlaygroundRouteRoute
   '/tutorial': typeof TutorialRouteRoute
   '/': typeof AuthGuardedIndexRoute
   '/bianca': typeof BiancaRoute
@@ -101,7 +101,7 @@ export interface FileRoutesByFullPath {
   '/users/id/$userId': typeof UsersIdUserIdRoute
 }
 export interface FileRoutesByTo {
-  '/practice-tool': typeof PracticeToolRouteRoute
+  '/playground': typeof PlaygroundRouteRoute
   '/tutorial': typeof TutorialRouteRoute
   '/': typeof AuthGuardedIndexRoute
   '/bianca': typeof BiancaRoute
@@ -115,7 +115,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/practice-tool': typeof PracticeToolRouteRoute
+  '/playground': typeof PlaygroundRouteRoute
   '/tutorial': typeof TutorialRouteRoute
   '/_auth': typeof AuthRouteWithChildren
   '/_auth-guarded': typeof AuthGuardedRouteWithChildren
@@ -132,7 +132,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/practice-tool'
+    | '/playground'
     | '/tutorial'
     | '/'
     | '/bianca'
@@ -145,7 +145,7 @@ export interface FileRouteTypes {
     | '/users/id/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/practice-tool'
+    | '/playground'
     | '/tutorial'
     | '/'
     | '/bianca'
@@ -158,7 +158,7 @@ export interface FileRouteTypes {
     | '/users/id/$userId'
   id:
     | '__root__'
-    | '/practice-tool'
+    | '/playground'
     | '/tutorial'
     | '/_auth'
     | '/_auth-guarded'
@@ -174,7 +174,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  PracticeToolRouteRoute: typeof PracticeToolRouteRoute
+  PlaygroundRouteRoute: typeof PlaygroundRouteRoute
   TutorialRouteRoute: typeof TutorialRouteRoute
   AuthRoute: typeof AuthRouteWithChildren
   AuthGuardedRoute: typeof AuthGuardedRouteWithChildren
@@ -221,11 +221,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TutorialRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/practice-tool': {
-      id: '/practice-tool'
-      path: '/practice-tool'
-      fullPath: '/practice-tool'
-      preLoaderRoute: typeof PracticeToolRouteRouteImport
+    '/playground': {
+      id: '/playground'
+      path: '/playground'
+      fullPath: '/playground'
+      preLoaderRoute: typeof PlaygroundRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth-guarded/': {
@@ -309,7 +309,7 @@ const AuthGuardedRouteWithChildren = AuthGuardedRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  PracticeToolRouteRoute: PracticeToolRouteRoute,
+  PlaygroundRouteRoute: PlaygroundRouteRoute,
   TutorialRouteRoute: TutorialRouteRoute,
   AuthRoute: AuthRouteWithChildren,
   AuthGuardedRoute: AuthGuardedRouteWithChildren,

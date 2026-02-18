@@ -6,7 +6,7 @@ import { Button, Panel, PanelDivider } from '@/components/atoms'
 import { GameBoard } from '@/components/molecules'
 import { getTriple } from '@/utils/getTriple'
 
-export const Route = createFileRoute('/practice-tool')({
+export const Route = createFileRoute('/playground')({
   component: RouteComponent,
 })
 
@@ -51,19 +51,18 @@ function RouteComponent() {
   }
 
   return (
-    <div className="w-full h-full flex items-center justify-center">
-      <Panel className="flex flex-col gap-8">
-        <h1 className="text-3xl text-gold-4 font-medium font-serif text-center">
-          MAGIC3T PLAYGROUND
-        </h1>
+    <div className="h-full flex items-center justify-center px-4">
+      <Panel className="w-fit max-w-full flex flex-col gap-6 md:gap-8">
+        <h1 className="text-3xl text-gold-3 font-bold font-serif text-center">PLAYGROUND</h1>
         <GameBoard
+          cellClass="text-4xl"
           allyChoices={orderChoices}
           enemyChoices={chaosChoices}
           isGameOver={finished}
           onPick={handlePick}
           isMyTurn
         />
-        <div className="w-full flex gap-8">
+        <div className="w-full flex gap-4 md:gap-8">
           <Button
             size="icon"
             variant={cursor === 0 ? 'secondary' : 'primary'}

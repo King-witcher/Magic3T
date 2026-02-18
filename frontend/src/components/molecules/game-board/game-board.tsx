@@ -67,7 +67,7 @@ export function GameBoard({
       {...props}
     >
       {/* 3x3 Grid */}
-      <div className="grid grid-cols-3 gap-2 md:gap-3 w-80">
+      <div className="grid grid-cols-3 gap-2 md:gap-3 w-80 max-w-full">
         {numbers.map((num) => (
           <NumberCell
             key={num}
