@@ -2,7 +2,7 @@ import { Choice } from '@magic3t/common-types'
 import { createFileRoute } from '@tanstack/react-router'
 import { SkipBack, SkipForward, StepBack, StepForward } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { Button, Panel } from '@/components/atoms'
+import { Button, Panel, PanelDivider } from '@/components/atoms'
 import { GameBoard } from '@/components/molecules'
 import { getTriple } from '@/utils/getTriple'
 
@@ -53,7 +53,9 @@ function RouteComponent() {
   return (
     <div className="w-full h-full flex items-center justify-center">
       <Panel className="flex flex-col gap-8">
-        <h1 className="text-4xl text-gold-4 font-medium font-serif text-center">PRACTICE TOOL</h1>
+        <h1 className="text-3xl text-gold-4 font-medium font-serif text-center">
+          MAGIC3T PLAYGROUND
+        </h1>
         <GameBoard
           allyChoices={orderChoices}
           enemyChoices={chaosChoices}

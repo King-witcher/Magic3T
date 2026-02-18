@@ -1,7 +1,7 @@
 import { UserRole } from '@magic3t/database-types'
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { GiBookCover, GiCrown, GiShoppingBag, GiTrophy } from 'react-icons/gi'
+import { GiBookCover, GiCrown, GiTargetArrows, GiTrophy } from 'react-icons/gi'
 import { IoLogOutOutline, IoPerson } from 'react-icons/io5'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { AuthState, useAuth } from '@/contexts/auth-context'
@@ -97,14 +97,6 @@ export function Navbar() {
         />
       </Link>
 
-      {/* Shop */}
-      {authState === AuthState.SignedIn && (
-        <NavLink href="." disabled tooltip="Shop (Coming Soon)">
-          <GiShoppingBag size={20} />
-          <span className="hidden lg:inline-block">Shop</span>
-        </NavLink>
-      )}
-
       {/* Leaderboard */}
       <NavLink href="/leaderboard" tooltip="The best Magic3T players">
         <GiTrophy size={20} />
@@ -115,6 +107,16 @@ export function Navbar() {
       <NavLink href="/tutorial" tooltip="Learn how to play Magic3T" className="hidden xs:flex">
         <GiBookCover size={20} />
         <span className="hidden lg:inline-block">Tutorial</span>
+      </NavLink>
+
+      {/* Playground */}
+      <NavLink
+        href="/practice-tool"
+        tooltip="A playground to test new movements"
+        className="hidden xs:flex"
+      >
+        <GiTargetArrows size={20} />
+        <span className="hidden lg:inline-block">Playground</span>
       </NavLink>
 
       {/* Admin Button */}
