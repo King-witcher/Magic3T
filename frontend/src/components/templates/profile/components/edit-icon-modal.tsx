@@ -97,11 +97,11 @@ function EditIconModalInner({ currentIcon, onClose }: InnerProps) {
       </div>
 
       {/* Icon Grid */}
-      {iconsQuery.isPending && (
+      {/* {iconsQuery.isPending && (
         <div className="flex justify-center py-8">
           <span className="text-grey-1 text-sm animate-pulse">Loading icons...</span>
         </div>
-      )}
+      )} */}
 
       {iconsQuery.isError && (
         <div className="flex justify-center py-8">
@@ -109,9 +109,12 @@ function EditIconModalInner({ currentIcon, onClose }: InnerProps) {
         </div>
       )}
 
-      {iconsQuery.isSuccess && (
-        <IconGrid icons={iconsQuery.data} selectedIcon={selectedIcon} onSelect={setSelectedIcon} />
-      )}
+      <IconGrid
+        loading={iconsQuery.isPending}
+        icons={iconsQuery.data}
+        selectedIcon={selectedIcon}
+        onSelect={setSelectedIcon}
+      />
 
       {/* Error message */}
       {updateIconMutation.isError && (

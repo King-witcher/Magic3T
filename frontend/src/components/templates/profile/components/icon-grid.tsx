@@ -1,28 +1,38 @@
+import { useMemo } from 'react'
 import { cn, getIconUrl } from '@/utils/utils'
 
-interface IconGridProps {
-  icons: number[]
+type IconGridProps = {
+  loading: boolean
+  icons: number[] | undefined
   selectedIcon: number
   onSelect: (iconId: number) => void
 }
 
-export function IconGrid({ icons, selectedIcon, onSelect }: IconGridProps) {
+export function IconGrid({ loading, icons, selectedIcon, onSelect }: IconGridProps) {
+  const skeletons = useMemo(() => {
+    return Array.from({ length: 50 }, (_, i) => i + 1).map((id) => {
+      return <div key={id} className="w-full aspect-square animate-pulse bg-gold-5/30 rounded" />
+    })
+  }, [])
+
   return (
-    <div>
+    <div className="h-76 lg:h-96 overflow-y-auto">
       <div
         className={cn(
           'grid grid-cols-4 xs:grid-cols-5 sm:grid-cols-6 md:grid-cols-7 gap-2',
-          'max-h-76 lg:max-h-92 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gold-5/40 scrollbar-track-transparent'
+          'pr-1 scrollbar-thin scrollbar-thumb-gold-5/40 scrollbar-track-transparent'
         )}
       >
-        {icons.map((iconId) => (
-          <IconGridItem
-            key={iconId}
-            iconId={iconId}
-            isSelected={iconId === selectedIcon}
-            onSelect={onSelect}
-          />
-        ))}
+        {loading
+          ? skeletons
+          : icons?.map((iconId) => (
+              <IconGridItem
+                key={iconId}
+                iconId={iconId}
+                isSelected={iconId === selectedIcon}
+                onSelect={onSelect}
+              />
+            ))}
       </div>
     </div>
   )
