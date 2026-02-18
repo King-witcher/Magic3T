@@ -57,8 +57,8 @@ const buttonVariants = {
 
 const buttonSizes = {
   sm: 'px-5 py-1.5 sm:py-2 text-sm rounded',
-  md: 'px-7.5 py-2 sm:py-3 text-base rounded',
-  lg: 'px-10 py-3 sm:py-4 text-lg rounded-lg',
+  md: 'px-7.5 py-3 text-base rounded',
+  lg: 'px-10 py-4 text-lg rounded-lg',
   icon: 'p-2 rounded',
 }
 

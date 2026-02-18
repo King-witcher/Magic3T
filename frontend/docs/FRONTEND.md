@@ -129,6 +129,7 @@ __root.tsx                    # Layout raiz (sempre renderiza)
 │
 ├── leaderboard.tsx           # /leaderboard (público)
 ├── tutorial/route.tsx        # /tutorial (público)
+├── playground/route.tsx      # /playground (público)
 ├── users/$nickname.tsx       # /users/:nickname (público)
 └── users/id/$userId.tsx      # /users/id/:userId (público)
 ```
@@ -148,6 +149,42 @@ __root.tsx                    # Layout raiz (sempre renderiza)
 #### `_auth.tsx`
 - Redireciona para home se já autenticado
 - Layout específico para páginas de login/registro
+
+### Páginas Públicas
+
+| Rota | Arquivo | Descrição |
+|------|---------|-----------|
+| `/leaderboard` | `leaderboard.tsx` | Ranking dos melhores jogadores |
+| `/tutorial` | `tutorial/route.tsx` | Guia de regras e estratégias |
+| `/playground` | `playground/route.tsx` | Simulador de partidas offline |
+| `/users/:nickname` | `users/$nickname.tsx` | Perfil público de jogador |
+
+#### `/playground` — Simulador de Partidas
+
+Permite simular partidas completas localmente, sem necessidade de autenticação ou conexão com o servidor. Útil para praticar estratégias.
+
+**Funcionalidades:**
+- Tabuleiro interativo alternando turnos entre **Order** (azul) e **Chaos** (vermelho)
+- Detecta automaticamente o vencedor ao completar um triplo somando 15
+- **Navegação no histórico**: avançar/recuar movimentos individualmente ou saltar para início/fim
+- **Histórico visual**: painel lateral com todos os movimentos, indicando o ponto atual na linha do tempo; clicar em uma entrada salta para aquele estado
+- Botão "Nova Partida" para resetar o tabuleiro
+- Indicadores de turno destacam visualmente qual lado está ativo ou venceu
+
+**Estado local (sem persistência):**
+```tsx
+const [history, setHistory] = useState<Choice[]>([])  // lista completa de movimentos
+const [cursor, setCursor]   = useState(0)               // posição atual na linha do tempo
+```
+
+- `history.slice(0, cursor)` = movimentos visíveis no tabuleiro
+- Índices pares → Order, ímpares → Chaos
+- Ao jogar com `cursor < history.length`, os movimentos futuros são descartados
+
+**Componentes utilizados:**
+- `<GameBoard>` — tabuleiro 3×3 reutilizado do jogo real
+- `<MoveHistory>` (local) — lista rolável de jogadas com cursor visual
+- `<Panel>`, `<PanelDivider>`, `<Button>` — primitivos de UI com identidade LoL
 
 ---
 

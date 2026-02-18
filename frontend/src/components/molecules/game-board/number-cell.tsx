@@ -15,7 +15,7 @@ const cellVariants = cva(
   ${/*size-20 md:size-22 lg:size-24*/ ''}
   aspect-square
   rounded-lg border-2
-  font-serif font-bold text-4xl md:text-5xl lg:text-5xl
+  font-serif font-bold text-4xl sm:text-5xl
   transition-all duration-200
 `,
   {
