@@ -11,6 +11,7 @@ import {
 } from 'react'
 import { useRegisterCommand } from '@/hooks/use-register-command'
 import { authClient } from '@/lib/auth-client'
+import { Console } from '@/lib/console'
 import { apiClient } from '@/services/clients/api-client'
 import { NotFoundError } from '@/services/clients/client-error'
 
@@ -64,7 +65,15 @@ const AuthContext = createContext<AuthContextData | null>(null)
 export function AuthProvider({ children }: Props) {
   // This state is only true while we're waiting for the initial auth state to load
   const [loadingSession, setLoadingSession] = useState(true)
-  useEffect(() => authClient.onAuthStateChanged(() => setLoadingSession(false)), [])
+  useEffect(() => {
+    Console.log('Loading session...')
+    const unlisten = authClient.onAuthStateChanged(firstListener)
+    function firstListener(userId: string | null) {
+      Console.log(`Session loaded: ${userId ? `signed in as ${userId}` : 'Not signed in'}`)
+      setLoadingSession(false)
+      unlisten()
+    }
+  }, [])
 
   const userId = useSyncExternalStore(
     (sub) => authClient.onAuthStateChanged(sub),
@@ -75,6 +84,7 @@ export function AuthProvider({ children }: Props) {
     queryKey: ['user-by-id', userId],
     enabled: !!userId,
     queryFn: async () => {
+      Console.log('Loading user...')
       if (!userId) throw new Error('No user ID')
       return apiClient.user.getById(userId)
     },
