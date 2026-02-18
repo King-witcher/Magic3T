@@ -91,7 +91,7 @@ function EditIconModalInner({ currentIcon, onClose }: InnerProps) {
           <img
             src={getIconUrl(selectedIcon)}
             alt="Selected icon preview"
-            className="size-24 rounded-full shadow-lg shadow-gold-5/40 border-2 border-gold-4/60"
+            className="size-24 lg:size-32 rounded-full shadow-lg shadow-gold-5/40 border-2 border-gold-4/60"
           />
         </div>
       </div>
