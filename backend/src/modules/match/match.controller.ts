@@ -1,4 +1,4 @@
-import { ListMatchesResult } from '@magic3t/api-types'
+import { GetMatchResult, ListMatchesResult } from '@magic3t/api-types'
 import {
   Controller,
   Get,
@@ -100,6 +100,17 @@ export class MatchController {
     const perspective = this.matchBank.getPerspective(userId)
     if (!perspective) return false
     return true
+  }
+
+  @Get(':matchId')
+  @ApiOperation({
+    summary: 'Get match by ID',
+    description: 'Get a specific match by its ID',
+  })
+  async getMatchById(@Param('matchId') matchId: string): Promise<GetMatchResult> {
+    const row = await this.matchRepository.getById(matchId)
+    if (!row) respondError('match-not-found', 404, 'Match not found.')
+    return this.matchService.getMatchByRow(row)
   }
 
   @Get('user/:userId')

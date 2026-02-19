@@ -1,6 +1,7 @@
 import { ListMatchesResultItem } from '@magic3t/api-types'
 import { Team } from '@magic3t/common-types'
-import { Link } from '@tanstack/react-router'
+import { useState } from 'react'
+import { MatchDetailModal } from '@/components/organisms/match-detail'
 import { Tooltip } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { leaguesMap } from '@/utils/ranks'
@@ -70,78 +71,82 @@ export function MatchHistoryItem({ match, currentUserId }: MatchHistoryItemProps
   }
 
   const config = resultConfig[result]
+  const [modalOpen, setModalOpen] = useState(false)
 
   return (
-    <Link
-      to="/users/$nickname"
-      params={{ nickname: opponent.name.replaceAll(' ', '') }}
-      className={cn(
-        'group block rounded transition-all duration-300',
-        'bg-linear-to-r',
-        config.bg,
-        'border',
-        config.border,
-        'hover:shadow-lg hover:shadow-black/20'
-      )}
-    >
-      <div className="flex items-center gap-3 py-3 px-4 sm:py-4 sm:px-5">
-        {/* Match Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-4 sm:gap-5">
-            {/* Opponent Icon */}
-            <AvatarRoot className="size-8">
-              <AvatarImage icon={29} />
-              <AvatarWing league={opponent.league} />
-            </AvatarRoot>
+    <>
+      <button
+        type="button"
+        onClick={() => setModalOpen(true)}
+        className={cn(
+          'group block rounded transition-all duration-300 w-full text-left cursor-pointer',
+          'bg-linear-to-r',
+          config.bg,
+          'border',
+          config.border,
+          'hover:shadow-lg hover:shadow-black/20'
+        )}
+      >
+        <div className="flex items-center gap-3 py-3 px-4 sm:py-4 sm:px-5">
+          {/* Match Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-4 sm:gap-5">
+              {/* Opponent Icon */}
+              <AvatarRoot className="size-8">
+                <AvatarImage icon={29} />
+                <AvatarWing league={opponent.league} />
+              </AvatarRoot>
 
-            {/* Opponent Name */}
-            <div className="min-w-0">
-              <span className="text-gold-1 font-bold font-serif truncate block">
-                {opponent.name}
-              </span>
-              <div className="flex items-center gap-1 text-xs text-grey-1">
-                <Tooltip text={opponentLeagueInfo.name}>
-                  <img src={opponentLeagueInfo.icon} alt="" className="size-4" />
-                </Tooltip>
-                <span className="font-serif">
-                  {opponentLeagueInfo.name}{' '}
-                  {opponent.division ? DIVISIONS[opponent.division - 1] : ''}
+              {/* Opponent Name */}
+              <div className="min-w-0">
+                <span className="text-gold-1 font-bold font-serif truncate block">
+                  {opponent.name}
                 </span>
+                <div className="flex items-center gap-1 text-xs text-grey-1">
+                  <Tooltip text={opponentLeagueInfo.name}>
+                    <img src={opponentLeagueInfo.icon} alt="" className="size-4" />
+                  </Tooltip>
+                  <span className="font-serif">
+                    {opponentLeagueInfo.name}{' '}
+                    {opponent.division ? DIVISIONS[opponent.division - 1] : ''}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Result & LP */}
-        <div className="shrink-0 text-right">
-          <div
-            className={cn(
-              'font-serif font-bold uppercase flex items-center gap-1',
-              config.textColor
-            )}
-          >
-            {config.text}
-            {result === 'draw' && (
-              <span className="text-sm font-sans font-medium">
-                ({currentPlayer.score > 0.5 && '+'}
-                {Math.round(currentPlayer.score * 200 - 100)})
-              </span>
+          {/* Result & LP */}
+          <div className="shrink-0 text-right">
+            <div
+              className={cn(
+                'font-serif font-bold uppercase flex items-center gap-1',
+                config.textColor
+              )}
+            >
+              {config.text}
+              {result === 'draw' && (
+                <span className="text-sm font-sans font-medium">
+                  ({currentPlayer.score > 0.5 && '+'}
+                  {Math.round(currentPlayer.score * 200 - 100)})
+                </span>
+              )}
+            </div>
+            {lpGain !== 0 && (
+              <div className={cn('text-sm font-semibold', lpColor)}>
+                {lpPrefix}
+                {lpGain} LP
+              </div>
             )}
           </div>
-          {lpGain !== 0 && (
-            <div className={cn('text-sm font-semibold', lpColor)}>
-              {lpPrefix}
-              {lpGain} LP
-            </div>
-          )}
-        </div>
 
-        {/* Date */}
-        <div className="hidden sm:block shrink-0 text-right text-grey-1 text-sm w-16">
-          <div>{formattedDate}</div>
-          <div className="text-xs opacity-70">{formattedTime}</div>
+          {/* Date */}
+          <div className="hidden sm:block shrink-0 text-right text-grey-1 text-sm w-16">
+            <div>{formattedDate}</div>
+            <div className="text-xs opacity-70">{formattedTime}</div>
+          </div>
         </div>
-      </div>
-    </Link>
+      </button>
+      <MatchDetailModal match={match} open={modalOpen} onOpenChange={setModalOpen} />
+    </>
   )
 }

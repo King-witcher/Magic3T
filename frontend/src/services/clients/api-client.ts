@@ -2,6 +2,7 @@ import {
   ChangeIconCommand,
   ChangeNicknameCommand,
   CrashReportCommand,
+  GetMatchResult,
   GetStatusResponse,
   GetUserResult,
   ListMatchesResult,
@@ -75,6 +76,13 @@ export class UserApiClient extends BaseApiClient {
 export class MatchApiClient extends BaseApiClient {
   constructor() {
     super('matches')
+  }
+
+  /**
+   * Gets a match by its ID.
+   */
+  async getById(matchId: string): Promise<GetMatchResult> {
+    return this.get<GetMatchResult>(matchId, false)
   }
 
   /**

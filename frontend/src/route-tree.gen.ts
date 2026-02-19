@@ -17,6 +17,7 @@ import { Route as TutorialRouteRouteImport } from './routes/tutorial/route'
 import { Route as PlaygroundRouteRouteImport } from './routes/playground/route'
 import { Route as AuthGuardedIndexRouteImport } from './routes/_auth-guarded/index'
 import { Route as UsersNicknameRouteImport } from './routes/users/$nickname'
+import { Route as MatchesMatchRouteImport } from './routes/matches/$match'
 import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthGuardedStoreRouteImport } from './routes/_auth-guarded/store'
@@ -61,6 +62,11 @@ const UsersNicknameRoute = UsersNicknameRouteImport.update({
   path: '/users/$nickname',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MatchesMatchRoute = MatchesMatchRouteImport.update({
+  id: '/matches/$match',
+  path: '/matches/$match',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthSignInRoute = AuthSignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
@@ -97,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/store': typeof AuthGuardedStoreRoute
   '/register': typeof AuthRegisterRoute
   '/sign-in': typeof AuthSignInRoute
+  '/matches/$match': typeof MatchesMatchRoute
   '/users/$nickname': typeof UsersNicknameRoute
   '/users/id/$userId': typeof UsersIdUserIdRoute
 }
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/store': typeof AuthGuardedStoreRoute
   '/register': typeof AuthRegisterRoute
   '/sign-in': typeof AuthSignInRoute
+  '/matches/$match': typeof MatchesMatchRoute
   '/users/$nickname': typeof UsersNicknameRoute
   '/users/id/$userId': typeof UsersIdUserIdRoute
 }
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/_auth-guarded/store': typeof AuthGuardedStoreRoute
   '/_auth/register': typeof AuthRegisterRoute
   '/_auth/sign-in': typeof AuthSignInRoute
+  '/matches/$match': typeof MatchesMatchRoute
   '/users/$nickname': typeof UsersNicknameRoute
   '/_auth-guarded/': typeof AuthGuardedIndexRoute
   '/users/id/$userId': typeof UsersIdUserIdRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/store'
     | '/register'
     | '/sign-in'
+    | '/matches/$match'
     | '/users/$nickname'
     | '/users/id/$userId'
   fileRoutesByTo: FileRoutesByTo
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/store'
     | '/register'
     | '/sign-in'
+    | '/matches/$match'
     | '/users/$nickname'
     | '/users/id/$userId'
   id:
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/_auth-guarded/store'
     | '/_auth/register'
     | '/_auth/sign-in'
+    | '/matches/$match'
     | '/users/$nickname'
     | '/_auth-guarded/'
     | '/users/id/$userId'
@@ -180,6 +192,7 @@ export interface RootRouteChildren {
   AuthGuardedRoute: typeof AuthGuardedRouteWithChildren
   BiancaRoute: typeof BiancaRoute
   LeaderboardRoute: typeof LeaderboardRoute
+  MatchesMatchRoute: typeof MatchesMatchRoute
   UsersNicknameRoute: typeof UsersNicknameRoute
   UsersIdUserIdRoute: typeof UsersIdUserIdRoute
 }
@@ -240,6 +253,13 @@ declare module '@tanstack/react-router' {
       path: '/users/$nickname'
       fullPath: '/users/$nickname'
       preLoaderRoute: typeof UsersNicknameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/matches/$match': {
+      id: '/matches/$match'
+      path: '/matches/$match'
+      fullPath: '/matches/$match'
+      preLoaderRoute: typeof MatchesMatchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth/sign-in': {
@@ -315,6 +335,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthGuardedRoute: AuthGuardedRouteWithChildren,
   BiancaRoute: BiancaRoute,
   LeaderboardRoute: LeaderboardRoute,
+  MatchesMatchRoute: MatchesMatchRoute,
   UsersNicknameRoute: UsersNicknameRoute,
   UsersIdUserIdRoute: UsersIdUserIdRoute,
 }
