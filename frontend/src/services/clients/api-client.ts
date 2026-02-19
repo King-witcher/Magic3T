@@ -1,4 +1,5 @@
 import {
+  BanUserCommand,
   ChangeIconCommand,
   ChangeNicknameCommand,
   CrashReportCommand,
@@ -119,10 +120,33 @@ export class QueueApiClient extends BaseApiClient {
   }
 }
 
+export class AdminApiClient extends BaseApiClient {
+  constructor() {
+    super('admin')
+  }
+
+  /**
+   * Bans a user by their user ID.
+   * @param userId The id of the user to ban
+   * @param data Ban data: reason and optional duration in seconds (null = permanent)
+   */
+  async banUser(userId: string, data: BanUserCommand): Promise<void> {
+    await this.post<BanUserCommand, void>(`ban/${userId}`, data)
+  }
+
+  /**
+   * Removes the ban from a user by their user ID.
+   */
+  async unbanUser(userId: string): Promise<void> {
+    await this.delete<void>(`ban/${userId}`)
+  }
+}
+
 export class ApiClient extends BaseApiClient {
   public readonly user = new UserApiClient()
   public readonly match = new MatchApiClient()
   public readonly queue = new QueueApiClient()
+  public readonly admin = new AdminApiClient()
 
   /**
    * Gets the status of the API.

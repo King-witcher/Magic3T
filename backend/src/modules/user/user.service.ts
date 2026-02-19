@@ -11,6 +11,13 @@ export class UserService {
   async getUserByRow(row: GetResult<UserRow>): Promise<GetUserResult> {
     const rating = await this.ratingService.getRatingConverter(row.data.elo)
 
+    const ban = row.data.ban
+      ? {
+          reason: row.data.ban.reason,
+          expiresAt: row.data.ban.expiresAt ? row.data.ban.expiresAt.toISOString() : null,
+        }
+      : undefined
+
     return {
       id: row.id,
       role: row.data.role,
@@ -18,6 +25,7 @@ export class UserService {
       summonerIcon: row.data.summoner_icon,
       stats: row.data.stats,
       rating: rating.ratingData,
+      ban,
     }
   }
 

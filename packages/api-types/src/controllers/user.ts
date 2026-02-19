@@ -1,5 +1,6 @@
 import type { RatingData } from '@magic3t/common-types'
 import type { UserRole } from '@magic3t/database-types'
+import type { BanInfo } from './admin'
 
 export type GetUserResult = {
   id: string
@@ -7,6 +8,7 @@ export type GetUserResult = {
   summonerIcon: number
   role: UserRole
   rating: RatingData
+  ban?: BanInfo
   stats: {
     wins: number
     draws: number

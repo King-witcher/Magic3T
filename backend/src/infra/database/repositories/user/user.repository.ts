@@ -202,4 +202,30 @@ export class UserRepository extends BaseFirestoreRepository<UserRow> {
       date: new Date(),
     })
   }
+
+  /**
+   * Bans a user.
+   * @param userId The id of the user to ban
+   * @param ban The ban data: reason, expiresAt (null = permanent), and bannedBy (creator uid)
+   */
+  async banUser(
+    userId: string,
+    ban: { reason: string; expiresAt: Date | null; bannedBy: string }
+  ): Promise<void> {
+    // biome-ignore lint/suspicious/noExplicitAny: Firestore UpdateData type doesn't accept optional object fields directly
+    await this.collection.doc(userId).update({ ban } as any)
+    this.user_logger.log(
+      `User "${userId}" banned by "${ban.bannedBy}". Expires: ${ban.expiresAt ?? 'never'}.`
+    )
+  }
+
+  /**
+   * Removes the ban from a user.
+   * @param userId The id of the user to unban
+   */
+  async unbanUser(userId: string): Promise<void> {
+    // biome-ignore lint/suspicious/noExplicitAny: Firestore UpdateData type doesn't accept null for optional object fields directly
+    await this.collection.doc(userId).update({ ban: null } as any)
+    this.user_logger.log(`User "${userId}" unbanned.`)
+  }
 }
