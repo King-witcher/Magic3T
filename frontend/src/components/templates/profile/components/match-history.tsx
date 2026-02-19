@@ -1,7 +1,10 @@
-import { ListMatchesResult } from '@magic3t/api-types'
+import { GetMatchResult, ListMatchesResult } from '@magic3t/api-types'
 import { UseQueryResult } from '@tanstack/react-query'
+import { useState } from 'react'
 import { GiSwordClash } from 'react-icons/gi'
 import { Spinner } from '@/components/atoms'
+import { MatchDetail } from '@/components/organisms/match-detail'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { MatchHistoryItem } from './match-history-item'
 
 interface MatchHistoryProps {
@@ -10,6 +13,9 @@ interface MatchHistoryProps {
 }
 
 export function MatchHistory({ matchesQuery, currentUserId }: MatchHistoryProps) {
+  const [selectedMatch, setSelectedMatch] = useState<GetMatchResult | null>(null)
+  const [matchModalOpen, setMatchModalOpen] = useState(false)
+
   return (
     <div className="space-y-6">
       {/* Section Title */}
@@ -47,10 +53,27 @@ export function MatchHistory({ matchesQuery, currentUserId }: MatchHistoryProps)
         ) : (
           <div className="space-y-2">
             {matchesQuery.data.matches.map((match) => (
-              <MatchHistoryItem key={match.id} match={match} currentUserId={currentUserId} />
+              <MatchHistoryItem
+                key={match.id}
+                match={match}
+                currentUserId={currentUserId}
+                onClick={() => {
+                  setSelectedMatch(match)
+                  setMatchModalOpen(true)
+                }}
+              />
             ))}
           </div>
         ))}
+      <Dialog open={matchModalOpen} onOpenChange={setMatchModalOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          {selectedMatch && (
+            <div className="max-h-[80vh] overflow-y-auto overflow-x-hidden">
+              <MatchDetail match={selectedMatch} />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

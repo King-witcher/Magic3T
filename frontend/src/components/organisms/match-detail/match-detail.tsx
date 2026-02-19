@@ -2,7 +2,7 @@ import { GetMatchResult } from '@magic3t/api-types'
 import { Team } from '@magic3t/common-types'
 import { MatchRowEventType } from '@magic3t/database-types'
 import { Link } from '@tanstack/react-router'
-import { Check, Link2 } from 'lucide-react'
+import { Check, ChevronDown, ChevronsDown, ChevronsUp, ChevronUp, Link2 } from 'lucide-react'
 import { useState } from 'react'
 import { GiCrown, GiSwordClash } from 'react-icons/gi'
 import {
@@ -98,12 +98,25 @@ export function MatchDetail({ match, className }: MatchDetailProps) {
         <PlayerCard player={match.chaos} team={Team.Chaos} isWinner={match.winner === Team.Chaos} />
       </div>
 
+      {/* LP Changes */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 border-b border-gold-5/40 pb-2">
+          <h3 className="font-serif font-bold text-gold-3 uppercase tracking-wide text-sm">
+            Results
+          </h3>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <LpChangeCard player={match.order} label="Order" />
+          <LpChangeCard player={match.chaos} label="Chaos" />
+        </div>
+      </div>
+
       {/* Event Timeline */}
       {match.events.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2 border-b border-gold-5/40 pb-2">
             <h3 className="font-serif font-bold text-gold-3 uppercase tracking-wide text-sm">
-              Match Events
+              Event Timeline
             </h3>
           </div>
           <div className="space-y-1.5">
@@ -118,19 +131,6 @@ export function MatchDetail({ match, className }: MatchDetailProps) {
           </div>
         </div>
       )}
-
-      {/* LP Changes */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 border-b border-gold-5/40 pb-2">
-          <h3 className="font-serif font-bold text-gold-3 uppercase tracking-wide text-sm">
-            Rating Changes
-          </h3>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <LpChangeCard player={match.order} label="Order" />
-          <LpChangeCard player={match.chaos} label="Chaos" />
-        </div>
-      </div>
     </div>
   )
 }
@@ -161,14 +161,14 @@ function PlayerCard({ player, team, isWinner }: PlayerCardProps) {
 
       {/* Avatar */}
       <div className={cn('relative', isWinner && 'ring-2 ring-gold-4/50 rounded-full')}>
-        <AvatarRoot className="size-16 sm:size-20">
+        <AvatarRoot className="size-16 sm:size-24">
           <AvatarImage icon={501} />
-          <AvatarWing league={player.league} />
+          <AvatarWing league={player.league} type="plate" />
         </AvatarRoot>
       </div>
 
       {/* Name */}
-      <span className="font-serif font-bold text-gold-1 truncate max-w-full text-sm sm:text-base group-hover:text-gold-2 transition-colors">
+      <span className="font-serif font-bold text-gold-2 mt-2 truncate max-w-full text-sm sm:text-lg group-hover:text-gold-2 transition-colors">
         {player.name}
       </span>
 
@@ -254,7 +254,7 @@ interface LpChangeCardProps {
 function LpChangeCard({ player, label }: LpChangeCardProps) {
   const lpGain = player.lp_gain
   const lpColor = lpGain > 0 ? 'text-green-400' : lpGain < 0 ? 'text-red-400' : 'text-grey-1'
-  const lpPrefix = lpGain > 0 ? '+' : ''
+  const lpPrefix = lpGain > 0 ? <ChevronUp /> : <ChevronDown />
   const labelColor = label === 'Order' ? 'text-blue-400' : 'text-red-400'
 
   return (
@@ -262,11 +262,13 @@ function LpChangeCard({ player, label }: LpChangeCardProps) {
       <span className={cn('font-serif font-bold text-xs uppercase tracking-wider', labelColor)}>
         {label}
       </span>
-      <span className="font-serif text-gold-1 text-sm truncate max-w-full">{player.name}</span>
+      <span className="font-serif text-gold-1 text-md font-bold truncate max-w-full">
+        {player.name}
+      </span>
       {lpGain !== 0 ? (
-        <span className={cn('font-bold text-lg', lpColor)}>
+        <span className={cn('font-bold text-lg flex items-center', lpColor)}>
           {lpPrefix}
-          {lpGain} LP
+          {Math.abs(lpGain)} LP
         </span>
       ) : (
         <span className="text-grey-1 text-sm">No LP change</span>

@@ -1,7 +1,9 @@
 import { ComponentProps } from 'react'
 import { cn } from '@/lib/utils'
 
-export function Panel({ className, children, ...props }: ComponentProps<'div'>) {
+export type PanelProps = ComponentProps<'div'>
+
+export function Panel({ className, children, ...props }: PanelProps) {
   return (
     <div
       className={cn(
