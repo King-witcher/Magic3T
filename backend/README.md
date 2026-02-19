@@ -26,7 +26,7 @@ backend/src/
 ├── app.controller.ts        # Health check controller
 │
 ├── infra/                   # Infrastructure layer
-│   ├── database/            # Firestore repositories
+│   ├── firestore/           # Firestore repositories
 │   ├── firebase/            # Firebase Admin SDK setup
 │   └── websocket/           # WebSocket infrastructure
 │

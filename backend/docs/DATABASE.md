@@ -10,7 +10,7 @@ Este documento descreve a estrutura do banco de dados Firestore utilizado pelo M
 |---------|-------------------|
 | **Database** | Firebase Firestore |
 | **Tipos** | `@magic3t/database-types` |
-| **Repositories** | `backend/src/infra/database/repositories/` |
+| **Repositories** | `backend/src/infra/firestore/repositories/` |
 
 ---
 
@@ -330,7 +330,7 @@ Divisões dentro de cada liga (exceto Master e Challenger que não têm divisõe
 
 ## Repositories
 
-Os repositories encapsulam o acesso ao Firestore e ficam em `backend/src/infra/database/repositories/`.
+Os repositories encapsulam o acesso ao Firestore e ficam em `backend/src/infra/firestore/repositories/`.
 
 | Repository | Collection | Arquivo |
 |------------|------------|---------|
