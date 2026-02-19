@@ -1,7 +1,9 @@
 import { QueueClientEventsMap, QueueServerEvents, QueueServerEventsMap } from '@magic3t/api-types'
 import { BotName } from '@magic3t/database-types'
+import { UseGuards } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import { MessageBody, SubscribeMessage, WebSocketGateway } from '@nestjs/websockets'
+import { BanGuard } from '@/common/guards'
 import { BaseGateway } from '@/common/websocket/base.gateway'
 import { WebsocketCountingService } from '@/infra/websocket/websocket-counting.service'
 import { UserId } from '@/modules/auth/user-id.decorator'
@@ -10,6 +12,7 @@ import { GameModePipe } from './pipes/game-mode.pipe'
 import { QueueService } from './queue.service'
 
 @WebSocketGateway({ cors: { origin: CORS_ALLOWED_ORIGINS, credentials: true }, namespace: 'queue' })
+@UseGuards(BanGuard)
 export class QueueGateway extends BaseGateway<QueueClientEventsMap, QueueServerEventsMap, 'queue'> {
   constructor(
     private queueService: QueueService,

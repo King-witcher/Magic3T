@@ -19,6 +19,7 @@ import { Route as UsersNicknameRouteImport } from './routes/users/$nickname'
 import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthGuardedStoreRouteImport } from './routes/_auth-guarded/store'
+import { Route as AuthGuardedAdminRouteImport } from './routes/_auth-guarded/admin'
 import { Route as AuthGuardedMeRouteRouteImport } from './routes/_auth-guarded/me/route'
 import { Route as UsersIdUserIdRouteImport } from './routes/users/id/$userId'
 
@@ -70,6 +71,11 @@ const AuthGuardedStoreRoute = AuthGuardedStoreRouteImport.update({
   path: '/store',
   getParentRoute: () => AuthGuardedRoute,
 } as any)
+const AuthGuardedAdminRoute = AuthGuardedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthGuardedRoute,
+} as any)
 const AuthGuardedMeRouteRoute = AuthGuardedMeRouteRouteImport.update({
   id: '/me',
   path: '/me',
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/bianca': typeof BiancaRoute
   '/leaderboard': typeof LeaderboardRoute
   '/me': typeof AuthGuardedMeRouteRoute
+  '/admin': typeof AuthGuardedAdminRoute
   '/store': typeof AuthGuardedStoreRoute
   '/register': typeof AuthRegisterRoute
   '/sign-in': typeof AuthSignInRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/bianca': typeof BiancaRoute
   '/leaderboard': typeof LeaderboardRoute
   '/me': typeof AuthGuardedMeRouteRoute
+  '/admin': typeof AuthGuardedAdminRoute
   '/store': typeof AuthGuardedStoreRoute
   '/register': typeof AuthRegisterRoute
   '/sign-in': typeof AuthSignInRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/bianca': typeof BiancaRoute
   '/leaderboard': typeof LeaderboardRoute
   '/_auth-guarded/me': typeof AuthGuardedMeRouteRoute
+  '/_auth-guarded/admin': typeof AuthGuardedAdminRoute
   '/_auth-guarded/store': typeof AuthGuardedStoreRoute
   '/_auth/register': typeof AuthRegisterRoute
   '/_auth/sign-in': typeof AuthSignInRoute
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/bianca'
     | '/leaderboard'
     | '/me'
+    | '/admin'
     | '/store'
     | '/register'
     | '/sign-in'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/bianca'
     | '/leaderboard'
     | '/me'
+    | '/admin'
     | '/store'
     | '/register'
     | '/sign-in'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/bianca'
     | '/leaderboard'
     | '/_auth-guarded/me'
+    | '/_auth-guarded/admin'
     | '/_auth-guarded/store'
     | '/_auth/register'
     | '/_auth/sign-in'
@@ -243,6 +255,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthGuardedStoreRouteImport
       parentRoute: typeof AuthGuardedRoute
     }
+    '/_auth-guarded/admin': {
+      id: '/_auth-guarded/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthGuardedAdminRouteImport
+      parentRoute: typeof AuthGuardedRoute
+    }
     '/_auth-guarded/me': {
       id: '/_auth-guarded/me'
       path: '/me'
@@ -274,12 +293,14 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface AuthGuardedRouteChildren {
   AuthGuardedMeRouteRoute: typeof AuthGuardedMeRouteRoute
+  AuthGuardedAdminRoute: typeof AuthGuardedAdminRoute
   AuthGuardedStoreRoute: typeof AuthGuardedStoreRoute
   AuthGuardedIndexRoute: typeof AuthGuardedIndexRoute
 }
 
 const AuthGuardedRouteChildren: AuthGuardedRouteChildren = {
   AuthGuardedMeRouteRoute: AuthGuardedMeRouteRoute,
+  AuthGuardedAdminRoute: AuthGuardedAdminRoute,
   AuthGuardedStoreRoute: AuthGuardedStoreRoute,
   AuthGuardedIndexRoute: AuthGuardedIndexRoute,
 }

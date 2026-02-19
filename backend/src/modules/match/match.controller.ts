@@ -12,6 +12,7 @@ import {
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { clamp } from 'lodash'
 import { respondError } from '@/common'
+import { BanGuard } from '@/common/guards'
 import { MatchRepository } from '@/infra/database'
 import { AuthGuard } from '@/modules/auth/auth.guard'
 import { UserId } from '@/modules/auth/user-id.decorator'
@@ -84,7 +85,7 @@ export class MatchController {
   }
 
   @Get('current')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, BanGuard)
   handleCurrentMatch(@UserId() userId: string) {
     const perspective = this.matchBank.getPerspective(userId)
     // TODO: shouldn't return 404
@@ -95,7 +96,7 @@ export class MatchController {
   }
 
   @Get('me/am-active')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, BanGuard)
   handleActiveMatch(@UserId() userId: string) {
     const perspective = this.matchBank.getPerspective(userId)
     if (!perspective) return false

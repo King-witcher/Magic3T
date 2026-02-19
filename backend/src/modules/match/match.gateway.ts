@@ -15,6 +15,7 @@ import {
   WebSocketGateway,
 } from '@nestjs/websockets'
 import { ChoicePipe } from '@/common'
+import { BanGuard } from '@/common/guards'
 import { BaseGateway } from '@/common/websocket/base.gateway'
 import { WebsocketEmitterService } from '@/infra/websocket/websocket-emitter.service'
 import { UserId } from '@/modules/auth/user-id.decorator'
@@ -29,7 +30,7 @@ import { matchException } from './types/match-error'
 
 const MAX_MESSAGE_LENGTH = 500
 
-@UseGuards(AuthGuard, MatchGuard)
+@UseGuards(AuthGuard, BanGuard, MatchGuard)
 @WebSocketGateway({ cors: { origin: CORS_ALLOWED_ORIGINS, credentials: true }, namespace: 'match' })
 export class MatchGateway extends BaseGateway<GameClientEventsMap, GameServerEventsMap, 'match'> {
   constructor(

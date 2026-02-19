@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
+import { BanNotificationHandler } from '@/components/organisms/ban-notification-handler'
 import { AuthProvider } from '@/contexts/auth-context'
 import { GameProvider } from '@/contexts/game-context'
 import { LiveActivityProvider } from '@/contexts/live-activity.context'
@@ -36,7 +37,10 @@ export function Providers({ children }: Props) {
         <ServiceStatusProvider>
           <AuthProvider>
             <GameProvider>
-              <QueueProvider>{children}</QueueProvider>
+              <QueueProvider>
+                <BanNotificationHandler />
+                {children}
+              </QueueProvider>
             </GameProvider>
           </AuthProvider>
         </ServiceStatusProvider>

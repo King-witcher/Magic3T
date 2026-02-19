@@ -1,4 +1,6 @@
 import {
+  BanUserBody,
+  BanUserResult,
   ChangeIconCommand,
   ChangeNicknameCommand,
   CrashReportCommand,
@@ -7,6 +9,8 @@ import {
   ListMatchesResult,
   ListUsersResult,
   RegisterUserCommand,
+  UnbanUserBody,
+  UnbanUserResult,
 } from '@magic3t/api-types'
 import { QueueMode } from '@/types/queue'
 import { BaseApiClient } from './base-api-client'
@@ -119,10 +123,33 @@ export class QueueApiClient extends BaseApiClient {
   }
 }
 
+export class AdminApiClient extends BaseApiClient {
+  constructor() {
+    super('admin')
+  }
+
+  /**
+   * Bans a user temporarily or permanently.
+   */
+  async banUser(userId: string, reason: string, durationMinutes?: number): Promise<BanUserResult> {
+    const payload: BanUserBody = { userId, reason, durationMinutes }
+    return this.post<BanUserBody, BanUserResult>('ban-user', payload)
+  }
+
+  /**
+   * Unbans a user.
+   */
+  async unbanUser(userId: string): Promise<UnbanUserResult> {
+    const payload: UnbanUserBody = { userId }
+    return this.post<UnbanUserBody, UnbanUserResult>('unban-user', payload)
+  }
+}
+
 export class ApiClient extends BaseApiClient {
   public readonly user = new UserApiClient()
   public readonly match = new MatchApiClient()
   public readonly queue = new QueueApiClient()
+  public readonly admin = new AdminApiClient()
 
   /**
    * Gets the status of the API.

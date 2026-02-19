@@ -2,6 +2,7 @@ import { BotName } from '@magic3t/database-types'
 import { Body, Controller, Delete, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { respondError } from '@/common'
+import { BanGuard } from '@/common/guards'
 import { AuthGuard } from '@/modules/auth/auth.guard'
 import { UserId } from '@/modules/auth/user-id.decorator'
 import { EnqueueDto, QueueMode } from './dtos/enqueue-dto'
@@ -9,7 +10,7 @@ import { QueueService } from './queue.service'
 
 @Controller('queue')
 @ApiBearerAuth()
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, BanGuard)
 export class QueueController {
   // private readonly logger = new Logger(QueueController.name, {
   //   timestamp: true,
