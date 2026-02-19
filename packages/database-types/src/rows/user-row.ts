@@ -19,6 +19,16 @@ export const enum UserRole {
   Bot = 'bot',
 }
 
+/** Stores ban information for a user */
+export type UserBan = {
+  /** The reason for the ban */
+  reason: string
+  /** The date when the ban expires. null means the ban is permanent. */
+  expiresAt: Date | null
+  /** The id of the creator who issued the ban */
+  bannedBy: string
+}
+
 export type UserRow = {
   identification: {
     /** Nickname slug used to identify the user uniquely */
@@ -26,6 +36,9 @@ export type UserRow = {
     nickname: string
     last_changed: Date
   }
+
+  /** Ban data. If undefined or null, the user is not banned. */
+  ban?: UserBan | null
 
   experience: number
 
