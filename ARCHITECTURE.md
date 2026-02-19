@@ -47,7 +47,7 @@ backend/src/
 ├── app.controller.ts        # Controller de health check
 │
 ├── infra/                   # 🏗️ Infraestrutura (external services)
-│   ├── database/            # 💾 Camada de dados
+│   ├── firestore/           # 💾 Camada de dados (Firestore)
 │   │   ├── database.module.ts
 │   │   ├── database.service.ts
 │   │   └── repositories/    # Repositories por entidade
@@ -150,7 +150,7 @@ backend/src/
                     Fluxo detalhado dos módulos:
 
          ┌─────────┐        ┌──────────┐        ┌──────────┐
-         │  Auth   │◄───────│ Firebase │◄───────│ Database │
+         │  Auth   │◄───────│ Firebase │◄───────│ Firestore│
          └─────────┘        └──────────┘        └──────────┘
               │                   │                   │
               └───────────────────┼───────────────────┘
@@ -712,7 +712,7 @@ module-name/
 ### Exports
 Cada pasta com `index.ts` exporta sua API pública:
 ```typescript
-// database/index.ts
+// firestore/index.ts
 export * from './database.module'
 export * from './database.service'
 export * from './user'
