@@ -12,7 +12,7 @@ import {
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { clamp } from 'lodash'
 import { respondError } from '@/common'
-import { MatchRepository } from '@/infra/database'
+import { MatchRepository } from '@/infra/firestore'
 import { AuthGuard } from '@/modules/auth/auth.guard'
 import { UserId } from '@/modules/auth/user-id.decorator'
 import { CurrentPerspective } from './decorators'

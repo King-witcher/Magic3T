@@ -2,8 +2,8 @@ import { Team } from '@magic3t/common-types'
 import { MatchRow } from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
 import { FieldPath, Filter } from 'firebase-admin/firestore'
-import { DatabaseService } from '@/infra/database/database.service'
 import { FirebaseService } from '@/infra/firebase/firebase.service'
+import { FirestoreService } from '@/infra/firestore/firestore.service'
 import { ListResult } from '../../types/query-types'
 import { BaseFirestoreRepository } from '../base-repository'
 
@@ -11,7 +11,7 @@ import { BaseFirestoreRepository } from '../base-repository'
 export class MatchRepository extends BaseFirestoreRepository<MatchRow> {
   matchLogger = new Logger(MatchRepository.name, { timestamp: true })
 
-  constructor(databaseService: DatabaseService, firebaseService: FirebaseService) {
+  constructor(databaseService: FirestoreService, firebaseService: FirebaseService) {
     super(firebaseService.firestore, databaseService, 'matches')
   }
 

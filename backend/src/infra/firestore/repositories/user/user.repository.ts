@@ -2,8 +2,8 @@ import { IconAssignmentRow, UserRow } from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
 import { FirestoreDataConverter } from 'firebase-admin/firestore'
 import { unexpected } from '@/common'
-import { DatabaseService } from '@/infra/database/database.service'
 import { FirebaseService } from '@/infra/firebase/firebase.service'
+import { FirestoreService } from '@/infra/firestore/firestore.service'
 import { GetResult, ListResult } from '../../types/query-types'
 import { BaseFirestoreRepository } from '../base-repository'
 import { ConfigRepository } from '../config'
@@ -14,7 +14,7 @@ export class UserRepository extends BaseFirestoreRepository<UserRow> {
   private iconAssignmentConverter: FirestoreDataConverter<IconAssignmentRow>
 
   constructor(
-    databaseService: DatabaseService,
+    databaseService: FirestoreService,
     firebaseService: FirebaseService,
     private configService: ConfigRepository
   ) {

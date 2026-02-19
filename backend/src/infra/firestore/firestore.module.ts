@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common'
 import { FirebaseModule } from '@/infra/firebase'
-import { DatabaseService } from './database.service'
+import { FirestoreService } from './firestore.service'
 
 import {
   ConfigRepository,
@@ -13,18 +13,18 @@ import {
 @Module({
   imports: [FirebaseModule],
   providers: [
-    DatabaseService,
+    FirestoreService,
     UserRepository,
     MatchRepository,
     ConfigRepository,
     CrashReportsRepository,
   ],
   exports: [
-    DatabaseService,
+    FirestoreService,
     UserRepository,
     MatchRepository,
     ConfigRepository,
     CrashReportsRepository,
   ],
 })
-export class DatabaseModule {}
+export class FirestoreModule {}

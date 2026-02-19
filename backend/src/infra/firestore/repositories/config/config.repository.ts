@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { firestore } from 'firebase-admin'
-import { DatabaseService } from '@/infra/database/database.service'
 import { FirebaseService } from '@/infra/firebase/firebase.service'
+import { FirestoreService } from '@/infra/firestore/firestore.service'
 
 import CollectionReference = firestore.CollectionReference
 
@@ -19,7 +19,7 @@ export class ConfigRepository {
 
   constructor(
     firestoreService: FirebaseService,
-    private databaseService: DatabaseService
+    private databaseService: FirestoreService
   ) {
     this.collection = firestoreService.firestore.collection('config')
   }

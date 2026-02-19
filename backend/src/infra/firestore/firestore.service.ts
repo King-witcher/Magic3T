@@ -22,7 +22,7 @@ function convertToBase62(number: number) {
 }
 
 @Injectable()
-export class DatabaseService {
+export class FirestoreService {
   private readonly nonceArray: string[]
   private nonce = 0
 

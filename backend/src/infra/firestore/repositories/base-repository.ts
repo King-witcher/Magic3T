@@ -5,7 +5,7 @@ import {
   FirestoreDataConverter,
   UpdateData,
 } from 'firebase-admin/firestore'
-import { DatabaseService } from '@/infra/database/database.service'
+import { FirestoreService } from '@/infra/firestore/firestore.service'
 import { GetResult, ListResult } from '../types'
 
 /**
@@ -20,7 +20,7 @@ export abstract class BaseFirestoreRepository<T extends {}> {
 
   protected constructor(
     protected firestore: Firestore,
-    private databaseService: DatabaseService,
+    private databaseService: FirestoreService,
     protected collectionName: string
   ) {
     this.converter = databaseService.getDefaultConverter<T>()

@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { respondError } from '@/common'
-import { UserRepository } from '@/infra/database'
+import { UserRepository } from '@/infra/firestore'
 import { AuthenticRequest } from '@/modules/auth/auth-request'
 import { AuthenticSocket } from '@/modules/auth/auth-socket'
 

@@ -3,7 +3,7 @@ import { MatchRow, MatchRowGameMode, UserRow } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { FieldValue, UpdateData } from 'firebase-admin/firestore'
-import { MatchRepository, UserRepository } from '@/infra/database'
+import { MatchRepository, UserRepository } from '@/infra/firestore'
 import { RatingService } from '@/modules/rating'
 import { MatchFinishedEvent } from './events/match-finished-event'
 

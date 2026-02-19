@@ -1,6 +1,6 @@
 import { Team } from '@magic3t/common-types'
 import { Injectable } from '@nestjs/common'
-import { DatabaseService } from '@/infra/database'
+import { FirestoreService } from '@/infra/firestore'
 import { Match, MatchClassEventType } from './match'
 import { Perspective } from './perspective'
 
@@ -16,7 +16,7 @@ export class MatchBank {
   private perspectives: Map<string, Perspective> = new Map() // Maps user ids to matchAdapters
   private opponents: Map<string, string> = new Map()
 
-  constructor(private databaseService: DatabaseService) {}
+  constructor(private databaseService: FirestoreService) {}
 
   /** Create a match, assign it an internal id, register it in the bank and return the match id. */
   createAndRegisterMatch(...params: ConstructorParameters<typeof Match>): {

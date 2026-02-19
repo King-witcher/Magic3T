@@ -1,10 +1,10 @@
 import { Global, Module } from '@nestjs/common'
-import { DatabaseModule } from '@/infra/database'
+import { FirestoreModule } from '@/infra/firestore'
 import { RatingService } from './rating.service'
 
 @Global()
 @Module({
-  imports: [DatabaseModule],
+  imports: [FirestoreModule],
   providers: [RatingService],
   exports: [RatingService],
 })

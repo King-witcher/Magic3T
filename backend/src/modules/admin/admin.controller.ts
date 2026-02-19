@@ -1,6 +1,6 @@
 import { Controller, Post, UseGuards } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
-import { ConfigRepository, UserRepository } from '@/infra/database'
+import { ConfigRepository, UserRepository } from '@/infra/firestore'
 import { AuthGuard } from '@/modules/auth/auth.guard'
 import { AdminGuard } from './admin.guard'
 

@@ -4,7 +4,7 @@ import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/co
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { range } from 'lodash'
 import { respondError } from '@/common'
-import { ConfigRepository, UserRepository } from '@/infra/database'
+import { ConfigRepository, UserRepository } from '@/infra/firestore'
 import { AuthGuard } from '@/modules/auth/auth.guard'
 import { UserId } from '@/modules/auth/user-id.decorator'
 import {

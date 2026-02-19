@@ -1,7 +1,7 @@
 import { GetUserResult, ListUsersResultData } from '@magic3t/api-types'
 import { UserRow } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
-import { GetResult } from '@/infra/database/types'
+import { GetResult } from '@/infra/firestore/types'
 import { RatingService } from '@/modules/rating'
 
 @Injectable()

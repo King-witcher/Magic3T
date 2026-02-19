@@ -7,7 +7,7 @@ import { ScheduleModule } from '@nestjs/schedule'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { SentryModule } from '@sentry/nestjs/setup'
 import { ResponseErrorFilter, ThrottlingFilter, UnexpectedErrorFilter } from '@/common'
-import { DatabaseModule, FirebaseModule } from '@/infra'
+import { FirebaseModule, FirestoreModule } from '@/infra'
 import { AdminModule, AuthModule, QueueModule, RatingModule, UserModule } from '@/modules'
 import { AppController } from './app.controller'
 import { AppGateway } from './app.gateway'
@@ -46,7 +46,7 @@ import { WebsocketModule } from './infra/websocket/websocket.module'
     RatingModule,
     AuthModule,
     QueueModule,
-    DatabaseModule,
+    FirestoreModule,
     FirebaseModule,
     UserModule,
     AdminModule,

@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common'
-import { DatabaseModule } from '@/infra/database'
+import { FirestoreModule } from '@/infra/firestore'
 import { UserController } from './user.controller'
 import { UserService } from './user.service'
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [FirestoreModule],
   controllers: [UserController],
   providers: [UserService],
 })

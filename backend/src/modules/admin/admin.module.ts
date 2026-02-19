@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common'
-import { DatabaseModule } from '@/infra/database'
+import { FirestoreModule } from '@/infra/firestore'
 import { AdminController } from './admin.controller'
 import { AdminService } from './admin.service'
 
 @Module({
   controllers: [AdminController],
   providers: [AdminService],
-  imports: [DatabaseModule],
+  imports: [FirestoreModule],
 })
 export class AdminModule {}

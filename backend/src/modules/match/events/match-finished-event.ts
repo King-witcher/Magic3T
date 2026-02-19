@@ -1,5 +1,5 @@
 import { MatchRowEvent, UserRow, UserRowElo } from '@magic3t/database-types'
-import { GetResult } from '@/infra/database/types'
+import { GetResult } from '@/infra/firestore/types'
 
 export type MatchFinishedEvent = {
   order: {

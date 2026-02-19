@@ -4,7 +4,7 @@ import { OnGatewayConnection, OnGatewayInit, WebSocketServer } from '@nestjs/web
 import { EventNames, EventParams, EventsMap } from '@socket.io/component-emitter'
 import { DefaultEventsMap, Namespace, Server, Socket } from 'socket.io'
 
-import { UserRepository } from '@/infra/database'
+import { UserRepository } from '@/infra/firestore'
 import { WebsocketEmitterEvent } from '@/infra/websocket/types'
 import { WebsocketCountingService } from '@/infra/websocket/websocket-counting.service'
 import { AuthService } from '@/modules/auth/auth.service'
