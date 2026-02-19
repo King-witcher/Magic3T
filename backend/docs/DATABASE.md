@@ -57,6 +57,8 @@ type UserRow = {
 
   role: UserRole           // 'player' | 'creator' | 'bot'
 
+  ban?: UserBan | null      // Informações de banimento (ver abaixo)
+
   elo: UserRowElo          // Dados de rating (ver abaixo)
 
   stats: {
@@ -64,6 +66,27 @@ type UserRow = {
     draws: number
     defeats: number
   }
+}
+```
+
+### Campo `ban` (UserBan)
+
+```typescript
+type UserBan = {
+  type: UserBanType           // 'temporary' | 'permanent'
+  created_at: Date            // Data/hora do banimento
+  banned_by: string           // UID do criador que aplicou o ban
+  reason?: string             // Motivo opcional
+  expires_at?: Date | null    // Apenas para ban temporário
+}
+```
+
+### Enum `UserBanType`
+
+```typescript
+enum UserBanType {
+  Temporary = 'temporary',
+  Permanent = 'permanent',
 }
 ```
 

@@ -1,4 +1,4 @@
-import { IconAssignmentRow, UserRow } from '@magic3t/database-types'
+import { IconAssignmentRow, UserBan, UserRow } from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
 import { FirestoreDataConverter } from 'firebase-admin/firestore'
 import { unexpected } from '@/common'
@@ -109,6 +109,22 @@ export class UserRepository extends BaseFirestoreRepository<UserRow> {
       },
     })
     this.user_logger.verbose(`update user "${id}" nickname to ${nickname}.`)
+  }
+
+  /** Sets a user's ban data. */
+  async setBan(id: string, ban: UserBan): Promise<void> {
+    await this.collection.doc(id).update({
+      ban,
+    })
+    this.user_logger.verbose(`set ban for user "${id}".`)
+  }
+
+  /** Clears a user's ban data. */
+  async clearBan(id: string): Promise<void> {
+    await this.collection.doc(id).update({
+      ban: null,
+    })
+    this.user_logger.verbose(`cleared ban for user "${id}".`)
   }
 
   /// Gets all bot profiles, sorted by the bot name (bot0, bot1, bot2 and bot3)

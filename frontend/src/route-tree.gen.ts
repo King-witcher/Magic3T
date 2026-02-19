@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as BiancaRouteImport } from './routes/bianca'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthGuardedRouteImport } from './routes/_auth-guarded'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as TutorialRouteRouteImport } from './routes/tutorial/route'
@@ -30,6 +31,11 @@ const LeaderboardRoute = LeaderboardRouteImport.update({
 const BiancaRoute = BiancaRouteImport.update({
   id: '/bianca',
   path: '/bianca',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthGuardedRoute = AuthGuardedRouteImport.update({
@@ -84,6 +90,7 @@ const UsersIdUserIdRoute = UsersIdUserIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/tutorial': typeof TutorialRouteRoute
   '/': typeof AuthGuardedIndexRoute
+  '/admin': typeof AdminRoute
   '/bianca': typeof BiancaRoute
   '/leaderboard': typeof LeaderboardRoute
   '/me': typeof AuthGuardedMeRouteRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/tutorial': typeof TutorialRouteRoute
   '/': typeof AuthGuardedIndexRoute
+  '/admin': typeof AdminRoute
   '/bianca': typeof BiancaRoute
   '/leaderboard': typeof LeaderboardRoute
   '/me': typeof AuthGuardedMeRouteRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/tutorial': typeof TutorialRouteRoute
   '/_auth': typeof AuthRouteWithChildren
   '/_auth-guarded': typeof AuthGuardedRouteWithChildren
+  '/admin': typeof AdminRoute
   '/bianca': typeof BiancaRoute
   '/leaderboard': typeof LeaderboardRoute
   '/_auth-guarded/me': typeof AuthGuardedMeRouteRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/tutorial'
     | '/'
+    | '/admin'
     | '/bianca'
     | '/leaderboard'
     | '/me'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
   to:
     | '/tutorial'
     | '/'
+    | '/admin'
     | '/bianca'
     | '/leaderboard'
     | '/me'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/tutorial'
     | '/_auth'
     | '/_auth-guarded'
+    | '/admin'
     | '/bianca'
     | '/leaderboard'
     | '/_auth-guarded/me'
@@ -165,6 +177,7 @@ export interface RootRouteChildren {
   TutorialRouteRoute: typeof TutorialRouteRoute
   AuthRoute: typeof AuthRouteWithChildren
   AuthGuardedRoute: typeof AuthGuardedRouteWithChildren
+  AdminRoute: typeof AdminRoute
   BiancaRoute: typeof BiancaRoute
   LeaderboardRoute: typeof LeaderboardRoute
   UsersNicknameRoute: typeof UsersNicknameRoute
@@ -185,6 +198,13 @@ declare module '@tanstack/react-router' {
       path: '/bianca'
       fullPath: '/bianca'
       preLoaderRoute: typeof BiancaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth-guarded': {
@@ -292,6 +312,7 @@ const rootRouteChildren: RootRouteChildren = {
   TutorialRouteRoute: TutorialRouteRoute,
   AuthRoute: AuthRouteWithChildren,
   AuthGuardedRoute: AuthGuardedRouteWithChildren,
+  AdminRoute: AdminRoute,
   BiancaRoute: BiancaRoute,
   LeaderboardRoute: LeaderboardRoute,
   UsersNicknameRoute: UsersNicknameRoute,

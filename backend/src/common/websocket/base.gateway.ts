@@ -1,9 +1,9 @@
+import { UserBanType } from '@magic3t/database-types'
 import { Inject, UseFilters, UseGuards } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { OnGatewayConnection, OnGatewayInit, WebSocketServer } from '@nestjs/websockets'
 import { EventNames, EventParams, EventsMap } from '@socket.io/component-emitter'
 import { DefaultEventsMap, Namespace, Server, Socket } from 'socket.io'
-
 import { UserRepository } from '@/infra/database'
 import { WebsocketEmitterEvent } from '@/infra/websocket/types'
 import { WebsocketCountingService } from '@/infra/websocket/websocket-counting.service'
@@ -79,6 +79,54 @@ export class BaseGateway<
       })
       client.disconnect()
       return
+    }
+
+    const user = await this.usersRepository.getById(userId)
+    if (user?.data.ban) {
+      const ban = user.data.ban
+
+      if (ban.type === UserBanType.Permanent) {
+        client.send('error', {
+          errorCode: 'user-banned',
+          metadata: {
+            type: ban.type,
+            reason: ban.reason,
+            createdAt: ban.created_at,
+          },
+        })
+        client.disconnect()
+        return
+      }
+
+      const expiresAt = ban.expires_at
+      if (!expiresAt || !(expiresAt instanceof Date)) {
+        client.send('error', {
+          errorCode: 'user-banned',
+          metadata: {
+            type: ban.type,
+            reason: ban.reason,
+            createdAt: ban.created_at,
+          },
+        })
+        client.disconnect()
+        return
+      }
+
+      if (expiresAt.getTime() > Date.now()) {
+        client.send('error', {
+          errorCode: 'user-banned',
+          metadata: {
+            type: ban.type,
+            reason: ban.reason,
+            createdAt: ban.created_at,
+            expiresAt,
+          },
+        })
+        client.disconnect()
+        return
+      }
+
+      await this.usersRepository.clearBan(userId)
     }
 
     // Attach user ID to the socket data

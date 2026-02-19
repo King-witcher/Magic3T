@@ -139,6 +139,7 @@ export class UserController {
         challenger: false,
         matches: 0,
       },
+      ban: null,
       experience: 0,
       identification: {
         last_changed: new Date(),

@@ -19,6 +19,19 @@ export const enum UserRole {
   Bot = 'bot',
 }
 
+export const enum UserBanType {
+  Temporary = 'temporary',
+  Permanent = 'permanent',
+}
+
+export type UserBan = {
+  type: UserBanType
+  created_at: Date
+  banned_by: string
+  reason?: string
+  expires_at?: Date | null
+}
+
 export type UserRow = {
   identification: {
     /** Nickname slug used to identify the user uniquely */
@@ -39,6 +52,9 @@ export type UserRow = {
   summoner_icon: number
 
   role: UserRole
+
+  /** Ban information, if the user is currently or previously banned. */
+  ban?: UserBan | null
 
   elo: UserRowElo
 

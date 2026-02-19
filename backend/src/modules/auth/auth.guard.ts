@@ -1,7 +1,9 @@
+import { UserBanType } from '@magic3t/database-types'
 import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Socket } from 'socket.io'
 import { respondError } from '@/common'
+import { UserRepository } from '@/infra/database'
 import { AuthService } from './auth.service'
 import { AuthenticRequest } from './auth-request'
 import { SKIP_AUTH_KEY } from './skip-auth.decorator'
@@ -12,7 +14,8 @@ export class AuthGuard implements CanActivate {
 
   constructor(
     private readonly authService: AuthService,
-    private readonly reflector: Reflector
+    private readonly reflector: Reflector,
+    private readonly userRepository: UserRepository
   ) {}
 
   async canActivate(context: ExecutionContext) {
@@ -48,6 +51,7 @@ export class AuthGuard implements CanActivate {
     if (!token) respondError('unauthorized', 401, '"Authorization" header is missing')
     const userId = await this.authService.validateToken(token.replace('Bearer ', ''))
     if (!userId) respondError('unauthorized', 401, 'Invalid auth token')
+    await this.assertUserNotBanned(userId)
     request.userId = userId
     return true
   }
@@ -60,6 +64,42 @@ export class AuthGuard implements CanActivate {
       return false
     }
 
+    await this.assertUserNotBanned(socket.data.userId)
+
     return true
+  }
+
+  private async assertUserNotBanned(userId: string): Promise<void> {
+    const user = await this.userRepository.getById(userId)
+    if (!user || !user.data.ban) return
+
+    const ban = user.data.ban
+    if (ban.type === UserBanType.Permanent) {
+      respondError('user-banned', 403, {
+        type: ban.type,
+        reason: ban.reason,
+        createdAt: ban.created_at,
+      })
+    }
+
+    const expiresAt = ban.expires_at
+    if (!expiresAt || !(expiresAt instanceof Date)) {
+      respondError('user-banned', 403, {
+        type: ban.type,
+        reason: ban.reason,
+        createdAt: ban.created_at,
+      })
+    }
+
+    if (expiresAt.getTime() > Date.now()) {
+      respondError('user-banned', 403, {
+        type: ban.type,
+        reason: ban.reason,
+        createdAt: ban.created_at,
+        expiresAt,
+      })
+    }
+
+    await this.userRepository.clearBan(userId)
   }
 }

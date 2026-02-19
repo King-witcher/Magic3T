@@ -1,4 +1,5 @@
 import {
+  BanUserCommand,
   ChangeIconCommand,
   ChangeNicknameCommand,
   CrashReportCommand,
@@ -123,6 +124,7 @@ export class ApiClient extends BaseApiClient {
   public readonly user = new UserApiClient()
   public readonly match = new MatchApiClient()
   public readonly queue = new QueueApiClient()
+  public readonly admin = new AdminApiClient()
 
   /**
    * Gets the status of the API.
@@ -136,6 +138,19 @@ export class ApiClient extends BaseApiClient {
    */
   async reportCrash(data: CrashReportCommand): Promise<void> {
     await this.post('crash-report', data, false)
+  }
+}
+
+export class AdminApiClient extends BaseApiClient {
+  constructor() {
+    super('admin')
+  }
+
+  /**
+   * Bans a user by ID.
+   */
+  async banUser(userId: string, payload: BanUserCommand): Promise<void> {
+    await this.post<BanUserCommand, void>(`users/${userId}/ban`, payload)
   }
 }
 
