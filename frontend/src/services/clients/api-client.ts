@@ -10,6 +10,7 @@ import {
 } from '@magic3t/api-types'
 import { QueueMode } from '@/types/queue'
 import { BaseApiClient } from './base-api-client'
+import { AdminApiClient } from './admin-api-client'
 
 export class UserApiClient extends BaseApiClient {
   constructor() {
@@ -123,6 +124,7 @@ export class ApiClient extends BaseApiClient {
   public readonly user = new UserApiClient()
   public readonly match = new MatchApiClient()
   public readonly queue = new QueueApiClient()
+  public readonly admin = new AdminApiClient()
 
   /**
    * Gets the status of the API.

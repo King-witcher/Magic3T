@@ -3,6 +3,7 @@ import { FirebaseModule } from '@/infra/firebase'
 import { DatabaseService } from './database.service'
 
 import {
+  BanRepository,
   ConfigRepository,
   CrashReportsRepository,
   MatchRepository,
@@ -18,6 +19,7 @@ import {
     MatchRepository,
     ConfigRepository,
     CrashReportsRepository,
+    BanRepository,
   ],
   exports: [
     DatabaseService,
@@ -25,6 +27,7 @@ import {
     MatchRepository,
     ConfigRepository,
     CrashReportsRepository,
+    BanRepository,
   ],
 })
 export class DatabaseModule {}

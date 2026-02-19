@@ -1,3 +1,4 @@
+export * from './ban-row'
 export * from './config'
 export * from './crash-report-row'
 export * from './icon-assignment-row'

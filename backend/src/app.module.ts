@@ -8,12 +8,11 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 
 import { ResponseErrorFilter, ThrottlingFilter, UnexpectedErrorFilter } from '@/common'
 import { DatabaseModule, FirebaseModule } from '@/infra'
-import { AdminModule, AuthModule, QueueModule, RatingModule, UserModule } from '@/modules'
+import { AdminModule, AuthModule, BanGuard, QueueModule, RatingModule, UserModule } from '@/modules'
 
 import { AppController } from './app.controller'
 import { AppGateway } from './app.gateway'
 import { WebsocketModule } from './infra/websocket/websocket.module'
-import { WebsocketEmitterService } from './infra/websocket/websocket-emitter.service'
 
 @Global()
 @Module({
@@ -58,6 +57,10 @@ import { WebsocketEmitterService } from './infra/websocket/websocket-emitter.ser
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: BanGuard,
     },
     {
       provide: APP_FILTER,
