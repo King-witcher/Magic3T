@@ -13,7 +13,7 @@ export function LoadingSessionTemplate() {
   const { state } = useAuth()
 
   return (
-    <div className="center h-full flex-col px-4">
+    <div className="flex items-center justify-center h-full flex-col px-4">
       <Panel className="flex flex-col items-center gap-2 w-120 max-w-full">
         <h1 className="text-3xl text-gold-4 font-bold font-serif mt-3 uppercase">
           {STATUS_MAP[state]}

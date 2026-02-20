@@ -1,15 +1,6 @@
 import { ChangeIconCommand, ChangeNicknameCommand, RegisterUserCommand } from '@magic3t/api-types'
 import { ApiProperty } from '@nestjs/swagger'
-import {
-  IsDefined,
-  IsNumber,
-  IsString,
-  Matches,
-  Max,
-  MaxLength,
-  Min,
-  MinLength,
-} from 'class-validator'
+import { IsDefined, IsNumber, IsString, Matches, MaxLength, MinLength } from 'class-validator'
 
 export class RegisterUserCommandClass implements RegisterUserCommand {
   @IsDefined()

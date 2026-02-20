@@ -21,7 +21,7 @@ export function ModalLayout() {
           }`}
       />
       <div
-        className={`fixed inset-[20px] center z-10
+        className={`fixed inset-[20px] flex items-center justify-center z-10
           ${isOpen ? '' : 'pointer-events-none'}`}
       >
         <section

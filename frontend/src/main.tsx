@@ -5,8 +5,6 @@ import { RouterProvider } from '@tanstack/react-router'
 import { createRoot } from 'react-dom/client'
 import './prelude'
 import './main.css'
-import '@/styles/fonts.sass'
-import '@/styles/base.sass'
 import * as Sentry from '@sentry/react'
 import { router } from './router'
 
