@@ -1,11 +1,12 @@
 import type { GetUserResult } from '@magic3t/api-types'
 import { Link } from '@tanstack/react-router'
 import { Flag } from 'lucide-react'
-import { SmoothNumber, TimerValue, Tooltip } from '@/components/atoms'
+import { SmoothNumber, TimerValue } from '@/components/atoms'
+import { Tooltip } from '@/components/ui/tooltip'
 import type { Timer } from '@/lib/Timer'
 import { cn } from '@/lib/utils'
 import { divisionMap, leaguesMap } from '@/utils/ranks'
-import { getIconUrl } from '@/utils/utils'
+import { AvatarImage, AvatarRoot } from '../../profile/components/profile-avatar'
 
 interface PlayerPanelProps {
   profile: GetUserResult | null
@@ -35,8 +36,8 @@ export function PlayerPanel({
     <div
       className={cn(
         'relative w-full max-w-md',
-        'backdrop-blur-md rounded-lg overflow-hidden',
-        'border-2 transition-all duration-300',
+        'backdrop-blur-md rounded-lg',
+        'border-2 transition-all duration-300 overflow-hidden',
         isActive
           ? position === 'bottom'
             ? 'bg-linear-to-r from-blue-900/40 to-blue-800/40 border-blue-400/50 shadow-lg shadow-blue-500/20'
@@ -51,17 +52,9 @@ export function PlayerPanel({
           params={{ userId: profile?.id || '' }}
           className="shrink-0 transition-transform hover:scale-105 border-3 border-gold-7 rounded-full"
         >
-          <img
-            src={getIconUrl(profile?.summonerIcon || 0)}
-            alt="avatar"
-            className="rounded-full w-16 h-16"
-          />
-          {/* <UserAvatar
-            icon={profile?.summonerIcon || 0}
-            league={League.Provisional}
-            division={profile?.rating.division || null}
-            className="text-[60px]"
-          /> */}
+          <AvatarRoot className="size-16">
+            <AvatarImage icon={profile?.summonerIcon || 0} />
+          </AvatarRoot>
         </Link>
 
         {/* Player Info */}
@@ -128,7 +121,7 @@ export function PlayerPanel({
               <TimerValue timer={timer} pause={isPaused} />
             </div>
             {showSurrender && position === 'bottom' && (
-              <Tooltip label="Surrender">
+              <Tooltip text="Surrender">
                 <button
                   type="button"
                   onClick={onSurrender}
