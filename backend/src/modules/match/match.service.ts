@@ -5,7 +5,14 @@ import {
   MatchServerEvents,
 } from '@magic3t/api-types'
 import { Team } from '@magic3t/common-types'
-import { BotName, MatchRow, SingleBotConfig, UserRow } from '@magic3t/database-types'
+import {
+  BotName,
+  MatchRow,
+  SingleBotConfig,
+  UserRole,
+  UserRow,
+  UserRowElo,
+} from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { unexpected } from '@/common'
@@ -231,8 +238,6 @@ export class MatchService {
       }
     )
 
-    match.on(MatchClassEventType.Finish, () => {})
-
     // Subscribe to match finished event
     match.on(MatchClassEventType.Finish, async (summary) => {
       const orderScore = computeOrderScore(summary)
@@ -252,6 +257,23 @@ export class MatchService {
         chaosRatingConverter.eloRow.matches++
       }
 
+      // Do not update ratings for bots
+      const newOrderRating: UserRowElo =
+        order.data.role === UserRole.Bot
+          ? {
+              ...order.data.elo,
+              matches: order.data.elo.matches + 1,
+            }
+          : orderRatingConverter.eloRow
+
+      const newChaosRating: UserRowElo =
+        chaos.data.role === UserRole.Bot
+          ? {
+              ...chaos.data.elo,
+              matches: chaos.data.elo.matches + 1,
+            }
+          : chaosRatingConverter.eloRow
+
       // Create a finished event
       const finishEvent: MatchFinishedEvent = {
         order: {
@@ -259,14 +281,15 @@ export class MatchService {
           matchScore: orderScore,
           row: order,
           time: summary.order.timeSpent,
-          newRating: orderRatingConverter.eloRow,
+          // Do not update rating for bots
+          newRating: newOrderRating,
         },
         chaos: {
           id: chaos.id,
           row: chaos,
           matchScore: 1 - orderScore,
           time: summary.chaos.timeSpent,
-          newRating: chaosRatingConverter.eloRow,
+          newRating: newChaosRating,
         },
         events: match.events,
         ranked,
