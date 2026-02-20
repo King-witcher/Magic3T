@@ -1,5 +1,5 @@
 import '../src/main.css'
-import '../src/styles/fonts.sass'
+import '../src/styles/fonts.css'
 import { GlobalProvider } from '@ladle/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
