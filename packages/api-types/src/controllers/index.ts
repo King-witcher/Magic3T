@@ -1,3 +1,6 @@
+export * from './admin'
 export * from './match'
+export * from './queue'
+export * from './root'
 export * from './root'
 export * from './user'

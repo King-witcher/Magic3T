@@ -11,5 +11,8 @@
   },
   "files": [
     "src"
-  ]
+  ],
+  "devDependencies": {
+    "@magic3t/database-types": "*"
+  }
 }

@@ -1,4 +1,5 @@
 import {
+  Admin,
   ChangeIconCommand,
   ChangeNicknameCommand,
   CrashReportCommand,
@@ -12,6 +13,19 @@ import {
 import { QueueMode } from '@/types/queue'
 import { BaseApiClient } from './base-api-client'
 
+export class AdminApiClient extends BaseApiClient {
+  constructor() {
+    super('admin')
+  }
+
+  /**
+   * Gets a list of all user accounts, including their authentication and rating information.
+   */
+  listAccounts(): Promise<Admin.ListAccountsResult> {
+    return this.get('accounts')
+  }
+}
+
 export class UserApiClient extends BaseApiClient {
   constructor() {
     super('users')
@@ -21,7 +35,7 @@ export class UserApiClient extends BaseApiClient {
    * Gets a user by ID.
    */
   async getById(id: string): Promise<GetUserResult> {
-    return this.get<GetUserResult>(`id/${id}`, false)
+    return this.get(`id/${id}`, false)
   }
 
   /**
@@ -131,6 +145,7 @@ export class ApiClient extends BaseApiClient {
   public readonly user = new UserApiClient()
   public readonly match = new MatchApiClient()
   public readonly queue = new QueueApiClient()
+  public readonly admin = new AdminApiClient()
 
   /**
    * Gets the status of the API.

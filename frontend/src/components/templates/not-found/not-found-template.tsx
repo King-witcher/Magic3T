@@ -6,7 +6,7 @@ import { Panel } from '@/components/ui/panel'
 
 export function NotFoundTemplate() {
   return (
-    <div className="center flex-col h-full px-4">
+    <div className="flex items-center justify-center flex-col h-full px-4">
       <Panel className="flex flex-col items-center max-w-150 w-full">
         {/* Icon */}
         <div className="relative mb-6">

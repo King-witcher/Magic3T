@@ -22,11 +22,11 @@ export class AuthService {
   }
 
   /**
-   * Gets all user records from Firebase Auth, up to 1000.
+   * Gets all user records from Firebase Auth, up to 100.
    */
-  async getAllUsers(nextPageToken?: string): Promise<[UserRecord[], string?]> {
+  async listAccounts(nextPageToken?: string): Promise<[UserRecord[], string?]> {
     const firebaseAuth = this.firebaseService.firebaseAuth
-    const listResult = await firebaseAuth.listUsers(1000, nextPageToken)
+    const listResult = await firebaseAuth.listUsers(100, nextPageToken)
     return [listResult.users, listResult.pageToken]
   }
 }
