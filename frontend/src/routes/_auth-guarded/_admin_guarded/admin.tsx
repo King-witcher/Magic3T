@@ -46,9 +46,7 @@ function AdminPage() {
             <h1 className="font-serif font-bold text-4xl sm:text-5xl text-gold-4 uppercase tracking-wide">
               Admin Panel
             </h1>
-            <p className="text-grey-1 text-sm mt-2 uppercase tracking-wider">
-              Account Management
-            </p>
+            <p className="text-grey-1 text-sm mt-2 uppercase tracking-wider">Account Management</p>
           </div>
 
           {/* Search */}
@@ -172,13 +170,9 @@ function AccountRow({
       </div>
 
       {/* Rank badge */}
-      {hasData && user.rating && (
-        <RankBadge league={user.rating.league} />
-      )}
+      {hasData && user.rating && <RankBadge league={user.rating.league} />}
 
-      {!hasData && (
-        <span className="text-xs text-grey-1-5 italic shrink-0">No data</span>
-      )}
+      {!hasData && <span className="text-xs text-grey-1-5 italic shrink-0">No data</span>}
     </button>
   )
 }
@@ -237,10 +231,7 @@ function AccountDetail({ user }: { user: Admin.ListAccountsResultItem }) {
             <Field label="Score" value={user.userRow.elo.score.toFixed(1)} />
             <Field label="K-Factor" value={String(user.userRow.elo.k)} />
             <Field label="Ranked Matches" value={String(user.userRow.elo.matches)} />
-            <Field
-              label="Challenger"
-              value={user.userRow.elo.challenger ? 'Yes' : 'No'}
-            />
+            <Field label="Challenger" value={user.userRow.elo.challenger ? 'Yes' : 'No'} />
           </Section>
 
           {/* Stats */}
@@ -288,12 +279,7 @@ function Field({ label, value, mono }: { label: string; value: string; mono?: bo
   return (
     <div className="flex justify-between items-baseline gap-2 py-0.5">
       <span className="text-xs text-grey-1 uppercase tracking-wider shrink-0">{label}</span>
-      <span
-        className={cn(
-          'text-sm text-gold-1 text-right truncate',
-          mono && 'font-mono text-xs'
-        )}
-      >
+      <span className={cn('text-sm text-gold-1 text-right truncate', mono && 'font-mono text-xs')}>
         {value}
       </span>
     </div>
