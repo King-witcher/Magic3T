@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { Loading, NotFoundTemplate, ProfileTemplate } from '@/components/templates'
+import { useClientQuery } from '@/hooks/use-client-query'
 import { apiClient } from '@/services/clients/api-client'
 import { NotFoundError } from '@/services/clients/client-error'
 
@@ -11,24 +11,21 @@ export const Route = createFileRoute('/users/$nickname')({
 
 function RouteComponent() {
   const { nickname } = Route.useParams()
-
   const slug = nickname.toLowerCase().replaceAll(' ', '')
 
-  const userQuery = useQuery({
-    queryKey: ['user-by-nickname', slug],
-    async queryFn() {
-      return apiClient.user.getByNickname(nickname)
+  const userQuery = useClientQuery(apiClient.user, 'getByNickname', slug, { authenticated: false })
+  const matchesQuery = useClientQuery(
+    apiClient.match,
+    'listUserMatches',
+    {
+      limit: 20,
+      userId: userQuery.data?.id ?? '',
     },
-  })
-
-  const matchesQuery = useQuery({
-    enabled: !!userQuery.data,
-    queryKey: ['matches', userQuery.data?.id],
-    staleTime: Number.POSITIVE_INFINITY,
-    async queryFn() {
-      return apiClient.match.getMatchesByUser(userQuery.data?.id || '', 20)
-    },
-  })
+    {
+      staleTime: Number.POSITIVE_INFINITY,
+      enabled: !!userQuery.data,
+    }
+  )
 
   switch (userQuery.status) {
     case 'pending': {

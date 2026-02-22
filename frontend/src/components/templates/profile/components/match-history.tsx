@@ -1,4 +1,4 @@
-import { GetMatchResult, ListMatchesResult } from '@magic3t/api-types'
+import { Match } from '@magic3t/api-types'
 import { UseQueryResult } from '@tanstack/react-query'
 import { useState } from 'react'
 import { GiSwordClash } from 'react-icons/gi'
@@ -8,12 +8,12 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { MatchHistoryItem } from './match-history-item'
 
 interface MatchHistoryProps {
-  matchesQuery: UseQueryResult<ListMatchesResult, Error>
+  matchesQuery: UseQueryResult<Match.ListMatchesResult, Error>
   currentUserId: string
 }
 
 export function MatchHistory({ matchesQuery, currentUserId }: MatchHistoryProps) {
-  const [selectedMatch, setSelectedMatch] = useState<GetMatchResult | null>(null)
+  const [selectedMatch, setSelectedMatch] = useState<Match.FindMatchResult | null>(null)
   const [matchModalOpen, setMatchModalOpen] = useState(false)
 
   return (

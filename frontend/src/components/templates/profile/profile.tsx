@@ -1,4 +1,4 @@
-import { GetUserResult, ListMatchesResult } from '@magic3t/api-types'
+import { GetUserResult, Match } from '@magic3t/api-types'
 import { UseQueryResult } from '@tanstack/react-query'
 import { Panel } from '@/components/ui/panel'
 import { useRegisterCommand } from '@/hooks/use-register-command'
@@ -10,7 +10,7 @@ import { ProfileStats } from './components/profile-stats'
 
 interface Props {
   user: GetUserResult
-  matchesQuery: UseQueryResult<ListMatchesResult, Error>
+  matchesQuery: UseQueryResult<Match.ListMatchesResult, Error>
 }
 
 export function ProfileTemplate({ user, matchesQuery }: Props) {

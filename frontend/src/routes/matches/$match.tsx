@@ -1,8 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { MatchDetail } from '@/components/organisms/match-detail'
 import { Loading, NotFoundTemplate } from '@/components/templates'
 import { Panel } from '@/components/ui/panel'
+import { useClientQuery } from '@/hooks/use-client-query'
 import { apiClient } from '@/services/clients/api-client'
 import { NotFoundError } from '@/services/clients/client-error'
 
@@ -13,13 +13,7 @@ export const Route = createFileRoute('/matches/$match')({
 function RouteComponent() {
   const { match: matchId } = Route.useParams()
 
-  const matchQuery = useQuery({
-    queryKey: ['match', matchId],
-    async queryFn() {
-      return apiClient.match.getById(matchId)
-    },
-  })
-
+  const matchQuery = useClientQuery(apiClient.match, 'getById', matchId)
   switch (matchQuery.status) {
     case 'pending':
       return <Loading />

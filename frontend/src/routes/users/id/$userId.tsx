@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { Loading, NotFoundTemplate, ProfileTemplate } from '@/components/templates'
+import { useClientQuery } from '@/hooks/use-client-query'
 import { apiClient } from '@/services/clients/api-client'
 import { NotFoundError } from '@/services/clients/client-error'
 
@@ -12,22 +12,20 @@ export const Route = createFileRoute('/users/id/$userId')({
 function Page() {
   const { userId } = Route.useParams()
 
-  const userQuery = useQuery({
-    queryKey: ['user', userId],
-    async queryFn() {
-      return apiClient.user.getById(userId)
-    },
-  })
+  const userQuery = useClientQuery(apiClient.user, 'getById', userId)
 
-  const matchesQuery = useQuery({
-    enabled: !!userQuery.data,
-    queryKey: ['matches', userQuery.data?.id],
-    staleTime: Number.POSITIVE_INFINITY,
-    async queryFn() {
-      return apiClient.match.getMatchesByUser(userQuery.data?.id || '', 20)
+  const matchesQuery = useClientQuery(
+    apiClient.match,
+    'listUserMatches',
+    {
+      limit: 20,
+      userId: userQuery.data?.id ?? '',
     },
-  })
-
+    {
+      staleTime: Number.POSITIVE_INFINITY,
+      enabled: !!userQuery.data,
+    }
+  )
   switch (userQuery.status) {
     case 'pending': {
       return <Loading />

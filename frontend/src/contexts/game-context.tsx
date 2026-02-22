@@ -7,7 +7,6 @@ import {
   MatchServerEvents,
 } from '@magic3t/api-types'
 import { Choice, Team } from '@magic3t/common-types'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createContext,
   type ReactNode,
@@ -18,6 +17,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import { useClientQuery } from '@/hooks/use-client-query'
 import { useGateway } from '@/hooks/use-gateway'
 import { useListener } from '@/hooks/use-listener'
 import { useObservable } from '@/hooks/use-observable'
@@ -66,26 +66,17 @@ export const GameContext = createContext<GameContextData | null>(null)
 // Refactor this and use white and black isntead of player and opponent
 export function GameProvider({ children }: Props) {
   const auth = useAuth()
-  const client = useQueryClient()
   const [matchId, setMatchId] = useState<string | null>(null)
   const isActive = !!matchId
   const [orderId, setOrderId] = useState<null | string>(null)
   const [chaosId, setChaosId] = useState<null | string>(null)
-  const orderQuery = useQuery({
-    queryKey: ['user', orderId],
-    queryFn: async () => {
-      if (!orderId) return null
-      return apiClient.user.getById(orderId)
-    },
-    initialData: null,
+  const orderQuery = useClientQuery(apiClient.user, 'getById', orderId!, {
+    enabled: !!orderId,
+    authenticated: false,
   })
-  const chaosQuery = useQuery({
-    queryKey: ['user', chaosId],
-    queryFn: async () => {
-      if (!chaosId) return null
-      return apiClient.user.getById(chaosId)
-    },
-    initialData: null,
+  const chaosQuery = useClientQuery(apiClient.user, 'getById', chaosId!, {
+    enabled: !!chaosId,
+    authenticated: false,
   })
 
   const orderProfile = orderQuery.data
@@ -162,17 +153,15 @@ export function GameProvider({ children }: Props) {
     MatchServerEvents.MatchReport,
     (report) => {
       if (!auth.signedIn) return
-      client.setQueryData(['user', orderId], (oldData: GetUserResult | null) => {
-        if (!oldData) return oldData
+      orderQuery.setData((oldData: GetUserResult | undefined) => {
         return {
-          ...oldData,
+          ...oldData!,
           rating: report[Team.Order].newRating,
         }
       })
-      client.setQueryData(['user', chaosId], (oldData: GetUserResult | null) => {
-        if (!oldData) return oldData
+      chaosQuery.setData((oldData: GetUserResult | undefined) => {
         return {
-          ...oldData,
+          ...oldData!,
           rating: report[Team.Chaos].newRating,
         }
       })
@@ -317,14 +306,14 @@ export function GameProvider({ children }: Props) {
         teams: {
           [Team.Order]: {
             choices: orderChoices,
-            profile: orderProfile,
+            profile: orderProfile ?? null,
             timer: orderTimer.current,
             gain: finalReport?.[Team.Order].lpGain || null,
             score: finalReport?.[Team.Order].score || null,
           },
           [Team.Chaos]: {
             choices: chaosChoices,
-            profile: chaosProfile,
+            profile: chaosProfile ?? null,
             timer: chaosTimer.current,
             gain: finalReport?.[Team.Chaos].lpGain || null,
             score: finalReport?.[Team.Chaos].score || null,

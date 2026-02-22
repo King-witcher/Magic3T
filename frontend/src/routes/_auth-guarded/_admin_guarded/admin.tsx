@@ -1,7 +1,6 @@
 import type { Admin } from '@magic3t/api-types'
 import { League } from '@magic3t/common-types'
 import { UserRole } from '@magic3t/database-types'
-import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { GiCrown, GiRobotGrab } from 'react-icons/gi'
@@ -9,6 +8,7 @@ import { Spinner } from '@/components/atoms'
 import { Panel } from '@/components/ui'
 import { Input } from '@/components/ui/input'
 import { Tooltip } from '@/components/ui/tooltip'
+import { useClientQuery } from '@/hooks/use-client-query'
 import { cn } from '@/lib/utils'
 import { apiClient } from '@/services/clients/api-client'
 import { divisionMap, leaguesMap } from '@/utils/ranks'
@@ -22,10 +22,7 @@ function AdminPage() {
   const [search, setSearch] = useState('')
   const [selectedUser, setSelectedUser] = useState<Admin.ListAccountsResultItem | null>(null)
 
-  const usersQuery = useQuery({
-    queryKey: ['admin', 'accounts'],
-    queryFn: () => apiClient.admin.listAccounts(),
-  })
+  const usersQuery = useClientQuery(apiClient.admin, 'listAccounts', { authenticated: true })
 
   const users = usersQuery.data?.users ?? []
   const filteredUsers = users.filter((user) => {

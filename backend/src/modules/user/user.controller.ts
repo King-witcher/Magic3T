@@ -16,7 +16,7 @@ import { UserService } from './user.service'
 
 const baseIcons = new Set([...range(59, 79), ...range(0, 30)])
 
-@Controller('users')
+@Controller('user')
 export class UserController {
   constructor(
     private readonly userService: UserService,

@@ -1,28 +1,22 @@
 import { League } from '@magic3t/common-types'
 import { UserRole } from '@magic3t/database-types'
-import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { GiCrown, GiRobotGrab } from 'react-icons/gi'
-import { Loading } from '@/components/templates'
 import { Panel } from '@/components/ui'
 import { Tooltip } from '@/components/ui/tooltip'
+import { useClientQuery } from '@/hooks/use-client-query'
 import { cn } from '@/lib/utils'
 import { apiClient } from '@/services/clients/api-client'
 import { divisionMap, leaguesMap } from '@/utils/ranks'
 import { getIconUrl } from '@/utils/utils'
 
 export const Route = createFileRoute('/leaderboard')({
-  pendingComponent: () => <Loading />,
-  component: () => <RankingTemplate />,
+  component: () => <LeaderboardTemplate />,
 })
 
-export function RankingTemplate() {
-  const rankingQuery = useSuspenseQuery({
-    queryKey: ['leaderboard'],
-    staleTime: 120 * 1000,
-    async queryFn() {
-      return await apiClient.user.getRanking()
-    },
+export function LeaderboardTemplate() {
+  const query = useClientQuery(apiClient.user, 'getRanking', {
+    authenticated: false,
   })
 
   return (
@@ -35,14 +29,14 @@ export function RankingTemplate() {
               Leaderboard
             </h1>
             <p className="text-grey-1 text-sm mt-2 uppercase tracking-wider">
-              Top {rankingQuery.data.data.length} Magic3T Players
+              Top {query.data?.data.length} Magic3T Players
             </p>
           </div>
 
           {/* Ranking List */}
-          {rankingQuery.isSuccess && (
+          {query.isSuccess && (
             <div className="space-y-2">
-              {rankingQuery.data.data.map((user, index) => {
+              {query.data.data.map((user, index) => {
                 const isApex =
                   user.rating.league === League.Master || user.rating.league === League.Challenger
                 const leagueInfo = leaguesMap[user.rating.league]

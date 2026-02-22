@@ -1,5 +1,4 @@
 import { GetUserResult } from '@magic3t/api-types'
-import { useQuery } from '@tanstack/react-query'
 import {
   createContext,
   type ReactNode,
@@ -9,6 +8,7 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react'
+import { useClientQuery } from '@/hooks/use-client-query'
 import { useRegisterCommand } from '@/hooks/use-register-command'
 import { authClient } from '@/lib/auth-client'
 import { Console } from '@/lib/console'
@@ -60,7 +60,7 @@ interface Props {
   children?: ReactNode
 }
 
-const AuthContext = createContext<AuthContextData | null>(null)
+export const AuthContext = createContext<AuthContextData | null>(null)
 
 export function AuthProvider({ children }: Props) {
   // This state is only true while we're waiting for the initial auth state to load
@@ -80,14 +80,9 @@ export function AuthProvider({ children }: Props) {
     () => authClient.userId ?? null
   )
 
-  const userQuery = useQuery({
-    queryKey: ['user-by-id', userId],
+  const userQuery = useClientQuery(apiClient.user, 'getById', userId!, {
     enabled: !!userId,
-    queryFn: async () => {
-      Console.log('Loading user...')
-      if (!userId) throw new Error('No user ID')
-      return apiClient.user.getById(userId)
-    },
+    authenticated: false,
   })
 
   useRegisterCommand(

@@ -8,7 +8,7 @@ import './main.css'
 import * as Sentry from '@sentry/react'
 import { router } from './router'
 
-console.clear()
+// console.clear()
 
 const rootElement = document.getElementById('root')!
 const reactRoot = createRoot(rootElement, {

@@ -1,8 +1,8 @@
 import {
   GameClientEventsMap,
   GameServerEventsMap,
+  Match,
   MatchClientEvents,
-  MatchError,
   MatchServerEvents,
   MessagePayload,
 } from '@magic3t/api-types'
@@ -60,7 +60,7 @@ export class MatchGateway extends BaseGateway<GameClientEventsMap, GameServerEve
     }
 
     const opponent = this.matchService.getOpponent(uid)
-    if (!opponent) matchException(MatchError.MatchNotFound)
+    if (!opponent) matchException(Match.Error.MatchNotFound)
 
     // Sanitize message content
     const sanitizedMessage = body.trim().slice(0, MAX_MESSAGE_LENGTH)

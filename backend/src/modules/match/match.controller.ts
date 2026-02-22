@@ -1,4 +1,4 @@
-import { GetMatchResult, ListMatchesResult } from '@magic3t/api-types'
+import { Match } from '@magic3t/api-types'
 import {
   Controller,
   Get,
@@ -21,7 +21,7 @@ import { MatchGuard } from './match.guard'
 import { MatchService } from './match.service'
 import { ListMatchesResultClass } from './swagger/list-matches'
 
-@Controller('matches')
+@Controller('match')
 export class MatchController {
   constructor(
     private matchBank: MatchBank,
@@ -107,7 +107,7 @@ export class MatchController {
     summary: 'Get match by ID',
     description: 'Get a specific match by its ID',
   })
-  async getMatchById(@Param('matchId') matchId: string): Promise<GetMatchResult> {
+  async getMatchById(@Param('matchId') matchId: string): Promise<Match.GetCurrentMatchResult> {
     const row = await this.matchRepository.getById(matchId)
     if (!row) respondError('match-not-found', 404, 'Match not found.')
     return this.matchService.getMatchByRow(row)
@@ -124,7 +124,7 @@ export class MatchController {
   async getMatchesByUser(
     @Query('limit', ParseIntPipe) limit: number,
     @Param('userId') userId: string
-  ): Promise<ListMatchesResult> {
+  ): Promise<Match.ListMatchesResult> {
     const clampedLimit = clamp(limit, 0, 50)
     const rows = await this.matchRepository.getByUser(userId, clampedLimit)
     const matches = await Promise.all(

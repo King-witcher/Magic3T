@@ -1,9 +1,4 @@
-import {
-  GetMatchResult,
-  ListMatchesResultItem,
-  MatchError,
-  MatchServerEvents,
-} from '@magic3t/api-types'
+import { Match as MatchNamespace, MatchServerEvents } from '@magic3t/api-types'
 import { Team } from '@magic3t/common-types'
 import {
   BotName,
@@ -47,7 +42,7 @@ export class MatchService {
     // Get profiles
     const userProfilePromise = this.getProfile(userId)
     const botConfig = await this.configRepository.getBotConfig(botId)
-    if (!botConfig) matchException(MatchError.BotNotFound, 404)
+    if (!botConfig) matchException(MatchNamespace.Error.BotNotFound, 404)
 
     const [userProfile, botProfile] = await Promise.all([
       userProfilePromise,
@@ -182,7 +177,7 @@ export class MatchService {
     return !this.matchBank.containsUser(userId)
   }
 
-  async getMatchByRow(match: GetResult<MatchRow>): Promise<GetMatchResult> {
+  async getMatchByRow(match: GetResult<MatchRow>): Promise<MatchNamespace.GetCurrentMatchResult> {
     return {
       events: match.data.events,
       id: match.id,
@@ -193,7 +188,9 @@ export class MatchService {
     }
   }
 
-  async getListedMatchByRow(match: GetResult<MatchRow>): Promise<ListMatchesResultItem> {
+  async getListedMatchByRow(
+    match: GetResult<MatchRow>
+  ): Promise<MatchNamespace.ListMatchesResultItem> {
     return {
       events: match.data.events,
       id: match.id,

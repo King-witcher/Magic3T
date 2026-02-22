@@ -1,4 +1,4 @@
-import { MatchError, StateReportPayload } from '@magic3t/api-types'
+import { Match as MatchNamespace, StateReportPayload } from '@magic3t/api-types'
 import { Choice, Team } from '@magic3t/common-types'
 import { MatchRowEvent, MatchRowEventType } from '@magic3t/database-types'
 import { Observable, Stopwatch } from '@/common'
@@ -131,8 +131,8 @@ export class Match extends Observable<MatchClassEventsMap> {
 
   public handleChoice(team: Team, choice: Choice): void {
     // TODO: Impvoe encapsulation of errors
-    if (this.turn !== team) matchException(MatchError.WrongTurn)
-    if (!this.isAvailable(choice)) matchException(MatchError.ChoiceUnavailable)
+    if (this.turn !== team) matchException(MatchNamespace.Error.WrongTurn)
+    if (!this.isAvailable(choice)) matchException(MatchNamespace.Error.ChoiceUnavailable)
 
     this[Team.Order].timer.pause()
     this[Team.Chaos].timer.pause()
@@ -167,7 +167,7 @@ export class Match extends Observable<MatchClassEventsMap> {
   }
 
   public handleSurrender(side: Team): void {
-    if (this.turn === null) matchException(MatchError.WrongTurn)
+    if (this.turn === null) matchException(MatchNamespace.Error.WrongTurn)
 
     const player = this[side]
     player.surrender = true

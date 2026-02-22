@@ -1,11 +1,12 @@
-import { useMutation } from '@tanstack/react-query'
 import { useRouter } from '@tanstack/react-router'
 import { ChangeEvent, SubmitEvent, useState } from 'react'
 import { GiCrystalShine } from 'react-icons/gi'
+import { toast } from 'sonner'
 import { Button, Input } from '@/components/atoms'
 import { Label } from '@/components/ui/label'
 import { Panel, PanelDivider } from '@/components/ui/panel'
 import { useSignedAuth } from '@/contexts/auth-context'
+import { useClientMutation } from '@/hooks/use-client-mutation'
 import { apiClient } from '@/services/clients/api-client'
 
 export function ChooseNicknameTemplate() {
@@ -14,15 +15,7 @@ export function ChooseNicknameTemplate() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  const changeNickMutation = useMutation({
-    mutationKey: ['register', nickname],
-    async mutationFn() {
-      if (nickname.length < 3) throw new Error('nickname must contain at least 3 characters')
-
-      await apiClient.user.register({
-        nickname,
-      })
-    },
+  const changeNickMutation = useClientMutation(apiClient.user, 'register', {
     onMutate() {
       setError(null)
     },
@@ -31,7 +24,9 @@ export function ChooseNicknameTemplate() {
       router.navigate({ to: '/tutorial' })
     },
     onError(e) {
-      setError(e.message.replace(/^(.)/, (match) => match.toUpperCase()))
+      const error = e.message.replace(/^(.)/, (match) => match.toUpperCase())
+      setError(error)
+      toast.error(error)
     },
   })
 
@@ -47,7 +42,7 @@ export function ChooseNicknameTemplate() {
 
   function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
-    changeNickMutation.mutate()
+    changeNickMutation.mutate({ nickname })
   }
 
   return (

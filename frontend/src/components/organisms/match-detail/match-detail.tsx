@@ -1,8 +1,8 @@
-import { GetMatchResult } from '@magic3t/api-types'
+import { Match } from '@magic3t/api-types'
 import { Team } from '@magic3t/common-types'
 import { MatchRowEventType } from '@magic3t/database-types'
 import { Link } from '@tanstack/react-router'
-import { Check, ChevronDown, ChevronsDown, ChevronsUp, ChevronUp, Link2 } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, Link2 } from 'lucide-react'
 import { useState } from 'react'
 import { GiCrown, GiSwordClash } from 'react-icons/gi'
 import {
@@ -17,7 +17,7 @@ import { leaguesMap } from '@/utils/ranks'
 const DIVISIONS = ['I', 'II', 'III', 'IV', 'V']
 
 interface MatchDetailProps {
-  match: GetMatchResult
+  match: Match.FindMatchResult
   className?: string
 }
 
@@ -138,7 +138,7 @@ export function MatchDetail({ match, className }: MatchDetailProps) {
 /* ─── Sub-components ─── */
 
 interface PlayerCardProps {
-  player: GetMatchResult['order']
+  player: Match.FindMatchResult['order']
   team: Team
   isWinner: boolean
 }
@@ -193,7 +193,7 @@ function PlayerCard({ player, team, isWinner }: PlayerCardProps) {
 }
 
 interface EventRowProps {
-  event: GetMatchResult['events'][number]
+  event: Match.FindMatchResult['events'][number]
   orderName: string
   chaosName: string
 }
@@ -247,7 +247,7 @@ function EventRow({ event, orderName, chaosName }: EventRowProps) {
 }
 
 interface LpChangeCardProps {
-  player: GetMatchResult['order']
+  player: Match.FindMatchResult['order']
   label: string
 }
 

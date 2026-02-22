@@ -1,3 +1,4 @@
+import { ApiNamespace } from '@magic3t/api-types'
 import { authClient } from '@/lib/auth-client'
 import { Console, SystemCvars } from '@/lib/console'
 import {
@@ -9,15 +10,15 @@ import {
   UnauthorizedError,
 } from './client-error'
 
-type RequestParams<T = unknown> = {
-  endpoint: string
-  method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
-  payload?: T
+type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+
+export type ClientRequestOptions = {
   authenticated?: boolean
+  signal?: AbortSignal
 }
 
-export class BaseApiClient {
-  constructor(public readonly namespace?: string) {}
+export class BaseApiClient<Namespace extends ApiNamespace = ApiNamespace> {
+  constructor(public readonly namespace: Namespace) {}
 
   private get apiUrl(): string {
     // This value is stored on a CVar for easy configuration during development and production.
@@ -28,61 +29,60 @@ export class BaseApiClient {
     return this.namespace ? `${this.apiUrl}/${this.namespace}` : this.apiUrl
   }
 
-  protected async get<T>(endpoint: string, authenticated = true): Promise<T> {
-    return this.request<unknown, T>({ endpoint, method: 'GET', payload: null, authenticated })
+  protected async get<T>(endpoint: string, options?: ClientRequestOptions): Promise<T> {
+    return this.request<unknown, T>('GET', endpoint, undefined, options)
   }
 
   protected async post<TPayload, TResonse>(
     endpoint: string,
     payload: TPayload,
-    authenticated = true
+    options?: ClientRequestOptions
   ): Promise<TResonse> {
-    return this.request<TPayload, TResonse>({ endpoint, method: 'POST', payload, authenticated })
+    return this.request<TPayload, TResonse>('POST', endpoint, payload, options)
   }
 
   protected async put<TPayload, TResonse>(
     endpoint: string,
     payload: TPayload,
-    authenticated = true
+    options?: ClientRequestOptions
   ): Promise<TResonse> {
-    return this.request<TPayload, TResonse>({ endpoint, method: 'PUT', payload, authenticated })
+    return this.request<TPayload, TResonse>('PUT', endpoint, payload, options)
   }
 
   protected async patch<TPayload, TResonse>(
     endpoint: string,
     payload: TPayload,
-    authenticated = true
+    options?: ClientRequestOptions
   ): Promise<TResonse> {
-    return this.request<TPayload, TResonse>({ endpoint, method: 'PATCH', payload, authenticated })
+    return this.request<TPayload, TResonse>('PATCH', endpoint, payload, options)
   }
 
-  protected async delete<TResonse>(endpoint: string, authenticated = true): Promise<TResonse> {
-    return this.request<unknown, TResonse>({
-      endpoint,
-      method: 'DELETE',
-      payload: null,
-      authenticated,
-    })
+  protected async delete<TResonse>(
+    endpoint: string,
+    options?: ClientRequestOptions
+  ): Promise<TResonse> {
+    return this.request<unknown, TResonse>('DELETE', endpoint, undefined, options)
   }
 
-  private async request<TPayload, TResonse>({
-    endpoint,
-    payload,
-    authenticated = true,
-    method = 'GET',
-  }: RequestParams<TPayload>): Promise<TResonse> {
+  private async request<TPayload, TResonse>(
+    method: HTTPMethod,
+    endpoint: string,
+    payload?: TPayload | undefined,
+    { authenticated = true, signal }: ClientRequestOptions = {}
+  ): Promise<TResonse> {
     const url = `${this.basePath}/${endpoint}`
     const headers = new Headers()
     const init: RequestInit = {
       method,
       headers,
+      signal,
     }
 
     // If there is a payload, serialize it as JSON and add it to the request body.
-    if (payload) {
-      if (method === 'GET' || method === 'DELETE') {
-        throw new Error(`Payload is not supported for HTTP method '${method}'`)
-      }
+    if (payload !== undefined) {
+      if (method === 'GET' || method === 'DELETE')
+        Console.log(`Payload is not supported for HTTP method '${method}'`)
+
       headers.set('Content-Type', 'application/json')
       init.body = JSON.stringify(payload)
     }

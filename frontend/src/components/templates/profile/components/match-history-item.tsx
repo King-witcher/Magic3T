@@ -1,4 +1,4 @@
-import { ListMatchesResultItem } from '@magic3t/api-types'
+import { Match } from '@magic3t/api-types'
 import { Team } from '@magic3t/common-types'
 import { ComponentProps } from 'react'
 import { Tooltip } from '@/components/ui/tooltip'
@@ -7,7 +7,7 @@ import { leaguesMap } from '@/utils/ranks'
 import { AvatarImage, AvatarRoot, AvatarWing } from './profile-avatar'
 
 type MatchHistoryItemProps = ComponentProps<'button'> & {
-  match: ListMatchesResultItem
+  match: Match.ListMatchesResultItem
   currentUserId: string
 }
 

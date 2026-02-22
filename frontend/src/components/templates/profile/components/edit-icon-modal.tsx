@@ -1,5 +1,4 @@
 import { GetUserResult } from '@magic3t/api-types'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,6 +10,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useSignedAuth } from '@/contexts/auth-context'
+import { useClientMutation } from '@/hooks/use-client-mutation'
+import { useClientQuery } from '@/hooks/use-client-query'
 import { apiClient } from '@/services/clients/api-client'
 import { getIconUrl } from '@/utils/utils'
 import { IconGrid } from './icon-grid'
@@ -39,34 +40,25 @@ type InnerProps = {
 function EditIconModalInner({ currentIcon, onClose }: InnerProps) {
   const [selectedIcon, setSelectedIcon] = useState(currentIcon)
   const auth = useSignedAuth()
-  const queryClient = useQueryClient()
 
-  const iconsQuery = useQuery({
-    queryKey: ['my-icons', auth.userId],
-    queryFn: () => apiClient.user.getMyIcons(),
+  const userQuery = useClientQuery(apiClient.user, 'getById', auth.userId, { authenticated: false })
+  const iconsQuery = useClientQuery(apiClient.user, 'getMyIcons', {
     staleTime: 60 * 1000, // 1 minute
   })
 
-  const updateIconMutation = useMutation({
-    mutationKey: ['update-icon', selectedIcon],
-    async mutationFn(iconId: number) {
-      await apiClient.user.updateIcon(iconId)
-    },
+  const updateIconMutation = useClientMutation(apiClient.user, 'updateIcon', {
     onMutate() {
-      queryClient.setQueryData(
-        ['user-by-id', auth.userId],
-        (oldData: GetUserResult | undefined) => {
-          if (!oldData) return oldData
-          return {
-            ...oldData,
-            summonerIcon: selectedIcon,
-          }
+      userQuery.setData((oldData: GetUserResult | undefined) => {
+        if (!oldData) return oldData!
+        return {
+          ...oldData,
+          summonerIcon: selectedIcon,
         }
-      )
+      })
       onClose()
     },
     onError() {
-      queryClient.invalidateQueries({ queryKey: ['user-by-id', auth.userId] })
+      userQuery.invalidate()
     },
   })
 

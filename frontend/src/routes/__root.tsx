@@ -4,12 +4,14 @@ import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { NotFoundTemplate, RootLayout } from '@/components/templates'
+import { Toaster } from '@/components/ui/sonner'
 import { GlobalErrorTemplate } from './-global-error'
 import { Providers } from './-providers'
 
 export const Route = createRootRoute({
   component: () => (
     <Providers>
+      <Toaster />
       <RootLayout>
         <Outlet />
       </RootLayout>
