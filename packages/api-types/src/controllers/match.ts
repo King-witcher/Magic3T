@@ -28,7 +28,7 @@ export namespace Match {
   export type GetCurrentMatchResult = object
 
   /** Represents possible errors that can occur in the match domain */
-  export const enum Error {
+  export const enum MatchError {
     /** Error when a player is already participating in another match */
     AlreadyInMatch = 'alreadyInMatch',
     /** Error when the specified bot cannot be found */

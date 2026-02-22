@@ -42,7 +42,7 @@ export class MatchService {
     // Get profiles
     const userProfilePromise = this.getProfile(userId)
     const botConfig = await this.configRepository.getBotConfig(botId)
-    if (!botConfig) matchException(MatchNamespace.Error.BotNotFound, 404)
+    if (!botConfig) matchException(MatchNamespace.MatchError.BotNotFound, 404)
 
     const [userProfile, botProfile] = await Promise.all([
       userProfilePromise,
