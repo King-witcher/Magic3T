@@ -5,6 +5,8 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
+console.log(process.env.NODE_ENV)
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -23,7 +25,6 @@ export default defineConfig({
     sentryVitePlugin({
       org: 'magic3t',
       project: 'magic3t-frontend',
-      disable: process.env.NODE_ENV !== 'production',
     }),
   ],
   server: {
