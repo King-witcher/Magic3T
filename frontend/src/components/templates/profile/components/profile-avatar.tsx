@@ -21,7 +21,7 @@ export function AvatarImage({ icon, className, ...props }: AvatarImageProps) {
     <img
       src={getIconUrl(icon)}
       alt={`icon ${icon}`}
-      className={cn('rounded-full shadow-lg shadow-gold-5/40', className)}
+      className={cn('rounded-full shadow-lg shadow-gold-5/40 relative', className)}
       {...props}
     />
   )
@@ -49,6 +49,30 @@ export function AvatarWing({ league, type = 'plate' }: AvatarWingProps) {
           src={type === 'wing' ? leagueInfo.wing : leagueInfo.plate}
           alt={leagueInfo.name}
         />
+      </div>
+    </div>
+  )
+}
+
+type AvatarWingAnimationProps = {
+  league: League
+}
+export function AvatarWingAnimation({ league }: AvatarWingAnimationProps) {
+  const leagueInfo = leaguesMap[league]
+
+  if (!leagueInfo.animation) return null
+
+  return (
+    <div className="absolute inset-0">
+      <div
+        className={cn(
+          'absolute h-auto left-1/2 -translate-x-1/2 ',
+          league === League.Provisional
+            ? 'top-1/2 w-1264/683 -translate-y-1/2' // Unranked
+            : 'w-287/96 -translate-y-467/992' // Ranked
+        )}
+      >
+        <video className="w-full h-auto" src={leagueInfo.animation} autoPlay loop muted />
       </div>
     </div>
   )

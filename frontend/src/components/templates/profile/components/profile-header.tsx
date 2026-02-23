@@ -6,7 +6,13 @@ import { Tooltip } from '@/components/ui/tooltip'
 import { useSignedAuth } from '@/contexts/auth-context'
 import { EditAvatarOverlay } from './edit-avatar-overlay'
 import { EditIconModal } from './edit-icon-modal'
-import { AvatarDivision, AvatarImage, AvatarRoot, AvatarWing } from './profile-avatar'
+import {
+  AvatarDivision,
+  AvatarImage,
+  AvatarRoot,
+  AvatarWing,
+  AvatarWingAnimation,
+} from './profile-avatar'
 
 interface ProfileHeaderProps {
   user: GetUserResult
@@ -22,10 +28,11 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
       <div className="flex flex-col items-center gap-6">
         {/* Profile Avatar */}
         <AvatarRoot className="mt-24">
+          <AvatarWingAnimation league={user.rating.league} />
           <AvatarImage icon={user.summonerIcon} />
+          {isOwnProfile && <EditAvatarOverlay onClick={() => setEditIconOpen(true)} />}
           <AvatarWing league={user.rating.league} type="wing" />
           {user.rating.division && <AvatarDivision division={user.rating.division} />}
-          {isOwnProfile && <EditAvatarOverlay onClick={() => setEditIconOpen(true)} />}
         </AvatarRoot>
 
         {/* User Info */}

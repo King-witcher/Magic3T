@@ -7,6 +7,7 @@ export type LeagueInfo = {
   icon: string
   plate: string
   name: string
+  animation?: string
 }
 
 export const leaguesMap: Record<League, LeagueInfo> = {
@@ -43,6 +44,7 @@ export const leaguesMap: Record<League, LeagueInfo> = {
     name: 'Gold',
   },
   [League.Diamond]: {
+    // animation: `${import.meta.env.VITE_CDN_URL}/leagues/videos/diamond.webm`,
     emblem: `${import.meta.env.VITE_CDN_URL}/leagues/emblems/diamond.png`,
     emblemOldest: `${import.meta.env.VITE_CDN_URL}/ranks-old/diamond.png`,
     wing: `${import.meta.env.VITE_CDN_URL}/leagues/wings/diamond.png`,
@@ -51,6 +53,7 @@ export const leaguesMap: Record<League, LeagueInfo> = {
     name: 'Diamond',
   },
   [League.Master]: {
+    animation: `${import.meta.env.VITE_CDN_URL}/leagues/videos/master.webm`,
     emblem: `${import.meta.env.VITE_CDN_URL}/leagues/emblems/master.png`,
     emblemOldest: `${import.meta.env.VITE_CDN_URL}/ranks-old/master.png`,
     wing: `${import.meta.env.VITE_CDN_URL}/leagues/wings/master.png`,
@@ -59,6 +62,7 @@ export const leaguesMap: Record<League, LeagueInfo> = {
     name: 'Master',
   },
   [League.Challenger]: {
+    animation: `${import.meta.env.VITE_CDN_URL}/leagues/videos/challenger.webm`,
     emblem: `${import.meta.env.VITE_CDN_URL}/leagues/emblems/challenger.png`,
     emblemOldest: `${import.meta.env.VITE_CDN_URL}/ranks-old/challenger.png`,
     wing: `${import.meta.env.VITE_CDN_URL}/leagues/wings/challenger.png`,
