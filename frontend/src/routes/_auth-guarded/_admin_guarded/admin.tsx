@@ -25,14 +25,20 @@ function AdminPage() {
   const usersQuery = useClientQuery(apiClient.admin, 'listAccounts', { authenticated: true })
 
   const users = usersQuery.data?.users ?? []
-  const filteredUsers = users.filter((user) => {
-    if (!search) return true
-    const query = search.toLowerCase()
-    if (user.id.toLowerCase().includes(query)) return true
-    if (user.userRow?.identification.nickname.toLowerCase().includes(query)) return true
-    if (user.userRow?.identification.unique_id.toLowerCase().includes(query)) return true
-    return false
-  })
+  const filteredUsers = users
+    .filter((user) => {
+      if (!search) return true
+      const query = search.toLowerCase()
+      if (user.id.toLowerCase().includes(query)) return true
+      if (user.userRow?.identification.nickname.toLowerCase().includes(query)) return true
+      if (user.userRow?.identification.unique_id.toLowerCase().includes(query)) return true
+      return false
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.metadata.lastSignInTime).getTime() -
+        new Date(a.metadata.lastSignInTime).getTime()
+    )
 
   return (
     <div className="w-full min-h-full p-4 sm:p-8 flex justify-center items-start">
@@ -191,6 +197,8 @@ function AccountDetail({ user }: { user: Admin.ListAccountsResultItem }) {
       {/* Identity */}
       <Section title="Identity">
         <Field label="Auth ID" value={user.id} mono />
+        <Field label="Email" value={user.accountData.email} />
+        <Field label="Display Name" value={user.accountData.displayName} />
         {hasData && (
           <>
             <Field label="Nickname" value={user.userRow.identification.nickname} />
@@ -199,6 +207,13 @@ function AccountDetail({ user }: { user: Admin.ListAccountsResultItem }) {
           </>
         )}
         {!hasData && <p className="text-grey-1 text-sm italic">User has not registered yet.</p>}
+      </Section>
+
+      {/* Session */}
+      <Section title="Session">
+        <Field label="Last Sign-In Time" value={user.metadata.lastSignInTime} mono />
+        <Field label="Creation Time" value={user.metadata.creationTime} mono />
+        <Field label="Last Refresh Time" value={user.metadata.lastRefreshTime ?? 'N/A'} mono />
       </Section>
 
       {hasData && (

@@ -48,6 +48,15 @@ export class AdminController {
           return {
             id: user.uid,
             userRow: null,
+            metadata: {
+              lastSignInTime: user.metadata.lastSignInTime,
+              creationTime: user.metadata.creationTime,
+              lastRefreshTime: user.metadata.lastRefreshTime ?? null,
+            },
+            accountData: {
+              displayName: user.displayName ?? 'not provided',
+              email: user.email ?? 'not provided',
+            },
             rating: null,
           }
         }
@@ -56,6 +65,15 @@ export class AdminController {
         const rating = converter.ratingData
         return {
           id: user.uid,
+          metadata: {
+            lastSignInTime: user.metadata.lastSignInTime,
+            creationTime: user.metadata.creationTime,
+            lastRefreshTime: user.metadata.lastRefreshTime ?? null,
+          },
+          accountData: {
+            displayName: user.displayName ?? 'not provided',
+            email: user.email ?? 'not provided',
+          },
           userRow: userRow.data,
           rating,
         }
