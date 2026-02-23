@@ -125,7 +125,9 @@ __root.tsx                    # Layout raiz (sempre renderiza)
 ├── _auth-guarded.tsx         # Layout que requer autenticação
 │   ├── index.tsx             # / (home/lobby)
 │   ├── store.tsx             # /store
-│   └── me/route.tsx          # /me (perfil próprio)
+│   ├── me/route.tsx          # /me (perfil próprio)
+│   └── _admin_guarded/       # Layout que requer role Creator
+│       └── admin.tsx         # /admin (painel administrativo)
 │
 ├── leaderboard.tsx           # /leaderboard (público)
 ├── tutorial/route.tsx        # /tutorial (público)
@@ -146,6 +148,12 @@ __root.tsx                    # Layout raiz (sempre renderiza)
 - Mostra `<LoadingSessionTemplate>` enquanto carrega
 - Mostra `<ChooseNicknameTemplate>` se não registrou nickname
 
+#### `_admin_guarded.tsx`
+- Aninhado dentro de `_auth-guarded`
+- Verifica se o usuário tem role `Creator`
+- Exibe `<NotFoundTemplate>` se não for admin
+- Renderiza `<Outlet>` normalmente para admins
+
 #### `_auth.tsx`
 - Redireciona para home se já autenticado
 - Layout específico para páginas de login/registro
@@ -153,11 +161,54 @@ __root.tsx                    # Layout raiz (sempre renderiza)
 ### Páginas Públicas
 
 | Rota | Arquivo | Descrição |
-|------|---------|-----------|
+|------|---------|----------|
 | `/leaderboard` | `leaderboard.tsx` | Ranking dos melhores jogadores |
 | `/tutorial` | `tutorial/route.tsx` | Guia de regras e estratégias |
 | `/playground` | `playground/route.tsx` | Simulador de partidas offline |
 | `/users/:nickname` | `users/$nickname.tsx` | Perfil público de jogador |
+
+### Páginas Protegidas (Admin)
+
+#### `/admin` — Painel Administrativo
+
+> Rota protegida: requer autenticação **e** role `Creator` (`_admin_guarded` layout).
+
+Permite gerenciar todas as contas do sistema (Firebase Auth + dados Firestore).
+
+**Funcionalidades:**
+- **Lista de contas**: exibe todas as contas Firebase Auth, com dados do Firestore quando disponíveis
+- **Busca**: filtragem por nickname, slug ou Auth ID
+- **Ordenação**: contas ordenadas pela data do último login (mais recentes primeiro)
+- **Painel de detalhes**: ao selecionar uma conta, mostra:
+  - **Identidade**: Auth ID, email, display name, nickname, slug e role
+  - **Sessão**: horários de último login, criação e último refresh
+  - **Rating**: liga, divisão e LP (quando registrado)
+  - **Elo**: score, K-factor, partidas ranqueadas e status Challenger
+  - **Estatísticas**: vitórias, empates e derrotas
+  - **Economia**: experiência, Magic Points e Perfect Squares
+  - Link para perfil público do jogador
+- Contas sem registro no Firestore aparecem como "Unregistered" / "No data"
+- Ícones indicam contas de Bot (`GiRobotGrab`) e Creator (`GiCrown`)
+
+**Tipo de retorno da API:**
+
+```typescript
+// packages/api-types — namespace Admin
+type ListAccountsResultItem = {
+  id: string
+  metadata: { lastSignInTime: string; creationTime: string; lastRefreshTime: string | null }
+  accountData: { displayName: string; email: string }
+} & (
+  | { userRow: UserRow; rating: RatingData }
+  | { userRow: null; rating: null }
+)
+
+type ListAccountsResult = { users: ListAccountsResultItem[] }
+```
+
+**Componentes locais:** `AccountRow`, `AccountDetail`, `RankBadge`, `Section`, `Field`, `StatBox`
+
+---
 
 #### `/playground` — Simulador de Partidas
 
@@ -296,6 +347,7 @@ class BaseApiClient {
 - `apiClient.user` - Operações de usuário
 - `apiClient.match` - Operações de partida
 - `apiClient.queue` - Operações de fila
+- `apiClient.admin` - Operações administrativas (requer role `Creator`)
 - `apiClient.status` - Status do servidor
 - `apiClient.crash` - Relatórios de erro
 

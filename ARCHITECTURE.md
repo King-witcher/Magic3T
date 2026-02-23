@@ -106,6 +106,7 @@ backend/src/
 │   │
 │   └── admin/               # 🛡️ Administração
 │       ├── admin.module.ts
+│       ├── admin.controller.ts
 │       ├── admin.guard.ts
 │       └── admin.service.ts
 │
@@ -221,6 +222,7 @@ frontend/src/
 ### `@magic3t/api-types`
 Tipos compartilhados entre frontend e backend:
 - **DTOs** de controllers (requests/responses)
+- **Namespace `Admin`** — tipos do painel administrativo (`ListAccountsResult`, `ListAccountsResultItem`)
 - **Eventos WebSocket** (QueueServerEvents, MatchServerEvents)
 - **Tipos de erro**
 
