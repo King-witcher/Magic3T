@@ -41,7 +41,7 @@ export class RatingConverter {
    *
    * Returns an integer value, or null if the user is provisional.
    */
-  public get lp(): number | null {
+  public get leaguePoints(): number | null {
     const totalPoints = this.totalPoints
     if (totalPoints === null) return null
 
@@ -124,19 +124,27 @@ export class RatingConverter {
     this.eloRow.score += surpriseFactor * this.eloRow.k
     opponent.eloRow.score -= surpriseFactor * opponent.eloRow.k
 
-    const [thisNewLp, opponentNewLp] = [this.lp, opponent.lp]
+    const [thisNewTotalPoints, opponentNewTotalPoints] = [this.totalPoints, opponent.totalPoints]
 
     // Get the LP gains
     const thisLpGain =
-      thisNewLp !== null && thisPreviousLp !== null ? thisNewLp - thisPreviousLp : 0
+      thisNewTotalPoints !== null && thisPreviousLp !== null
+        ? thisNewTotalPoints - thisPreviousLp
+        : 0
     const opponentLpGain =
-      opponentNewLp !== null && opponentPreviousLp !== null ? opponentNewLp - opponentPreviousLp : 0
+      opponentNewTotalPoints !== null && opponentPreviousLp !== null
+        ? opponentNewTotalPoints - opponentPreviousLp
+        : 0
 
     // Remove challenger status if falling below master
-    if (this.eloRow.challenger && thisNewLp && thisNewLp < TOTAL_MASTER_LP) {
+    if (this.eloRow.challenger && thisNewTotalPoints && thisNewTotalPoints < TOTAL_MASTER_LP) {
       this.eloRow.challenger = false
     }
-    if (opponent.eloRow.challenger && opponentNewLp && opponentNewLp < TOTAL_MASTER_LP) {
+    if (
+      opponent.eloRow.challenger &&
+      opponentNewTotalPoints &&
+      opponentNewTotalPoints < TOTAL_MASTER_LP
+    ) {
       opponent.eloRow.challenger = false
     }
 
@@ -157,7 +165,7 @@ export class RatingConverter {
     return {
       league: this.league,
       division: this.division,
-      points: this.lp,
+      points: this.leaguePoints,
       progress: this.bo5Progress,
     }
   }
