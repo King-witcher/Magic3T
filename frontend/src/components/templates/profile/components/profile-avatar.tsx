@@ -63,7 +63,7 @@ export function AvatarWingAnimation({ league }: AvatarWingAnimationProps) {
   if (!leagueInfo.animation) return null
 
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0 hidden md:block">
       <div
         className={cn(
           'absolute h-auto left-1/2 -translate-x-1/2 ',
