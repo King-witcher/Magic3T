@@ -1,10 +1,74 @@
 # Database - Magic3T
 
+O Magic3T utiliza duas camadas de persistência:
+
+| Banco | Uso principal | Módulo |
+|-------|--------------|--------|
+| **Firebase Firestore** | Usuários, partidas, configurações, crash-reports | `infra/firestore/` |
+| **PostgreSQL** | Dados relacionais (migração em andamento) | `infra/database/` |
+
+---
+
+## PostgreSQL (`DatabaseService`)
+
+O `DatabaseService` (`infra/database/database.service.ts`) gerencia um **pool de conexões** com o PostgreSQL utilizando a biblioteca `pg`.
+
+### Configuração
+
+As credenciais são lidas das variáveis de ambiente:
+
+| Variável | Descrição |
+|----------|-----------|
+| `PG_HOST` | Host do servidor PostgreSQL |
+| `PG_PORT` | Porta (padrão: `5432`) |
+| `PG_USER` | Usuário |
+| `PG_PASSWORD` | Senha |
+| `PG_DATABASE` | Nome do banco |
+
+SSL é habilitado automaticamente quando `PG_HOST !== 'localhost'`.
+
+Para desenvolvimento local, suba o PostgreSQL com:
+```bash
+docker compose up -d
+```
+
+### API
+
+```typescript
+class DatabaseService {
+  // Executa uma query parametrizada e retorna as linhas
+  query<T>(text: string, values?: unknown[]): Promise<T[]>
+
+  // Executa múltiplas queries em uma transação gerenciada
+  // (BEGIN / COMMIT automático, ROLLBACK em caso de erro)
+  transaction<T>(callback: (client: PoolClient) => Promise<T>): Promise<T>
+}
+```
+
+**Exemplo de uso:**
+```typescript
+// Query simples
+const rows = await this.databaseService.query<UserPgRow>(
+  'SELECT * FROM users WHERE id = $1',
+  [userId]
+)
+
+// Transação
+await this.databaseService.transaction(async (client) => {
+  await client.query('UPDATE users SET score = $1 WHERE id = $2', [score, userId])
+  await client.query('INSERT INTO rating_history ...')
+})
+```
+
+---
+
+## Firestore
+
 Este documento descreve a estrutura do banco de dados Firestore utilizado pelo Magic3T.
 
 ---
 
-## Visão Geral
+## Visão Geral (Firestore)
 
 | Aspecto | Tecnologia/Detalhe |
 |---------|-------------------|

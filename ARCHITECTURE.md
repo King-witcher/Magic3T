@@ -8,7 +8,7 @@ Este documento descreve a arquitetura técnica do projeto Magic3T, um jogo multi
 |--------|------------|
 | **Frontend** | React 19, TypeScript, Vite, TanStack Router, TanStack Query, Tailwind CSS, Radix UI |
 | **Backend** | NestJS, TypeScript, WebSockets (Socket.IO) |
-| **Database** | Firebase Firestore |
+| **Database** | Firebase Firestore, PostgreSQL (via `pg`) |
 | **Autenticação** | Firebase Authentication (Google Provider) |
 | **Observabilidade** | Sentry (Error tracking, Performance monitoring) - Backend e Frontend |
 | **Monorepo** | npm Workspaces |
@@ -47,9 +47,15 @@ backend/src/
 ├── app.controller.ts        # Controller de health check
 │
 ├── infra/                   # 🏗️ Infraestrutura (external services)
-│   ├── firestore/           # 💾 Camada de dados (Firestore)
+│   ├── infrastructure.module.ts  # Módulo agregador (@Global) - exporta todos abaixo
+│   │
+│   ├── database/            # 🐘 PostgreSQL (raw queries via `pg`)
 │   │   ├── database.module.ts
-│   │   ├── database.service.ts
+│   │   └── database.service.ts  # Pool de conexões, query(), transaction()
+│   │
+│   ├── firestore/           # 💾 Firebase Firestore
+│   │   ├── firestore.module.ts
+│   │   ├── firestore.service.ts
 │   │   └── repositories/    # Repositories por entidade
 │   │       ├── base-repository.ts
 │   │       ├── user/
@@ -150,28 +156,29 @@ backend/src/
 
                     Fluxo detalhado dos módulos:
 
-         ┌─────────┐        ┌──────────┐        ┌──────────┐
-         │  Auth   │◄───────│ Firebase │◄───────│ Firestore│
-         └─────────┘        └──────────┘        └──────────┘
-              │                   │                   │
-              └───────────────────┼───────────────────┘
-                                  │
-                   ┌──────────────┼──────────────┐
-                   │              │              │
-                   ▼              ▼              ▼
-              ┌─────────┐   ┌──────────┐   ┌─────────┐
-              │  Match  │◄──│  Queue   │   │  User   │
-              └─────────┘   └──────────┘   └─────────┘
-                   │              │
-                   ▼              │
-              ┌─────────┐        │
-              │ Rating  │◄───────┘
+                         ┌──────────────────────────────────┐
+                         │       InfrastructureModule       │
+                         │  (Firebase, Firestore, Database, │
+                         │         WebSocket)               │
+                         └────────────────┬─────────────────┘
+                                          │ exporta todos
+         ┌─────────┐                     │
+         │  Auth   │◄────────────────────┤
+         └─────────┘                     │
+              │                          │
+              └──────────────────────────┤
+                                         │
+                   ┌──────────┬──────────┴───────┐
+                   │          │                  │
+                   ▼          ▼                  ▼
+              ┌─────────┐  ┌──────────┐   ┌─────────┐
+              │  Match  │◄─│  Queue   │   │  User   │
+              └─────────┘  └──────────┘   └─────────┘
+                   │            │
+                   ▼            │
+              ┌─────────┐      │
+              │ Rating  │◄─────┘
               └─────────┘
-                   │
-                   ▼
-         ┌────────────────┐
-         │ WebsocketModule│ (emite eventos para gateways)
-         └────────────────┘
 ```
 
 ---
@@ -395,7 +402,20 @@ Player A                    Backend                    Player B
 
 ---
 
-## Database (Firestore)
+## Infraestrutura de Dados
+
+### PostgreSQL (`infra/database/`)
+
+O `DatabaseService` gerencia um **pool de conexões** com o PostgreSQL via `pg`.
+
+| Método | Descrição |
+|--------|-----------|
+| `query<T>(text, values?)` | Executa uma query parametrizada e retorna as linhas |
+| `transaction<T>(callback)` | Executa múltiplas queries em uma transação (com BEGIN/COMMIT/ROLLBACK automático) |
+
+SSL é habilitado automaticamente em produção (`PG_HOST !== 'localhost'`).
+
+### Firestore (`infra/firestore/`)
 
 ### Collections
 
@@ -483,10 +503,19 @@ npm run build        # Build de produção
 
 ### Backend (`.env`)
 ```env
+PORT=3000
 FIREBASE_ADMIN_CREDENTIALS=<base64 do JSON de credenciais>
 FIRESTORE_DB=<nome do database>
-PORT=3000
+
+# PostgreSQL
+PG_HOST=localhost
+PG_PORT=5432
+PG_USER=dev
+PG_PASSWORD=let-me-in
+PG_DATABASE=magic3t
 ```
+
+> Para desenvolvimento local, suba o PostgreSQL com `docker compose up -d`.
 
 ### Frontend (`.env`)
 ```env
@@ -685,7 +714,7 @@ async handleConnection(client: Socket) {
 | Rate limiting WebSocket | ✅ | WsThrottlerGuard customizado |
 | Headers de segurança | ✅ | Helmet middleware |
 | Validação de entrada | ✅ | ValidationPipe + class-validator |
-| Container não-root | ✅ | `USER node` no Dockerfile |
+| Container não-root | ✅ | `USER node` no `frontend/Dockerfile` |
 | Sanitização de mensagens | ✅ | Limite de tamanho e trim |
 
 ---

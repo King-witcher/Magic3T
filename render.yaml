@@ -27,6 +27,18 @@ services:
       - key: SENTRY_AUTH_TOKEN
         sync: false
 
+      # Postgres
+      - key: PG_HOST
+        value: ep-curly-morning-aiu6a597-pooler.c-4.us-east-1.aws.neon.tech
+      - key: PG_PORT
+        value: "5432"
+      - key: PG_USER
+        value: magic3t_backend
+      - key: PG_DATABASE
+        value: magic3t
+      - key: PG_PASSWORD
+        sync: false
+
       - key: DEBUG
         value: "false"
     healthCheckPath: /status

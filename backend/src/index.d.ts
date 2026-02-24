@@ -18,6 +18,11 @@ declare global {
       QUEUE_STATUS_POLLING_RATE: number
       SENTRY_DSN: string
       FIRESTORE_DB: string
+      PG_HOST: string
+      PG_PORT: string
+      PG_USER: string
+      PG_PASSWORD: string
+      PG_DATABASE: string
     }
   }
 }

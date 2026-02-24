@@ -7,15 +7,15 @@ import { ScheduleModule } from '@nestjs/schedule'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { SentryModule } from '@sentry/nestjs/setup'
 import { ResponseErrorFilter, ThrottlingFilter, UnexpectedErrorFilter } from '@/common'
-import { FirebaseModule, FirestoreModule } from '@/infra'
 import { AdminModule, AuthModule, QueueModule, RatingModule, UserModule } from '@/modules'
 import { AppController } from './app.controller'
 import { AppGateway } from './app.gateway'
-import { WebsocketModule } from './infra/websocket/websocket.module'
+import { InfrastructureModule } from './infra/infrastructure.module'
 
 @Global()
 @Module({
   imports: [
+    // External Modules
     SentryModule.forRoot(),
     ThrottlerModule.forRoot([
       {
@@ -43,14 +43,14 @@ import { WebsocketModule } from './infra/websocket/websocket.module'
       ignoreErrors: false,
     }),
     ScheduleModule.forRoot(),
-    RatingModule,
+
+    // Modules
+    InfrastructureModule,
+    AdminModule,
     AuthModule,
     QueueModule,
-    FirestoreModule,
-    FirebaseModule,
+    RatingModule,
     UserModule,
-    AdminModule,
-    WebsocketModule,
   ],
   controllers: [AppController],
   providers: [
