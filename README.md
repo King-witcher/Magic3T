@@ -1,6 +1,7 @@
 # Magic3T Monorepo
 
 [![Biome CI](https://github.com/King-witcher/Magic3T/actions/workflows/biome.yml/badge.svg)](https://github.com/King-witcher/Magic3T/actions/workflows/biome.yml)
+[![Migrations](https://github.com/King-witcher/Magic3T/actions/workflows/migrations.yml/badge.svg)](https://github.com/King-witcher/Magic3T/actions/workflows/migrations.yml)
 
 
 ## Description
