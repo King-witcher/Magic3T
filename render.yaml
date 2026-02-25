@@ -11,7 +11,7 @@ services:
     envVars:
       # Self Requests
       - key: HEARTBEAT_RATE
-        value: 600_000 # 10 minutes
+        value: 600000 # 10 minutes
       - key: MAGIC3T_BACKEND_URL
         value: https://backend.magic3t.com.br
 
