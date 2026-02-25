@@ -16,6 +16,12 @@
           "value": "https://api.magic3t.com.br"
         }
       ]
+    },
+    {
+      "id": "migration-name",
+      "type": "promptString",
+      "description": "Enter a name for the new migration (e.g., 'create-users-table')",
+      "default": "new-migration"
     }
   ],
 	"tasks": [
@@ -141,6 +147,74 @@
       },
     },
 
+    {
+      "label": "Create Migration",
+      "icon": {
+        "id": "database",
+        "color": "terminal.ansiYellow",
+      },
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "new",
+        "${input:migration-name}",
+      ],
+      "options": {
+        "cwd": "packages/migrations"
+      },
+      "problemMatcher": {
+        "owner": "migrations",
+        "pattern": {
+          "regexp": "^([^\\\\s].*)\\\\((\\\\d+,\\\\d+)\\\\):\\\\s*(.*)$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        }
+      },
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    },
+
+    {
+      "label": "Run Migrations",
+      "icon": {
+        "id": "database",
+        "color": "terminal.ansiBlue",
+      },
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "migrate"
+      ],
+      "options": {
+        "cwd": "packages/migrations"
+      },
+      "problemMatcher": {
+        "owner": "migrations",
+        "pattern": {
+          "regexp": "^([^\\\\s].*)\\\\((\\\\d+,\\\\d+)\\\\):\\\\s*(.*)$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        }
+      },
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    },
 
     //////////////// CI Test
 
