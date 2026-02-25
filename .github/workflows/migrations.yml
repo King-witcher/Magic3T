@@ -10,6 +10,7 @@ on:
 
 jobs:
   migrate:
+    name: Migrate Database
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
