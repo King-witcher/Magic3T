@@ -11,18 +11,19 @@ declare global {
 
   namespace NodeJS {
     interface ProcessEnv {
-      PORT: number
       FIREBASE_ADMIN_CREDENTIALS: string
-      MAGIC3T_BACKEND_URL: string
-      HEARTBEAT_RATE: string
-      QUEUE_STATUS_POLLING_RATE: number
-      SENTRY_DSN: string
       FIRESTORE_DB: string
+      HEARTBEAT_RATE: string
+      MAGIC3T_BACKEND_URL: string
+      PG_DATABASE: string
       PG_HOST: string
+      PG_PASSWORD: string
       PG_PORT: string
       PG_USER: string
-      PG_PASSWORD: string
-      PG_DATABASE: string
+      PG_SSL: 'true' | 'false'
+      PORT: number
+      QUEUE_STATUS_POLLING_RATE: number
+      SENTRY_DSN: string
     }
   }
 }

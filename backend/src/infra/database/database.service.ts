@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-import { Cron } from '@nestjs/schedule'
 import { Pool, PoolClient, QueryConfig, QueryConfigValues } from 'pg'
 
 @Injectable()
@@ -13,10 +12,10 @@ export class DatabaseService {
       user: process.env.PG_USER,
       password: process.env.PG_PASSWORD,
       database: process.env.PG_DATABASE,
+      ssl: process.env.PG_SSL === 'true' ? { rejectUnauthorized: false } : false,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 2000,
       maxLifetimeSeconds: 60,
-      ssl: process.env.PG_HOST !== 'localhost',
     })
   }
 
