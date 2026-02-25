@@ -1,0 +1,16 @@
+{
+  "name": "@magic3t/migrations",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "new": "tsx scripts/generate.ts",
+    "migrate": "tsx --env-file .env scripts/migrate.ts",
+    "migrate:production": "tsx scripts/migrate.ts"
+  },
+  "dependencies": {
+    "@types/node": "^25.3.0",
+    "pg": "^8.19.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
