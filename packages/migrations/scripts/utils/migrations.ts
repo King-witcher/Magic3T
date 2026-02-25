@@ -10,8 +10,15 @@ export const MIGRATIONS_DIR = 'sql'
 
 /** Lists all migration names in the migrations directory */
 export async function listMigrationNames(): Promise<string[]> {
-  const names = await readdir(MIGRATIONS_DIR)
-  const result = names.sort((a, b) => a.localeCompare(b))
+  const entries = await readdir(MIGRATIONS_DIR, {
+    withFileTypes: true
+  })
+
+  const dirs = entries
+    .filter((file) => file.isDirectory())
+    .map((file) => file.name)
+
+  const result = dirs.sort((a, b) => a.localeCompare(b))
   return result
 }
 

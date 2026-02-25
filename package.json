@@ -4,7 +4,9 @@
 	},
 	"name": "magic3t",
 	"scripts": {
-		"lint": "biome check . --write"
+		"lint": "biome check . --write",
+		"migrate": "npm run migrate --workspace=packages/migrations",
+		"migrate:production": "npm run migrate:production --workspace=packages/migrations"
 	},
 	"version": "1.0.0",
 	"overrides": {
@@ -15,6 +17,7 @@
 		"frontend",
 		"packages/api-types",
 		"packages/common-types",
-		"packages/database-types"
+		"packages/database-types",
+		"packages/migrations"
 	]
 }

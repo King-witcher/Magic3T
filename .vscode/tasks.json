@@ -194,9 +194,6 @@
         "run",
         "migrate"
       ],
-      "options": {
-        "cwd": "packages/migrations"
-      },
       "problemMatcher": {
         "owner": "migrations",
         "pattern": {

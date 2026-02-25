@@ -25,7 +25,7 @@ jobs:
         run: npm ci --workspace=packages/migrations --include-workspace-root
 
       - name: Run migrations
-        run: npm run migrate --workspace=packages/migrations
+        run: npm run migrate:production
         env:
           PG_HOST: ${{ secrets.PG_HOST }}
           PG_PORT: ${{ secrets.PG_PORT }}
