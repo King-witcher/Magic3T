@@ -1,0 +1,36 @@
+name: Migrations
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/migrations/**'
+      - '.github/workflows/migrations.yml'
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.node-version'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --workspace=packages/migrations --include-workspace-root
+
+      - name: Run migrations
+        run: npm run migrate --workspace=packages/migrations
+        env:
+          PG_HOST: ${{ secrets.PG_HOST }}
+          PG_PORT: ${{ secrets.PG_PORT }}
+          PG_USER: ${{ secrets.PG_USER }}
+          PG_DATABASE: ${{ secrets.PG_DATABASE }}
+          PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+          PG_SSL: "true"
+
