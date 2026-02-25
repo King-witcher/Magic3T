@@ -4,14 +4,14 @@ services:
     name: Magic3T Backend
 
     plan: free
-    buildCommand: npm ci && npm run build --workspace=backend
+    buildCommand: npm install --workspace=backend --include-workspace-root && npm run build --workspace=backend
     startCommand: npm run start:prod --workspace=backend
     region: virginia
     repo: https://github.com/King-witcher/Magic3T
     envVars:
       # Self Requests
       - key: HEARTBEAT_RATE
-        value: 60000 # 10 minutes
+        value: 600_000 # 10 minutes
       - key: MAGIC3T_BACKEND_URL
         value: https://backend.magic3t.com.br
 
@@ -29,9 +29,11 @@ services:
 
       # Postgres
       - key: PG_HOST
-        value: ep-curly-morning-aiu6a597-pooler.c-4.us-east-1.aws.neon.tech
+        sync: false
       - key: PG_PORT
         value: "5432"
+      - key: PG_SSL
+        value: "true"
       - key: PG_USER
         value: magic3t_backend
       - key: PG_DATABASE
@@ -48,9 +50,7 @@ services:
     buildFilter:
       paths:
         - backend/**
-        - lib/**
-      ignoredPaths:
-        - lib/types/**
+        - packages/**
 
   - type: redis
     name: Magic3T Redis
