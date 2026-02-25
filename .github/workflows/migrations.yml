@@ -7,6 +7,7 @@ on:
     paths:
       - 'packages/migrations/**'
       - '.github/workflows/migrations.yml'
+  workflow_dispatch:
 
 jobs:
   migrate:
