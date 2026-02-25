@@ -26,7 +26,8 @@ Magic3T/
 ├── packages/                # Bibliotecas compartilhadas
 │   ├── api-types/           # Tipos de API (DTOs, eventos WebSocket)
 │   ├── common-types/        # Tipos comuns (Team, Choice, Rating)
-│   └── database-types/      # Tipos de entidades do banco (UserRow, MatchRow)
+│   ├── database-types/      # Tipos de entidades do banco (UserRow, MatchRow)
+│   └── migrations/          # Migrações SQL do PostgreSQL
 ├── biome.json               # Configuração do linter
 ├── package.json             # Workspaces do monorepo
 └── render.yaml              # Configuração de deploy
@@ -244,6 +245,14 @@ Tipos de entidades do Firestore:
 - `UserRow` - Documento de usuário
 - `MatchRow` - Documento de partida
 - `BotConfig` - Configuração de bots
+
+### `@magic3t/migrations`
+Sistema de migrações SQL do PostgreSQL:
+- Migrações versionadas por timestamp em arquivos `.sql` puros
+- Runner transacional (aplica todas as pendentes ou nenhuma)
+- Tabela de controle `_migrations` no banco
+- GitHub Action para deploy automático em produção
+- Documentação completa em [`packages/migrations/MIGRATIONS.md`](packages/migrations/MIGRATIONS.md)
 
 ---
 
@@ -484,6 +493,7 @@ UserRepository.updateElo()
 # Raiz do monorepo
 npm install          # Instala deps de todos os workspaces
 npm run lint         # Roda Biome em todo o projeto
+npm run migrate      # Aplica migrações SQL pendentes (local)
 
 # Backend
 cd backend
@@ -495,6 +505,11 @@ npm run test         # Testes com Vitest
 cd frontend
 npm run dev          # Dev server Vite
 npm run build        # Build de produção
+
+# Migrations
+cd packages/migrations
+npm run new <nome>   # Cria nova migração (up.sql + down.sql)
+npm run migrate      # Aplica migrações pendentes (usa .env local)
 ```
 
 ---

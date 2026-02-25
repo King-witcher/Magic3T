@@ -31,13 +31,14 @@ This is the Magic3T monorepo, which includes the backend, the frontend and some 
 ### Monorepo & Tooling
 - **Package Manager:** npm Workspaces
 - **Linting:** [Biome JS](https://biomejs.dev/)
-- **CI/CD:** GitHub Actions ([Biome CI](https://biomejs.dev/recipes/continuous-integration/), [Reviewdog](https://github.com/reviewdog/reviewdog), npm audit)
+- **CI/CD:** GitHub Actions ([Biome CI](https://biomejs.dev/recipes/continuous-integration/), [Reviewdog](https://github.com/reviewdog/reviewdog), npm audit, [Migrations](.github/workflows/migrations.yml))
 - **Deployment:** [Render with IaC](https://render.com/) (backend) + [Vercel](https://vercel.com/docs) (frontend) + [Firebase](https://firebase.google.com/)
 - **Debugging:** [VSCode Launch Configurations](https://code.visualstudio.com/docs/debugtest/debugging) and a bunch of [Tasks](https://code.visualstudio.com/docs/debugtest/tasks) + [Problem Matchers](https://code.visualstudio.com/docs/debugtest/tasks#_defining-a-problem-matcher) (see `.vscode` folder)
 
 ## Projects
 - **[backend](./backend)**: The backend server built with NestJS.
 - **[frontend](./frontend)**: The frontend application built with React and Vite.
+- **[migrations](./packages/migrations)**: SQL migrations for PostgreSQL schema management. See [MIGRATIONS.md](./packages/migrations/MIGRATIONS.md).
 
 ## Running Locally
 

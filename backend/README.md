@@ -9,8 +9,7 @@ Backend server for Magic3T, a multiplayer real-time game based on the magic squa
 | **NestJS** | Backend framework |
 | **TypeScript** | Static typing |
 | **Socket.IO** | Real-time WebSocket communication |
-| **Firebase Admin** | Authentication & Firestore database |
-| **Zod** | Runtime validation |
+| **Firebase Admin** | Authentication & Firestore database || **PostgreSQL** | Relational data (via `pg`) || **Zod** | Runtime validation |
 | **class-validator** | DTO validation |
 | **Swagger + Scalar** | API documentation |
 | **Sentry** | Error tracking & performance monitoring |
@@ -26,6 +25,7 @@ backend/src/
 ├── app.controller.ts        # Health check controller
 │
 ├── infra/                   # Infrastructure layer
+│   ├── database/            # PostgreSQL (raw queries via pg)
 │   ├── firestore/           # Firestore repositories
 │   ├── firebase/            # Firebase Admin SDK setup
 │   └── websocket/           # WebSocket infrastructure
@@ -119,3 +119,7 @@ Error handling patterns are documented at [docs/ERROR-HANDLING.md](docs/ERROR-HA
 ### Database
 
 Database schema and access patterns are documented at [docs/DATABASE.md](docs/DATABASE.md).
+
+### Migrations
+
+PostgreSQL schema evolution is managed by SQL migrations in `packages/migrations/`. See [MIGRATIONS.md](../packages/migrations/MIGRATIONS.md) for details on creating, running, and deploying migrations.

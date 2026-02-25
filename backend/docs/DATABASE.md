@@ -7,6 +7,8 @@ O Magic3T utiliza duas camadas de persistência:
 | **Firebase Firestore** | Usuários, partidas, configurações, crash-reports | `infra/firestore/` |
 | **PostgreSQL** | Dados relacionais (migração em andamento) | `infra/database/` |
 
+A evolução do schema do PostgreSQL é gerenciada pelo módulo de migrações em `packages/migrations/`. Consulte [`packages/migrations/MIGRATIONS.md`](../../packages/migrations/MIGRATIONS.md) para detalhes sobre criação, aplicação e deploy de migrações.
+
 ---
 
 ## PostgreSQL (`DatabaseService`)
