@@ -12,6 +12,7 @@ import { AppController } from './app.controller'
 import { AppGateway } from './app.gateway'
 import { HttpExceptionFilter } from './common/filters/http-exception.filter'
 import { InfrastructureModule } from './infra/infrastructure.module'
+import { HoneypotModule } from './modules/honeypot'
 
 const EXTERNAL_MODULES: (
   | DynamicModule
@@ -58,7 +59,15 @@ const MODULES: (
   | Type<unknown>
   | Promise<DynamicModule>
   | ForwardReference<unknown>
-)[] = [InfrastructureModule, AdminModule, AuthModule, QueueModule, RatingModule, UserModule]
+)[] = [
+  InfrastructureModule,
+  AdminModule,
+  AuthModule,
+  HoneypotModule,
+  QueueModule,
+  RatingModule,
+  UserModule,
+]
 
 const FILTERS: Provider[] = [
   {
