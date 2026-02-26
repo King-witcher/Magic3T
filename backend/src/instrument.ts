@@ -4,6 +4,7 @@ import * as Sentry from '@sentry/nestjs'
 const result = Sentry.init({
   dsn: process.env.SENTRY_DSN, // Not set from .env before instrumenting in development mode
   enabled: Boolean(process.env.SENTRY_DSN),
+  sendDefaultPii: true,
   enableLogs: true,
 })
 

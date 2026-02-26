@@ -1,5 +1,4 @@
 import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common'
-import { captureException } from '@sentry/nestjs'
 import { ErrorResponseException } from '../errors'
 
 /**
@@ -9,7 +8,7 @@ import { ErrorResponseException } from '../errors'
 @Catch(ErrorResponseException)
 export class ResponseErrorFilter implements ExceptionFilter {
   catch(error: ErrorResponseException, argumentsHost: ArgumentsHost) {
-    captureException(error)
+    // captureException(error)
     const context = argumentsHost.getType()
     switch (context) {
       case 'ws': {

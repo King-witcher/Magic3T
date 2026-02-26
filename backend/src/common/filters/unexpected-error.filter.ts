@@ -20,7 +20,7 @@ export class UnexpectedErrorFilter implements ExceptionFilter {
       case 'ws': {
         const client = argumentsHost.switchToWs().getClient()
         client.emit('error', {
-          errorCode: 'internal-server-error',
+          errorCode: 'InternalServerError',
           description: 'An unexpected error occurred on the server.',
         })
         return
@@ -29,7 +29,7 @@ export class UnexpectedErrorFilter implements ExceptionFilter {
         const ctx = argumentsHost.switchToHttp()
         const response = ctx.getResponse()
         response.status(500).json({
-          errorCode: 'internal-server-error',
+          errorCode: 'InternalServerError',
           description: 'An unexpected error occurred on the server.',
         })
         break

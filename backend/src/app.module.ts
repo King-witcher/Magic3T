@@ -1,5 +1,5 @@
 import { CacheModule } from '@nestjs/cache-manager'
-import { Global, Module } from '@nestjs/common'
+import { DynamicModule, ForwardReference, Global, Module, Provider, Type } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { APP_FILTER, APP_GUARD } from '@nestjs/core'
 import { EventEmitterModule } from '@nestjs/event-emitter'
@@ -10,66 +10,80 @@ import { ResponseErrorFilter, ThrottlingFilter, UnexpectedErrorFilter } from '@/
 import { AdminModule, AuthModule, QueueModule, RatingModule, UserModule } from '@/modules'
 import { AppController } from './app.controller'
 import { AppGateway } from './app.gateway'
+import { HttpExceptionFilter } from './common/filters/http-exception.filter'
 import { InfrastructureModule } from './infra/infrastructure.module'
+
+const EXTERNAL_MODULES: (
+  | DynamicModule
+  | Type<unknown>
+  | Promise<DynamicModule>
+  | ForwardReference<unknown>
+)[] = [
+  SentryModule.forRoot(),
+  ThrottlerModule.forRoot([
+    {
+      name: 'short',
+      ttl: 1000,
+      limit: 1,
+    },
+    {
+      name: 'medium',
+      ttl: 60 * 1000,
+      limit: 100,
+    },
+  ]),
+  ConfigModule.forRoot({ envFilePath: '.env' }),
+  CacheModule.register({
+    isGlobal: true,
+  }),
+  EventEmitterModule.forRoot({
+    wildcard: false,
+    delimiter: '.',
+    newListener: false,
+    removeListener: false,
+    maxListeners: 10,
+    verboseMemoryLeak: false,
+    ignoreErrors: false,
+  }),
+  ScheduleModule.forRoot(),
+]
+
+const MODULES: (
+  | DynamicModule
+  | Type<unknown>
+  | Promise<DynamicModule>
+  | ForwardReference<unknown>
+)[] = [InfrastructureModule, AdminModule, AuthModule, QueueModule, RatingModule, UserModule]
+
+const FILTERS: Provider[] = [
+  {
+    provide: APP_FILTER,
+    useClass: UnexpectedErrorFilter,
+  },
+  {
+    provide: APP_FILTER,
+    useClass: HttpExceptionFilter,
+  },
+  {
+    provide: APP_FILTER,
+    useClass: ResponseErrorFilter,
+  },
+  {
+    provide: APP_FILTER,
+    useClass: ThrottlingFilter,
+  },
+]
 
 @Global()
 @Module({
-  imports: [
-    // External Modules
-    SentryModule.forRoot(),
-    ThrottlerModule.forRoot([
-      {
-        name: 'short',
-        ttl: 1000,
-        limit: 10,
-      },
-      {
-        name: 'medium',
-        ttl: 60 * 1000,
-        limit: 100,
-      },
-    ]),
-    ConfigModule.forRoot({ envFilePath: '.env' }),
-    CacheModule.register({
-      isGlobal: true,
-    }),
-    EventEmitterModule.forRoot({
-      wildcard: false,
-      delimiter: '.',
-      newListener: false,
-      removeListener: false,
-      maxListeners: 10,
-      verboseMemoryLeak: false,
-      ignoreErrors: false,
-    }),
-    ScheduleModule.forRoot(),
-
-    // Modules
-    InfrastructureModule,
-    AdminModule,
-    AuthModule,
-    QueueModule,
-    RatingModule,
-    UserModule,
-  ],
+  imports: [...EXTERNAL_MODULES, ...MODULES],
   controllers: [AppController],
   providers: [
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
-    {
-      provide: APP_FILTER,
-      useClass: UnexpectedErrorFilter,
-    },
-    {
-      provide: APP_FILTER,
-      useClass: ResponseErrorFilter,
-    },
-    {
-      provide: APP_FILTER,
-      useClass: ThrottlingFilter,
-    },
+    ...FILTERS,
     AppGateway,
   ],
 })

@@ -1,5 +1,6 @@
-import { Catch, ExceptionFilter } from '@nestjs/common'
+import { ArgumentsHost, Catch, ExceptionFilter, Logger } from '@nestjs/common'
 import { ThrottlerException } from '@nestjs/throttler'
+import { Socket } from 'socket.io'
 import { respondError } from '../errors'
 
 /**
@@ -8,7 +9,28 @@ import { respondError } from '../errors'
  */
 @Catch(ThrottlerException)
 export class ThrottlingFilter implements ExceptionFilter {
-  catch() {
-    respondError('too-many-requests', 429)
+  private logger: Logger = new Logger(ThrottlingFilter.name)
+
+  catch(_: ThrottlerException, argumentsHost: ArgumentsHost) {
+    const context = argumentsHost.getType()
+    switch (context) {
+      case 'ws': {
+        const host = argumentsHost.switchToWs()
+        const client = argumentsHost.switchToWs().getClient()
+        client.emit('error', respondError('TooManyRequests', 429))
+        return
+      }
+      case 'http': {
+        const ctx = argumentsHost.switchToHttp()
+        const response = ctx.getResponse()
+        response.status(429).json(respondError('TooManyRequests', 429))
+        break
+      }
+      case 'rpc': {
+        this.logger.error('RPC ThrottlerException: TooManyRequests')
+      }
+    }
+
+    respondError('TooManyRequests', 429)
   }
 }

@@ -1,8 +1,8 @@
 {
   "configurations": [
     {
-      "command": "npm run dev",
-      "cwd": "${workspaceFolder}/backend",
+      "command": "npm run dev --workspace=backend",
+      // "cwd": "${workspaceFolder}/backend",
       "name": "Launch Backend",
       "request": "launch",
       "type": "node-terminal"

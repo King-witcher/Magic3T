@@ -1,4 +1,7 @@
 {
+  "buildOptions": {
+    "sourceRoot": "/"
+  },
   "extends": "./tsconfig.json",
   "include": ["src"]
 }

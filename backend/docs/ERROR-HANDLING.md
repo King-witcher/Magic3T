@@ -167,10 +167,9 @@ Os filters do NestJS interceptam exceções e formatam as respostas.
 ```typescript
 @Catch(ErrorResponseException)
 class ResponseErrorFilter implements ExceptionFilter {
-  @SentryExceptionCaptured()  // Envia erro ao Sentry
   catch(exception: ErrorResponseException, host: ArgumentsHost) {
+    captureException(exception)  // Envia erro ao Sentry diretamente
     // Captura apenas ErrorResponseException
-    // Registra no Sentry para análise
     // Envia error.response ao cliente
     // Respeita error.httpStatus
   }
@@ -178,6 +177,51 @@ class ResponseErrorFilter implements ExceptionFilter {
 ```
 
 **Localização:** [`backend/src/common/filters/response-error.filter.ts`](../src/common/filters/response-error.filter.ts)
+
+### HttpExceptionFilter
+
+```typescript
+@Catch(HttpException)
+class HttpExceptionFilter implements ExceptionFilter {
+  catch(exception: HttpException, host: ArgumentsHost) {
+    captureException(exception)  // Envia erro ao Sentry diretamente
+    // Captura HttpException e todas as suas subclasses (ex: BadRequestException,
+    // NotFoundException, UnauthorizedException, etc.)
+    // HTTP: responde com error.getStatus() e error.getResponse()
+    // WS: emite error.getResponse() no evento 'error'
+  }
+}
+```
+
+**Localização:** [`backend/src/common/filters/http-exception.filter.ts`](../src/common/filters/http-exception.filter.ts)
+
+**Propósito:** Intercepta exceções nativas do NestJS lançadas por guards, pipes, e outros componentes do framework. Sem este filter, essas exceções seriam capturadas pelo `UnexpectedErrorFilter` e retornadas como erro 500 genérico, perdendo o status HTTP correto.
+
+**Exemplos de exceções capturadas:**
+
+| Classe NestJS | Status |  Fonte comum |
+|---|---|---|
+| `BadRequestException` | 400 | Validation Pipe |
+| `UnauthorizedException` | 401 | Guards de autenticação |
+| `ForbiddenException` | 403 | Guards de autorização |
+| `NotFoundException` | 404 | Decoradores de rota |
+| `ConflictException` | 409 | Lógica de negócio |
+
+**Formato da resposta** (depende de como a exceção foi construída):
+
+```json
+// BadRequestException lançada pelo ValidationPipe:
+// Status: 400
+{
+  "statusCode": 400,
+  "message": ["name must be a string"],
+  "error": "Bad Request"
+}
+
+// HttpException simples com mensagem string:
+// Status: 403
+"Forbidden"
+```
 
 ### UnexpectedErrorFilter
 
@@ -202,40 +246,50 @@ class UnexpectedErrorFilter implements ExceptionFilter {
 @Catch(ThrottlerException)
 class ThrottlingFilter implements ExceptionFilter {
   // Captura exceções de rate limiting
-  // Retorna resposta 429 Too Many Requests
+  // Retorna resposta 429 Too Many Requests via respondError()
   // Funciona tanto para HTTP quanto WebSocket
 }
 ```
 
-**Localização:** `backend/src/common/filters/throttling.filter.ts`
+**Localização:** [`backend/src/common/filters/throtlling.filter.ts`](../src/common/filters/throtlling.filter.ts)
 
 ### Ordem de Execução
+
+Os filters são registrados globalmente via `APP_FILTER` e executados em ordem LIFO (último registrado = maior prioridade). A ordem de registro em `app.module.ts` é: `UnexpectedErrorFilter` → `HttpExceptionFilter` → `ResponseErrorFilter` → `ThrottlingFilter`.
 
 ```
 Exceção lançada
        │
        ▼
-┌──────────────────────────┐
-│ É ThrottlerException?    │
-└────────────┬─────────────┘
-             │
-     Sim     │     Não
-       ▼     │       ▼
-┌────────────┐  ┌──────────────────────────┐
-│ Throttling │  │ É ErrorResponseException? │
-│ Filter     │  └────────────┬─────────────┘
-└────────────┘             │
-       │             Sim     │     Não
-       ▼               ▼     │       ▼
-   Resposta      ┌────────────┐  ┌────────────────────┐
-   429           │ Response   │  │ UnexpectedError    │
-                 │ ErrorFilter│  │ Filter (catch-all) │
-                 └────────────┘  └────────────────────┘
-                       │                 │
-                       ▼                 ▼
-                   Resposta          Log + Resposta
-                   com código        genérica 500
-                   específico
+┌────────────────────────────┐
+│ É ThrottlerException?      │
+└──────────────┬─────────────┘
+               │
+       Sim     │     Não
+         ▼     │       ▼
+  ┌────────────┐  ┌───────────────────────────┐
+  │ Throttling │  │ É ErrorResponseException?  │
+  │ Filter 429 │  └─────────────┬─────────────┘
+  └────────────┘                │
+                        Sim     │     Não
+                          ▼     │       ▼
+                   ┌────────────┐  ┌─────────────────────────┐
+                   │ Response   │  │ É HttpException          │
+                   │ ErrorFilter│  │ (ou subclasse NestJS)?   │
+                   └────────────┘  └─────────────┬───────────┘
+                         │                       │
+                         ▼               Sim     │     Não
+                     Resposta              ▼     │       ▼
+                     com código     ┌────────────┐  ┌────────────────────┐
+                     específico     │   Http     │  │ UnexpectedError    │
+                                    │ Exception  │  │ Filter (catch-all) │
+                                    │ Filter     │  └────────────────────┘
+                                    └────────────┘          │
+                                          │                 ▼
+                                          ▼            Log + Resposta
+                                    Resposta com       genérica 500
+                                    status original
+                                    da HttpException
 ```
 
 ---
