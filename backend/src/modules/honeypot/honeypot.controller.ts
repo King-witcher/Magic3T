@@ -36,7 +36,7 @@ function randomDelay(min: number, max: number): Promise<void> {
 const nestLogger = new Logger('Honeypot')
 
 function logHoneypotAccess(ip: string, path: string, extra?: Record<string, unknown>) {
-  nestLogger.warn(`Honeypot access detected: ${ip} accessed ${path}`, { ...extra })
+  nestLogger.warn(`Honeypot access detected: ${ip} accessed ${path}`)
   logger.warn('Honeypot access detected', {
     ip,
     path,
