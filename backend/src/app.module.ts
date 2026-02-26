@@ -24,7 +24,7 @@ const EXTERNAL_MODULES: (
     {
       name: 'short',
       ttl: 1000,
-      limit: 1,
+      limit: 10,
     },
     {
       name: 'medium',
