@@ -3,8 +3,8 @@ import {
   Controller,
   Get,
   Header,
+  Headers,
   HttpCode,
-  Ip,
   Logger,
   Post,
   Query,
@@ -61,7 +61,7 @@ export class HoneypotController {
   @Header('X-Powered-By', 'PHP/8.2.13')
   @Header('Server', 'Apache/2.4.57 (Ubuntu)')
   async fakeAdminGet(
-    @Ip() ip: string,
+    @Headers('X-Forwarded-For') ip: string,
     @Query('page') page: string | undefined,
     @Res() res: Response
   ) {
@@ -88,7 +88,7 @@ export class HoneypotController {
   @Header('Server', 'Apache/2.4.57 (Ubuntu)')
   @HttpCode(200)
   async fakeAdminPost(
-    @Ip() ip: string,
+    @Headers('X-Forwarded-For') ip: string,
     @Body() body: Record<string, string>,
     @Query('page') page: string | undefined,
     @Res() res: Response
@@ -122,7 +122,7 @@ export class HoneypotController {
   @Get('wp-login.php')
   @Header('Content-Type', 'text/html; charset=UTF-8')
   @Header('X-Powered-By', 'PHP/8.2.13')
-  async wpLoginGet(@Ip() ip: string, @Res() res: Response) {
+  async wpLoginGet(@Headers('X-Forwarded-For') ip: string, @Res() res: Response) {
     logHoneypotAccess(ip, '/wp-login.php')
     await randomDelay(500, 1500)
     return res.send(wpLoginPage())
@@ -132,7 +132,11 @@ export class HoneypotController {
   @Header('Content-Type', 'text/html; charset=UTF-8')
   @Header('X-Powered-By', 'PHP/8.2.13')
   @HttpCode(200)
-  async wpLoginPost(@Ip() ip: string, @Body() body: Record<string, string>, @Res() res: Response) {
+  async wpLoginPost(
+    @Headers('X-Forwarded-For') ip: string,
+    @Body() body: Record<string, string>,
+    @Res() res: Response
+  ) {
     logHoneypotAccess(ip, 'POST /wp-login.php', { user: body.log })
     await randomDelay(4000, 8000)
 
@@ -150,7 +154,7 @@ export class HoneypotController {
   @Get('phpinfo.php')
   @Header('Content-Type', 'text/html; charset=UTF-8')
   @Header('X-Powered-By', 'PHP/8.2.13')
-  async fakePhpInfo(@Ip() ip: string, @Res() res: Response) {
+  async fakePhpInfo(@Headers('X-Forwarded-For') ip: string, @Res() res: Response) {
     logHoneypotAccess(ip, '/phpinfo.php')
     await randomDelay(300, 800)
     return res.send(phpInfoPage())
@@ -161,7 +165,7 @@ export class HoneypotController {
   @Get('.env')
   @Header('Content-Type', 'text/plain')
   @Header('X-Powered-By', 'PHP/8.2.13')
-  async fakeEnv(@Ip() ip: string, @Res() res: Response) {
+  async fakeEnv(@Headers('X-Forwarded-For') ip: string, @Res() res: Response) {
     logHoneypotAccess(ip, '/.env')
     await randomDelay(200, 500)
     // Completely fake credentials that lead nowhere
@@ -206,7 +210,7 @@ STRIPE_SECRET=sk_live_fake_51234567890abcdef
   @Get('wp-config.php')
   @Header('Content-Type', 'text/plain')
   @Header('X-Powered-By', 'PHP/8.2.13')
-  async fakeWpConfig(@Ip() ip: string, @Res() res: Response) {
+  async fakeWpConfig(@Headers('X-Forwarded-For') ip: string, @Res() res: Response) {
     logHoneypotAccess(ip, '/wp-config.php')
     await randomDelay(200, 500)
     res.send(`<?php
