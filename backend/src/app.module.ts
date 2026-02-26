@@ -28,8 +28,13 @@ const EXTERNAL_MODULES: (
     },
     {
       name: 'medium',
-      ttl: 60 * 1000,
-      limit: 100,
+      ttl: 60 * 1000, // minute
+      limit: 4 * 60,
+    },
+    {
+      name: 'high',
+      ttl: 60 * 60 * 1000, // hour
+      limit: 60 * 60 * 3,
     },
   ]),
   ConfigModule.forRoot({ envFilePath: '.env' }),
