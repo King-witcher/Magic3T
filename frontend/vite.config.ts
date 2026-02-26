@@ -25,6 +25,14 @@ export default defineConfig({
     sentryVitePlugin({
       org: 'magic3t',
       project: 'magic3t-frontend',
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      sourcemaps: {
+        filesToDeleteAfterUpload: [
+          './**/*.map',
+          '.*/**/public/**/*.map',
+          './dist/**/client/**/*.map',
+        ],
+      },
     }),
   ],
   server: {
