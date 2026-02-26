@@ -5,6 +5,7 @@ import {
   Header,
   HttpCode,
   Ip,
+  Logger,
   Post,
   Query,
   Res,
@@ -32,7 +33,10 @@ function randomDelay(min: number, max: number): Promise<void> {
   return delay(min + Math.random() * (max - min))
 }
 
+const nestLogger = new Logger('Honeypot')
+
 function logHoneypotAccess(ip: string, path: string, extra?: Record<string, unknown>) {
+  nestLogger.warn(`Honeypot access detected: ${ip} accessed ${path}`, { ...extra })
   logger.warn('Honeypot access detected', {
     ip,
     path,
@@ -59,7 +63,7 @@ export class HoneypotController {
   async fakeAdminGet(
     @Ip() ip: string,
     @Query('page') page: string | undefined,
-    @Res() res: Response,
+    @Res() res: Response
   ) {
     logHoneypotAccess(ip, '/admin.php', { page })
     await randomDelay(800, 2000)
@@ -87,7 +91,7 @@ export class HoneypotController {
     @Ip() ip: string,
     @Body() body: Record<string, string>,
     @Query('page') page: string | undefined,
-    @Res() res: Response,
+    @Res() res: Response
   ) {
     logHoneypotAccess(ip, 'POST /admin.php', { body: { ...body, password: '***' }, page })
 
@@ -128,11 +132,7 @@ export class HoneypotController {
   @Header('Content-Type', 'text/html; charset=UTF-8')
   @Header('X-Powered-By', 'PHP/8.2.13')
   @HttpCode(200)
-  async wpLoginPost(
-    @Ip() ip: string,
-    @Body() body: Record<string, string>,
-    @Res() res: Response,
-  ) {
+  async wpLoginPost(@Ip() ip: string, @Body() body: Record<string, string>, @Res() res: Response) {
     logHoneypotAccess(ip, 'POST /wp-login.php', { user: body.log })
     await randomDelay(4000, 8000)
 
