@@ -47,7 +47,7 @@ async function main(): Promise<number> {
         }
         await client.query(
           `
-          INSERT INTO _migrations (name)
+          INSERT INTO _migration (name)
           VALUES ($1)
         `,
           [migration.migrationName]

@@ -1,13 +1,29 @@
 import { UserDocumentRole, UserRow, user_role } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
-import { UserDocumentRepository } from '@/infra/firestore'
+import { ConfigRepository, UserDocumentRepository } from '@/infra/firestore'
+import { INSERT_INTO } from '@/shared/pg-chain'
+import { sql } from '@/shared/sql'
 import { DatabaseService } from '../database.service'
+
+export type CreateUserRow = Omit<
+  UserRow,
+  | 'id'
+  | 'uuid'
+  | 'role'
+  | 'credits'
+  | 'xp'
+  | 'profile_nickname_date'
+  | 'profile_icon'
+  | `rating_series_played`
+  | `stats_${string}`
+>
 
 @Injectable()
 export class UserRepository {
   constructor(
     private readonly databaseService: DatabaseService,
-    private readonly userDocument: UserDocumentRepository
+    private readonly userDocument: UserDocumentRepository,
+    private readonly configRepository: ConfigRepository
   ) {}
 
   async importFromFirestore() {
@@ -48,11 +64,37 @@ export class UserRepository {
     await this.bulkCreate(userRows)
   }
 
+  async getByFirebaseId(firebaseId: string): Promise<UserRow | null> {
+    const [row] = await this.databaseService.query<UserRow>(sql`
+      SELECT * FROM "user"
+      WHERE firebase_id = ${firebaseId}
+    `)
+    return row ?? null
+  }
+
+  slugify(nickname: string): string {
+    return nickname.toLowerCase().replaceAll(' ', '')
+  }
+
+  async regiser(firebaseId: string, nickname: string) {
+    const ratingConfig = await this.configRepository.cachedGetRatingConfig()
+
+    await this.databaseService.query(
+      INSERT_INTO<Partial<UserRow>>('user', {
+        firebase_id: firebaseId,
+        profile_nickname: nickname,
+        profile_nickname_slug: this.slugify(nickname),
+        rating_score: ratingConfig.initial_elo,
+        rating_k_factor: ratingConfig.initial_k_factor,
+      }) //
+        .RETURNING`*`
+    )
+  }
+
   async bulkCreate(userRows: Omit<UserRow, 'id' | 'uuid' | 'profile_nickname_date'>[]) {
-    console.log('bulk create')
     await this.databaseService.transaction(async (client) => {
       for (const user of userRows) {
-        console.info(`Importing user ${JSON.stringify(user, null, 4)}`)
+        console.info(`Importing user ${user.firebase_id ?? user.profile_nickname}`)
         await client.query({
           name: 'insert_user',
           text: `INSERT INTO "user" (
