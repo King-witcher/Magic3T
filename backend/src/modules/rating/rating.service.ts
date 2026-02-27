@@ -1,4 +1,4 @@
-import { RatingConfigRow, UserRowElo } from '@magic3t/database-types'
+import { RatingConfigRow, UserDocumentElo } from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import * as Sentry from '@sentry/node'
@@ -44,7 +44,7 @@ export class RatingService {
   /**
    * Gets the rating covnerter, which provides detailed rating information and utility methods with up to date config.
    */
-  async getRatingConverter(elo: UserRowElo): Promise<RatingConverter> {
+  async getRatingConverter(elo: UserDocumentElo): Promise<RatingConverter> {
     const config = await this.ratingConfig
     const rating = new RatingConverter(elo, config)
     return rating

@@ -1,5 +1,5 @@
 import { GetUserResult, ListUsersResult } from '@magic3t/api-types'
-import { UserRole, UserRow } from '@magic3t/database-types'
+import { UserDocument, UserDocumentRole } from '@magic3t/database-types'
 import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { range } from 'lodash'
@@ -132,7 +132,7 @@ export class UserController {
 
     if (previousUserRow) respondError('user-already-registered')
 
-    const userRow: UserRow = {
+    const userRow: UserDocument = {
       elo: {
         k: ratingConfig.initial_k_factor,
         score: ratingConfig.initial_elo,
@@ -147,7 +147,7 @@ export class UserController {
       },
       magic_points: 0,
       perfect_squares: 0,
-      role: UserRole.Player,
+      role: UserDocumentRole.Player,
       stats: {
         defeats: 0,
         draws: 0,

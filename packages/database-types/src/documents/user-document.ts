@@ -1,5 +1,5 @@
 /** Stores the Elo-related information for a user */
-export type UserRowElo = {
+export type UserDocumentElo = {
   /** The user's Elo score */
   score: number
 
@@ -13,13 +13,13 @@ export type UserRowElo = {
   challenger: boolean
 }
 
-export const enum UserRole {
+export const enum UserDocumentRole {
   Player = 'player',
   Creator = 'creator',
   Bot = 'bot',
 }
 
-export type UserRow = {
+export type UserDocument = {
   identification: {
     /** Nickname slug used to identify the user uniquely */
     unique_id: string // slug
@@ -38,9 +38,9 @@ export type UserRow = {
   /** The summoner icon id chosen by the user */
   summoner_icon: number
 
-  role: UserRole
+  role: UserDocumentRole
 
-  elo: UserRowElo
+  elo: UserDocumentElo
 
   stats: {
     wins: number

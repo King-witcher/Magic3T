@@ -1,4 +1,4 @@
-import { IconAssignmentRow, UserRow } from '@magic3t/database-types'
+import { IconAssignmentRow, UserDocument } from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
 import { FirestoreDataConverter } from 'firebase-admin/firestore'
 import { unexpected } from '@/common'
@@ -9,7 +9,7 @@ import { BaseFirestoreRepository } from '../base-repository'
 import { ConfigRepository } from '../config'
 
 @Injectable()
-export class UserRepository extends BaseFirestoreRepository<UserRow> {
+export class UserRepository extends BaseFirestoreRepository<UserDocument> {
   private user_logger = new Logger(UserRepository.name, { timestamp: true })
   private iconAssignmentConverter: FirestoreDataConverter<IconAssignmentRow>
 
@@ -26,7 +26,7 @@ export class UserRepository extends BaseFirestoreRepository<UserRow> {
     return nickname.toLowerCase().replaceAll(' ', '')
   }
 
-  async getByNickname(nickname: string): Promise<GetResult<UserRow> | null> {
+  async getByNickname(nickname: string): Promise<GetResult<UserDocument> | null> {
     const uniqueId = this.slugify(nickname)
     const query = this.collection.where('identification.unique_id', '==', uniqueId).limit(1)
     const snapshot = await query.get()
@@ -44,7 +44,7 @@ export class UserRepository extends BaseFirestoreRepository<UserRow> {
   }
 
   /** List all challengers. */
-  async listChallengers(): Promise<ListResult<UserRow>> {
+  async listChallengers(): Promise<ListResult<UserDocument>> {
     const query = this.collection.where('elo.challenger', '==', true)
     const snapshot = await query.get()
     this.user_logger.verbose(`Queried ${snapshot.size} challengers`)
@@ -112,7 +112,7 @@ export class UserRepository extends BaseFirestoreRepository<UserRow> {
   }
 
   /// Gets all bot profiles, sorted by the bot name (bot0, bot1, bot2 and bot3)
-  async getBots(): Promise<ListResult<UserRow>> {
+  async getBots(): Promise<ListResult<UserDocument>> {
     const bots = await this.configService.getBotConfigs()
     const uids = [bots.bot0.uid, bots.bot1.uid, bots.bot2.uid, bots.bot3.uid]
     return await Promise.all(
@@ -130,7 +130,7 @@ export class UserRepository extends BaseFirestoreRepository<UserRow> {
    * @param limit The amount of players to be fetched
    * @returns The `limit` best ranked players
    */
-  async listBestPlayers(minMatches: number, limit: number): Promise<ListResult<UserRow>> {
+  async listBestPlayers(minMatches: number, limit: number): Promise<ListResult<UserDocument>> {
     this.user_logger.verbose(`read ${limit} best players from.`)
     const rankingQuery = this.collection
       .orderBy('elo.score', 'desc')

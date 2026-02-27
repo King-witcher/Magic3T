@@ -1,5 +1,5 @@
 import { Team } from '@magic3t/common-types'
-import { MatchRow, MatchRowGameMode, UserRow } from '@magic3t/database-types'
+import { MatchRow, MatchRowGameMode, UserDocument } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { FieldValue, UpdateData } from 'firebase-admin/firestore'
@@ -98,8 +98,8 @@ export class PersistanceService {
   private buildStatsUpdate(
     winner: 'order' | 'chaos' | 'draw',
     playerType: 'order' | 'chaos'
-  ): UpdateData<UserRow> {
-    const update: UpdateData<UserRow> = {}
+  ): UpdateData<UserDocument> {
+    const update: UpdateData<UserDocument> = {}
 
     if (playerType === winner) {
       update['stats.wins'] = FieldValue.increment(1)

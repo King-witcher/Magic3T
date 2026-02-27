@@ -4,9 +4,9 @@ import {
   BotName,
   MatchRow,
   SingleBotConfig,
-  UserRole,
-  UserRow,
-  UserRowElo,
+  UserDocument,
+  UserDocumentElo,
+  UserDocumentRole,
 } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
@@ -206,8 +206,8 @@ export class MatchService {
    */
   private subscribeMatchEvents(
     match: Match,
-    order: GetResult<UserRow>,
-    chaos: GetResult<UserRow>,
+    order: GetResult<UserDocument>,
+    chaos: GetResult<UserDocument>,
     ranked: boolean,
     startedAt: Date
   ) {
@@ -255,16 +255,16 @@ export class MatchService {
       }
 
       // Do not update ratings for bots
-      const newOrderRating: UserRowElo =
-        order.data.role === UserRole.Bot
+      const newOrderRating: UserDocumentElo =
+        order.data.role === UserDocumentRole.Bot
           ? {
               ...order.data.elo,
               matches: order.data.elo.matches + 1,
             }
           : orderRatingConverter.eloRow
 
-      const newChaosRating: UserRowElo =
-        chaos.data.role === UserRole.Bot
+      const newChaosRating: UserDocumentElo =
+        chaos.data.role === UserDocumentRole.Bot
           ? {
               ...chaos.data.elo,
               matches: chaos.data.elo.matches + 1,
@@ -310,7 +310,7 @@ export class MatchService {
       : new RandomBot(perspective)
   }
 
-  private async getProfile(userId: string): Promise<GetResult<UserRow>> {
+  private async getProfile(userId: string): Promise<GetResult<UserDocument>> {
     const profile = await this.userRepository.getById(userId)
     if (!profile)
       unexpected('match service should never try to get a profile that does not exist', userId)

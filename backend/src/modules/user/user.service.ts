@@ -1,5 +1,5 @@
 import { GetUserResult, ListUsersResultData } from '@magic3t/api-types'
-import { UserRow } from '@magic3t/database-types'
+import { UserDocument } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
 import { GetResult } from '@/infra/firestore/types'
 import { RatingService } from '@/modules/rating'
@@ -8,7 +8,7 @@ import { RatingService } from '@/modules/rating'
 export class UserService {
   constructor(private ratingService: RatingService) {}
 
-  async getUserByRow(row: GetResult<UserRow>): Promise<GetUserResult> {
+  async getUserByRow(row: GetResult<UserDocument>): Promise<GetUserResult> {
     const rating = await this.ratingService.getRatingConverter(row.data.elo)
 
     return {
@@ -21,7 +21,7 @@ export class UserService {
     }
   }
 
-  async getListedUserByRow(row: GetResult<UserRow>): Promise<ListUsersResultData> {
+  async getListedUserByRow(row: GetResult<UserDocument>): Promise<ListUsersResultData> {
     const rating = await this.ratingService.getRatingConverter(row.data.elo)
 
     return {

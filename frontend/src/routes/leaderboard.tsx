@@ -1,5 +1,5 @@
 import { League } from '@magic3t/common-types'
-import { UserRole } from '@magic3t/database-types'
+import { UserDocumentRole } from '@magic3t/database-types'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { GiCrown, GiRobotGrab } from 'react-icons/gi'
 import { Panel } from '@/components/ui'
@@ -85,12 +85,12 @@ export function LeaderboardTemplate() {
                         />
                         <div className="flex flex-col min-w-0">
                           <div className="flex items-center gap-2 flex-nowrap">
-                            {user.role === UserRole.Bot && (
+                            {user.role === UserDocumentRole.Bot && (
                               <Tooltip text="Bot account">
                                 <GiRobotGrab className="text-gold-4 size-6" />
                               </Tooltip>
                             )}
-                            {user.role === UserRole.Creator && (
+                            {user.role === UserDocumentRole.Creator && (
                               <Tooltip text="This account belongs to the creator of the game">
                                 <GiCrown className="text-gold-4 size-6" />
                               </Tooltip>

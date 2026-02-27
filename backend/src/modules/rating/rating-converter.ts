@@ -1,5 +1,5 @@
 import { Division, League, RatingData } from '@magic3t/common-types'
-import { RatingConfigRow, UserRowElo } from '@magic3t/database-types'
+import { RatingConfigRow, UserDocumentElo } from '@magic3t/database-types'
 import { clamp } from 'lodash'
 
 const baseLeagueIndexes = [League.Bronze, League.Silver, League.Gold, League.Diamond]
@@ -7,10 +7,10 @@ const TOTAL_MASTER_LP = 4 * 400
 
 /** Represents a user rating. */
 export class RatingConverter {
-  public eloRow: UserRowElo
+  public eloRow: UserDocumentElo
 
   constructor(
-    elo: Readonly<UserRowElo>,
+    elo: Readonly<UserDocumentElo>,
     private config: Readonly<RatingConfigRow>
   ) {
     this.eloRow = { ...elo }

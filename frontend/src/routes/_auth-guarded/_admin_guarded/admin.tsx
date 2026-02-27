@@ -1,6 +1,6 @@
 import type { Admin } from '@magic3t/api-types'
 import { League } from '@magic3t/common-types'
-import { UserRole } from '@magic3t/database-types'
+import { UserDocumentRole } from '@magic3t/database-types'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { GiCrown, GiRobotGrab } from 'react-icons/gi'
@@ -155,12 +155,12 @@ function AccountRow({
       {/* Info */}
       <div className="flex flex-col min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          {hasData && user.userRow.role === UserRole.Bot && (
+          {hasData && user.userRow.role === UserDocumentRole.Bot && (
             <Tooltip text="Bot account">
               <GiRobotGrab className="text-gold-4 size-4 shrink-0" />
             </Tooltip>
           )}
-          {hasData && user.userRow.role === UserRole.Creator && (
+          {hasData && user.userRow.role === UserDocumentRole.Creator && (
             <Tooltip text="Creator account">
               <GiCrown className="text-gold-4 size-4 shrink-0" />
             </Tooltip>

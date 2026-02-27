@@ -1,4 +1,4 @@
-import { UserRole } from '@magic3t/database-types'
+import { UserDocumentRole } from '@magic3t/database-types'
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { GiBookCover, GiCrown, GiTargetArrows, GiTrophy } from 'react-icons/gi'
@@ -116,7 +116,7 @@ export function Navbar() {
       </NavLink>
 
       {/* Admin Button */}
-      {authState === AuthState.SignedIn && user.role === UserRole.Creator && (
+      {authState === AuthState.SignedIn && user.role === UserDocumentRole.Creator && (
         <NavLink href="/admin" tooltip="Creator Zone" className="hidden md:flex">
           <GiCrown size={20} />
           <span className="hidden lg:inline-block">Admin</span>
@@ -173,7 +173,7 @@ export function Navbar() {
                   <IoPerson />
                   My Profile
                 </Link>
-                {authState === AuthState.SignedIn && user.role === UserRole.Creator && (
+                {authState === AuthState.SignedIn && user.role === UserDocumentRole.Creator && (
                   <Link
                     to={'/admin' as '/'}
                     className="flex gap-2 items-center hover:bg-blue-4/20 p-3 cursor-pointer md:hidden"

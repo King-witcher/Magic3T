@@ -1,5 +1,5 @@
 import { RatingData } from '@magic3t/common-types'
-import { UserRow } from '@magic3t/database-types'
+import { UserDocument } from '@magic3t/database-types'
 
 export namespace Admin {
   export type ListAccountsResultItem = {
@@ -15,7 +15,7 @@ export namespace Admin {
     }
   } & (
     | {
-        userRow: UserRow
+        userRow: UserDocument
         rating: RatingData
       }
     | {
