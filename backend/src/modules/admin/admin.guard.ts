@@ -1,12 +1,12 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { respondError } from '@/common'
-import { UserRepository } from '@/infra/firestore'
+import { UserDocumentRepository } from '@/infra/firestore'
 import { AuthenticRequest } from '@/modules/auth/auth-request'
 import { AuthenticSocket } from '@/modules/auth/auth-socket'
 
 @Injectable()
 export class AdminGuard implements CanActivate {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(private readonly userRepository: UserDocumentRepository) {}
 
   async canActivate(context: ExecutionContext) {
     let userId: string | undefined

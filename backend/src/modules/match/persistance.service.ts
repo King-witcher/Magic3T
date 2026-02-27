@@ -3,7 +3,7 @@ import { MatchRow, MatchRowGameMode, UserDocument } from '@magic3t/database-type
 import { Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { FieldValue, UpdateData } from 'firebase-admin/firestore'
-import { MatchRepository, UserRepository } from '@/infra/firestore'
+import { MatchRepository, UserDocumentRepository } from '@/infra/firestore'
 import { RatingService } from '@/modules/rating'
 import { MatchFinishedEvent } from './events/match-finished-event'
 
@@ -13,7 +13,7 @@ import { MatchFinishedEvent } from './events/match-finished-event'
 @Injectable()
 export class PersistanceService {
   constructor(
-    private usersRepository: UserRepository,
+    private usersRepository: UserDocumentRepository,
     private matchesRepository: MatchRepository,
     private ratingService: RatingService
   ) {}

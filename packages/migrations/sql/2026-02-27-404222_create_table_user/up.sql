@@ -1,6 +1,7 @@
 -- Migration generated on 2026-02-27 11:13:42
 
 CREATE TYPE user_role AS ENUM (
+    'bot',
     'player',
     'admin',
     'superuser'
@@ -13,7 +14,7 @@ CREATE TYPE user_apex_flag AS ENUM (
 
 CREATE TABLE "user"
 (
-    id                    INTEGER GENERATED ALWAYS AS IDENTITY,
+    id                    INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     uuid                  uuid UNIQUE        NOT NULL DEFAULT gen_random_uuid(),
     firebase_id           CHAR(28) UNIQUE,
     role                  user_role          NOT NULL DEFAULT 'player',

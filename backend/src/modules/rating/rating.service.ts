@@ -2,7 +2,7 @@ import { RatingConfigRow, UserDocumentElo } from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import * as Sentry from '@sentry/node'
-import { ConfigRepository, UserRepository } from '@/infra/firestore'
+import { ConfigRepository, UserDocumentRepository } from '@/infra/firestore'
 import { RatingConverter } from './rating-converter'
 
 const MAX_CHALLENGERS = 1
@@ -13,7 +13,7 @@ export class RatingService {
 
   constructor(
     private configRepository: ConfigRepository,
-    private usersRepository: UserRepository
+    private usersRepository: UserDocumentRepository
   ) {}
 
   private get ratingConfig(): Promise<RatingConfigRow> {

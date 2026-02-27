@@ -1,6 +1,6 @@
 import type { CHAR, DATE, INTEGER, REAL, SMALLINT, TIMESTAMP, UUID, VARCHAR } from '../postgres'
 
-export type user_role = 'player' | 'admin' | 'superuser'
+export type user_role = 'bot' | 'player' | 'admin' | 'superuser'
 
 export type user_apex_flag = 'challenger' | 'grandmaster'
 

@@ -4,7 +4,7 @@ import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/co
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { range } from 'lodash'
 import { respondError } from '@/common'
-import { ConfigRepository, UserRepository } from '@/infra/firestore'
+import { ConfigRepository, UserDocumentRepository } from '@/infra/firestore'
 import { AuthGuard } from '@/modules/auth/auth.guard'
 import { UserId } from '@/modules/auth/user-id.decorator'
 import {
@@ -20,7 +20,7 @@ const baseIcons = new Set([...range(59, 79), ...range(0, 30)])
 export class UserController {
   constructor(
     private readonly userService: UserService,
-    private readonly userRepository: UserRepository,
+    private readonly userRepository: UserDocumentRepository,
     private readonly configRepository: ConfigRepository
   ) {}
 

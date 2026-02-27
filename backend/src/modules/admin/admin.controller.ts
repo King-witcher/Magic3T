@@ -2,7 +2,8 @@ import { Admin } from '@magic3t/api-types'
 import { Controller, Get, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { IconRepository } from '@/infra/database/repositories/icon-repository'
-import { ConfigRepository, UserRepository } from '@/infra/firestore'
+import { UserRepository } from '@/infra/database/repositories/user-repository'
+import { ConfigRepository, UserDocumentRepository } from '@/infra/firestore'
 import { AuthGuard } from '@/modules/auth/auth.guard'
 import { AuthService } from '../auth'
 import { RatingService } from '../rating'
@@ -13,7 +14,8 @@ import { AdminGuard } from './admin.guard'
 @ApiBearerAuth()
 export class AdminController {
   constructor(
-    private usersRepository: UserRepository,
+    private readonly userRepository: UserRepository,
+    private userDocumentRepository: UserDocumentRepository,
     private configRepository: ConfigRepository,
     private iconRepository: IconRepository,
     private readonly authService: AuthService,
@@ -26,11 +28,11 @@ export class AdminController {
   @Post('reset-ratings')
   async resetRatings() {
     const ratingConfig = await this.configRepository.cachedGetRatingConfig()
-    const users = await this.usersRepository.listAll()
+    const users = await this.userDocumentRepository.listAll()
 
     await Promise.all(
       users.map(async (user) => {
-        this.usersRepository.set(user.id, {
+        this.userDocumentRepository.set(user.id, {
           ...user.data,
           elo: {
             challenger: false,
@@ -52,7 +54,7 @@ export class AdminController {
     const [accounts] = await this.authService.listAccounts()
     const items = await Promise.all(
       accounts.map(async (user): Promise<Admin.ListAccountsResultItem> => {
-        const userRow = await this.usersRepository.getById(user.uid)
+        const userRow = await this.userDocumentRepository.getById(user.uid)
         if (!userRow) {
           return {
             id: user.uid,
@@ -97,5 +99,13 @@ export class AdminController {
   @Post('sync-icons')
   async syncIcons() {
     await this.iconRepository.syncIcons()
+  }
+
+  @ApiOperation({
+    summary: 'Synchronize icons with Riot API',
+  })
+  @Post('import-users')
+  async importUsers() {
+    await this.userRepository.importFromFirestore()
   }
 }

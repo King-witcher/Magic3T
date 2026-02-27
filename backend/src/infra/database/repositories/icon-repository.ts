@@ -71,7 +71,7 @@ export class IconRepository {
 
     this.logger.log(`Found ${newIcons.length} new icons. Adding to the database...`)
     const iconRows = newIcons.map((icon) => this.getIconRowFromRiotIcon(icon))
-    await this.batchInsertIcons(iconRows)
+    await this.bulkCreate(iconRows)
     this.logger.log('Icon repopulation process completed successfully.')
   }
 
@@ -97,7 +97,7 @@ export class IconRepository {
     }
   }
 
-  private async batchInsertIcons(iconRows: IconRow[]) {
+  private async bulkCreate(iconRows: IconRow[]) {
     await this.databaseService.transaction(async (client) => {
       for (const icon of iconRows) {
         await client.query({

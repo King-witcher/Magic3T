@@ -9,8 +9,8 @@ import { BaseFirestoreRepository } from '../base-repository'
 import { ConfigRepository } from '../config'
 
 @Injectable()
-export class UserRepository extends BaseFirestoreRepository<UserDocument> {
-  private user_logger = new Logger(UserRepository.name, { timestamp: true })
+export class UserDocumentRepository extends BaseFirestoreRepository<UserDocument> {
+  private user_logger = new Logger(UserDocumentRepository.name, { timestamp: true })
   private iconAssignmentConverter: FirestoreDataConverter<IconAssignmentRow>
 
   constructor(
@@ -200,6 +200,19 @@ export class UserRepository extends BaseFirestoreRepository<UserDocument> {
 
     await subCollection.doc(String(iconId)).set({
       date: new Date(),
+    })
+  }
+
+  async listAll(): Promise<ListResult<UserDocument>> {
+    const snapshot = await this.collection.get()
+    return snapshot.docs.map((doc) => {
+      const data = doc.data()
+      return {
+        id: doc.id,
+        createdAt: doc.createTime.toDate(),
+        updatedAt: doc.updateTime.toDate(),
+        data: data,
+      }
     })
   }
 }

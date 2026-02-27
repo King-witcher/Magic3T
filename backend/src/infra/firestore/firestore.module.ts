@@ -6,7 +6,7 @@ import {
   ConfigRepository,
   CrashReportsRepository,
   MatchRepository,
-  UserRepository,
+  UserDocumentRepository,
 } from './repositories'
 
 @Global()
@@ -14,14 +14,14 @@ import {
   imports: [FirebaseModule],
   providers: [
     FirestoreService,
-    UserRepository,
+    UserDocumentRepository,
     MatchRepository,
     ConfigRepository,
     CrashReportsRepository,
   ],
   exports: [
     FirestoreService,
-    UserRepository,
+    UserDocumentRepository,
     MatchRepository,
     ConfigRepository,
     CrashReportsRepository,

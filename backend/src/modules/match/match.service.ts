@@ -11,7 +11,7 @@ import {
 import { Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { unexpected } from '@/common'
-import { ConfigRepository, UserRepository } from '@/infra/firestore'
+import { ConfigRepository, UserDocumentRepository } from '@/infra/firestore'
 import { GetResult } from '@/infra/firestore/types/query-types'
 import { WebsocketEmitterService } from '@/infra/websocket/websocket-emitter.service'
 import { RatingService } from '@/modules/rating'
@@ -28,7 +28,7 @@ const HUMAN_VS_HUMAN_TIMELIMIT = 240 * 1000 // 4 minutes per player
 export class MatchService {
   constructor(
     private configRepository: ConfigRepository,
-    private userRepository: UserRepository,
+    private userRepository: UserDocumentRepository,
     private matchBank: MatchBank,
     private ratingService: RatingService,
     private eventEmitter: EventEmitter2,
