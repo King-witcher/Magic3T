@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common'
 import { DatabaseService } from './database.service'
-import { IconRepository } from './repositories/icons-repository'
+import { IconRepository } from './repositories/icon-repository'
 
 @Module({
   providers: [DatabaseService, IconRepository],

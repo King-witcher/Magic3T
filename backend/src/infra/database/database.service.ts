@@ -14,8 +14,9 @@ export class DatabaseService {
       database: process.env.PG_DATABASE,
       ssl: process.env.PG_SSL === 'true' ? { rejectUnauthorized: false } : false,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      connectionTimeoutMillis: 5000,
       maxLifetimeSeconds: 60,
+      max: 20,
     })
   }
 

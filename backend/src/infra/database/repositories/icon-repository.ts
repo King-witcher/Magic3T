@@ -53,7 +53,7 @@ export class IconRepository {
   }
 
   @Cron('0 5 * * 3')
-  async repopulate() {
+  async syncIcons() {
     this.logger.log('Starting icon repopulation process...')
     const [riotIcons, dbIconIds] = await Promise.all([
       this.listAllRiotIcons(),

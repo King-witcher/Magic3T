@@ -1,7 +1,7 @@
 import { Admin } from '@magic3t/api-types'
 import { Controller, Get, Post, UseGuards } from '@nestjs/common'
-import { ApiOperation } from '@nestjs/swagger'
-import { IconRepository } from '@/infra/database/repositories/icons-repository'
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
+import { IconRepository } from '@/infra/database/repositories/icon-repository'
 import { ConfigRepository, UserRepository } from '@/infra/firestore'
 import { AuthGuard } from '@/modules/auth/auth.guard'
 import { AuthService } from '../auth'
@@ -10,6 +10,7 @@ import { AdminGuard } from './admin.guard'
 
 @Controller('admin')
 @UseGuards(AuthGuard, AdminGuard)
+@ApiBearerAuth()
 export class AdminController {
   constructor(
     private usersRepository: UserRepository,
@@ -19,7 +20,9 @@ export class AdminController {
     private readonly ratingService: RatingService
   ) {}
 
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Reset all user ratings to the initial values',
+  })
   @Post('reset-ratings')
   async resetRatings() {
     const ratingConfig = await this.configRepository.cachedGetRatingConfig()
@@ -40,6 +43,10 @@ export class AdminController {
     )
   }
 
+  @ApiOperation({
+    summary: 'List all user accounts',
+    description: 'Returns a list of all user accounts with their details.',
+  })
   @Get('accounts')
   async listAccounts(): Promise<Admin.ListAccountsResult> {
     const [accounts] = await this.authService.listAccounts()
@@ -84,8 +91,11 @@ export class AdminController {
     return { users: items }
   }
 
-  @Post('repopulate-icons')
-  async repopulateIcons() {
-    await this.iconRepository.repopulate()
+  @ApiOperation({
+    summary: 'Synchronize icons with Riot API',
+  })
+  @Post('sync-icons')
+  async syncIcons() {
+    await this.iconRepository.syncIcons()
   }
 }
