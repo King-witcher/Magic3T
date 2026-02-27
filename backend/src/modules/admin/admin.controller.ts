@@ -1,6 +1,7 @@
 import { Admin } from '@magic3t/api-types'
 import { Controller, Get, Post, UseGuards } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
+import { IconRepository } from '@/infra/database/repositories/icons-repository'
 import { ConfigRepository, UserRepository } from '@/infra/firestore'
 import { AuthGuard } from '@/modules/auth/auth.guard'
 import { AuthService } from '../auth'
@@ -13,6 +14,7 @@ export class AdminController {
   constructor(
     private usersRepository: UserRepository,
     private configRepository: ConfigRepository,
+    private iconRepository: IconRepository,
     private readonly authService: AuthService,
     private readonly ratingService: RatingService
   ) {}
@@ -80,5 +82,10 @@ export class AdminController {
       })
     )
     return { users: items }
+  }
+
+  @Post('repopulate-icons')
+  async repopulateIcons() {
+    await this.iconRepository.repopulate()
   }
 }
