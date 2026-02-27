@@ -18,7 +18,14 @@ export class UserRepository {
       [UserDocumentRole.Bot]: 'bot',
     }
 
+    console.log(`imported ${users.length} from firestore`)
+
     const userRows: Omit<UserRow, 'id' | 'uuid' | 'profile_nickname_date'>[] = users.map((user) => {
+      const summoner_icon =
+        user.data.summoner_icon >= 59 && user.data.summoner_icon <= 78
+          ? 29
+          : user.data.summoner_icon
+
       return {
         firebase_id: user.data.role !== UserDocumentRole.Bot ? user.id : null,
         role: roleMap[user.data.role],
@@ -26,7 +33,7 @@ export class UserRepository {
         xp: user.data.experience,
         profile_nickname: user.data.identification.nickname,
         profile_nickname_slug: user.data.identification.unique_id,
-        profile_icon: user.data.summoner_icon,
+        profile_icon: summoner_icon,
         rating_score: user.data.elo.score,
         rating_k_factor: user.data.elo.k,
         rating_apex: user.data.elo.challenger ? 'challenger' : null,
@@ -42,16 +49,18 @@ export class UserRepository {
   }
 
   async bulkCreate(userRows: Omit<UserRow, 'id' | 'uuid' | 'profile_nickname_date'>[]) {
+    console.log('bulk create')
     await this.databaseService.transaction(async (client) => {
       for (const user of userRows) {
+        console.info(`Importing user ${JSON.stringify(user, null, 4)}`)
         await client.query({
           name: 'insert_user',
           text: `INSERT INTO "user" (
-            firebase_id, role, credits, xp,
-            profile_nickname, profile_nickname_slug, profile_icon,
-            rating_score, rating_k_factor, rating_apex, rating_series_played, rating_date,
-            stats_victories, stats_draws, stats_defeats
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+              firebase_id, role, credits, xp,
+              profile_nickname, profile_nickname_slug, profile_icon,
+              rating_score, rating_k_factor, rating_apex, rating_series_played, rating_date,
+              stats_victories, stats_draws, stats_defeats
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
           values: [
             user.firebase_id,
             user.role,

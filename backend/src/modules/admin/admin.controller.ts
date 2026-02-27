@@ -102,7 +102,7 @@ export class AdminController {
   }
 
   @ApiOperation({
-    summary: 'Synchronize icons with Riot API',
+    summary: 'Import users from Firestore',
   })
   @Post('import-users')
   async importUsers() {

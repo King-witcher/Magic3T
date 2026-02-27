@@ -16,7 +16,7 @@ CREATE TABLE icon
     id            SMALLINT PRIMARY KEY,
     title         TEXT     NOT NULL,
     description   TEXT,
-    year_released SMALLINT NOT NULL,
+    year_released SMALLINT,
     content_id    UUID     NOT NULL,
     is_legacy     BOOLEAN  NOT NULL,
     rarity        rarity   NOT NULL

@@ -14,7 +14,7 @@ export type IconRow = {
   id: number
   title: string
   description: string | null
-  yearReleased: number
+  yearReleased: number | null
   contentId: UUID
   isLegacy: boolean
   rarity: IconRarity

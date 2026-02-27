@@ -14,7 +14,7 @@ import {
 } from './swagger/user-commands'
 import { UserService } from './user.service'
 
-const baseIcons = new Set([...range(59, 79), ...range(0, 30)])
+const baseIcons = new Set([...range(0, 30)])
 
 @Controller('user')
 export class UserController {
