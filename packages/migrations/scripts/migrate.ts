@@ -20,7 +20,7 @@ async function listUpMigrations(): Promise<SqlScript[]> {
   return migrations
 }
 
-async function main() {
+async function main(): Promise<number> {
   try {
     const [migrations] = await Promise.all([listUpMigrations(), createTableMigrationsIfNotExists()])
 
@@ -30,7 +30,7 @@ async function main() {
 
     if (pending.length === 0) {
       console.info('✅ No pending migrations. Database is up to date.')
-      return
+      return 0
     }
 
     console.info(`📃 Found ${pending.length} pending migration(s).`)
@@ -58,9 +58,11 @@ async function main() {
     console.info('✅ Migrations applied successfully.')
   } catch (error) {
     console.error('❌ Migration failed:', (error as Error).message)
+    return 1
   } finally {
     await close()
   }
+  return 0
 }
 
-main()
+process.exit(await main())
