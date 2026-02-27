@@ -15,16 +15,18 @@ CREATE TABLE "user"
 (
     id                    INTEGER GENERATED ALWAYS AS IDENTITY,
     uuid                  uuid UNIQUE        NOT NULL DEFAULT gen_random_uuid(),
-    fb_id                 CHAR(28) UNIQUE,
+    firebase_id           CHAR(28) UNIQUE,
     role                  user_role          NOT NULL DEFAULT 'player',
+    credits               INTEGER            NOT NULL DEFAULT 0 CHECK ( credits >= 0 ),
+    xp                    INTEGER            NOT NULL DEFAULT 0 CHECK ( xp >= 0 ),
 
     profile_nickname      VARCHAR(16)        NOT NULL,
     profile_nickname_slug VARCHAR(16) UNIQUE NOT NULL,
-    profile_nickname_date TIMESTAMP          NOT NULL,
+    profile_nickname_date TIMESTAMP          NOT NULL DEFAULT NOW(),
     profile_icon          SMALLINT           NOT NULL DEFAULT 29,
 
     rating_score          REAL               NOT NULL,
-    rating_k_factor       REAL               NOT NULL CHECK ( rating_k_factor > 0 ),
+    rating_k_factor       REAL               NOT NULL CHECK ( rating_k_factor >= 0 ),
     rating_apex           user_apex_flag,
     rating_series_played  SMALLINT           NOT NULL DEFAULT 0,
     rating_date           DATE               NOT NULL DEFAULT NOW(),
@@ -38,13 +40,13 @@ CREATE TABLE "user"
 
 COMMENT ON COLUMN "user".id IS 'User''s internal id';
 COMMENT ON COLUMN "user".uuid IS 'User''s external id';
-COMMENT ON COLUMN "user".fb_id IS 'Firebase Authentication ID';
+COMMENT ON COLUMN "user".firebase_id IS 'Firebase Authentication ID';
 COMMENT ON COLUMN "user".rating_k_factor IS 'Dynamic K-Factor used in Elo rating calculation';
 COMMENT ON COLUMN "user".rating_series_played IS 'Number of games played in the initial rating series';
 COMMENT ON COLUMN "user".rating_apex IS 'A flag indicating if the user has reached Challenger or Grandmaster rank';
 
 CREATE INDEX ON "user" (id);
 CREATE INDEX ON "user" (uuid);
-CREATE INDEX ON "user" (fb_id) WHERE fb_id IS NOT NULL;
+CREATE INDEX ON "user" (firebase_id) WHERE firebase_id IS NOT NULL;
 CREATE INDEX ON "user" (profile_nickname_slug);
 CREATE INDEX ON "user" (rating_score DESC, rating_date ASC);

@@ -7,8 +7,10 @@ export type user_apex_flag = 'challenger' | 'grandmaster'
 export type UserRow = {
   id: INTEGER
   uuid: UUID
-  fb_id: CHAR | null
+  firebase_id: CHAR | null
   role: user_role
+  credits: INTEGER
+  xp: INTEGER
 
   profile_nickname: VARCHAR
   profile_nickname_slug: VARCHAR
