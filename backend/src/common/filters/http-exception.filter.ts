@@ -19,7 +19,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const ctx = argumentsHost.switchToHttp()
         const status = error.getStatus()
         const response = ctx.getResponse<Response>()
-        response.status(status).json(response)
+        response.status(status).json(error.getResponse())
 
         if (status === 404) {
           const request = ctx.getRequest<Request>()
