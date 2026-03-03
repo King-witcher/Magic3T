@@ -8,3 +8,5 @@ CREATE TABLE legacy_user_identity
 );
 
 CREATE INDEX ON legacy_user_identity (email);
+
+COMMENT ON TABLE legacy_user_identity IS 'Since we are leaving Firebase, this table serves as a mapping between the old Firebase users the future Google OAuth2 identities.';

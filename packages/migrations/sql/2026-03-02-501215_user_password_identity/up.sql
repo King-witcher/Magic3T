@@ -2,7 +2,7 @@
 
 CREATE TABLE user_password_identity
 (
-    username        VARCHAR(20) PRIMARY KEY,
+    username_slug   VARCHAR(24) PRIMARY KEY,
     password_digest VARCHAR(60)    NOT NULL,
     user_id         INTEGER UNIQUE NOT NULL
 );
