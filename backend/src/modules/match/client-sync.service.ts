@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { WebsocketEmitterService } from '@/infra/websocket/websocket-emitter.service'
 import { RatingService } from '@/modules/rating'
-import { MatchFinishedEvent } from './events/match-finished-event'
+import { FinishedMatchContext } from './events/match-finished-event'
 
 /**
  * Service responsible for syncing match state and results to clients.
@@ -28,7 +28,7 @@ export class ClientSyncService {
    * Sends the final match summary to players after the match is finished.
    */
   @OnEvent('match.finished')
-  async sendMatchSummary(summary: MatchFinishedEvent) {
+  async sendMatchSummary(summary: FinishedMatchContext) {
     // Determine winner
     const winner =
       summary.order.matchScore === 1
@@ -69,7 +69,7 @@ export class ClientSyncService {
     for (const player of [summary.chaos, summary.order]) {
       if (player.row.data.role === 'bot') continue
       this.websocketEmitterService.send(
-        player.id,
+        player.firebaseId,
         'match',
         MatchServerEvents.MatchReport,
         socketSummary

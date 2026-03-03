@@ -13,3 +13,11 @@ services:
       - "5432:5432"
     volumes:
       - D://data/magic3t-postgres:/var/lib/postgresql
+  valkey:
+    image: valkey/valkey:8.1.6-alpine
+    container_name: magic3t-valkey
+    cpus: 0.1
+    mem_limit: 6m
+    command: valkey-server --loglevel warning --save ""
+    ports:
+      - "6379:6379"

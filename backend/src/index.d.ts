@@ -24,6 +24,7 @@ declare global {
       PORT: number
       QUEUE_STATUS_POLLING_RATE: number
       SENTRY_DSN: string
+      VALKEY_HOST: string
     }
   }
 }

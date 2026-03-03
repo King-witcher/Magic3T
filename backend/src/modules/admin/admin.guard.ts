@@ -1,12 +1,12 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { respondError } from '@/common'
-import { UserDocumentRepository } from '@/infra/firestore'
+import { UserRepository } from '@/infra/database/repositories/user-repository'
 import { AuthenticRequest } from '@/modules/auth/auth-request'
 import { AuthenticSocket } from '@/modules/auth/auth-socket'
 
 @Injectable()
 export class AdminGuard implements CanActivate {
-  constructor(private readonly userRepository: UserDocumentRepository) {}
+  constructor(private readonly userRepository: UserRepository) {}
 
   async canActivate(context: ExecutionContext) {
     let userId: string | undefined
@@ -28,9 +28,9 @@ export class AdminGuard implements CanActivate {
     }
 
     if (!userId) return false
-    const user = await this.userRepository.getById(userId)
+    const user = await this.userRepository.getByFirebaseId(userId)
     if (!user) return false
-    if (user.data.role === 'creator') return true
+    if (user.role === 'superuser') return true
     return false
   }
 }

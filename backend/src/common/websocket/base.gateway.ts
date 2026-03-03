@@ -3,8 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter'
 import { OnGatewayConnection, OnGatewayInit, WebSocketServer } from '@nestjs/websockets'
 import { EventNames, EventParams, EventsMap } from '@socket.io/component-emitter'
 import { DefaultEventsMap, Namespace, Server, Socket } from 'socket.io'
-
-import { UserDocumentRepository } from '@/infra/firestore'
+import { UserRepository } from '@/infra/database/repositories/user-repository'
 import { WebsocketEmitterEvent } from '@/infra/websocket/types'
 import { WebsocketCountingService } from '@/infra/websocket/websocket-counting.service'
 import { AuthService } from '@/modules/auth/auth.service'
@@ -29,8 +28,8 @@ export class BaseGateway<
 
   @Inject(AuthService)
   protected readonly authService: AuthService
-  @Inject(UserDocumentRepository)
-  protected readonly usersRepository: UserDocumentRepository
+  @Inject(UserRepository)
+  protected readonly userRepository: UserRepository
   @Inject(WebsocketCountingService)
   protected readonly websocketCountingService: WebsocketCountingService
 

@@ -1,23 +1,32 @@
-import { MatchRowEvent, UserDocument, UserDocumentElo } from '@magic3t/database-types'
-import { GetResult } from '@/infra/firestore/types'
+import { MatchRowEvent, RatingConfigRow, UserRow, user_apex_flag } from '@magic3t/database-types'
+import { RatingService } from '@/modules/rating'
 
-export type MatchFinishedEvent = {
-  order: {
-    id: string
-    matchScore: number
-    row: GetResult<UserDocument>
-    newRating: UserDocumentElo
-    time: number
+type FinishedMatchContextPlayer = {
+  row: UserRow
+  matchScore: number
+  newRating: {
+    score: number
+    kFactor: number
+    apexFlag: user_apex_flag
   }
-  chaos: {
-    id: string
-    matchScore: number
-    row: GetResult<UserDocument>
-    newRating: UserDocumentElo
-    time: number
-  }
+  prevLp: number | null
+  newLp: number | null
+  timeSpent: number
+}
+
+export type FinishedMatchContext = {
+  order: FinishedMatchContextPlayer
+  chaos: FinishedMatchContextPlayer
+
+  configSnapshot: RatingConfigRow
+  ratingService: RatingService
 
   startedAt: Date
   ranked: boolean
   events: MatchRowEvent[]
 }
+
+// Atualizar elo e fator k do jogador
+// Salvar partida com elo, lp total e ganho de lp
+// Avisar jogadores do resultado da partida, incluindo ganho de lp e novo elo
+// Remover apex flag ao cair abaixo do mestre

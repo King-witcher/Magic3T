@@ -43,8 +43,7 @@ export class ConfigRepository {
     return configs[botName] ?? null
   }
 
-  @CacheMethod(300)
-  async cachedGetRatingConfig(): Promise<RatingConfigRow> {
+  async getRatingConfig(): Promise<RatingConfigRow> {
     this.logger.verbose('read "rating" from config')
     const converter = this.databaseService.getDefaultConverter<RatingConfigRow>()
     const snapshot = await this.collection.withConverter(converter).doc('rating').get()

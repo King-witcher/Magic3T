@@ -41,8 +41,13 @@ services:
       - key: PG_PASSWORD
         sync: false
 
+      # Redis
+      - key: REDIS_HOST
+        sync: false
+
       - key: DEBUG
         value: "false"
+
     healthCheckPath: /status
     domains:
       - backend.magic3t.com.br
@@ -52,11 +57,11 @@ services:
         - backend/**
         - packages/**
 
-  - type: redis
-    name: Magic3T Redis
-    plan: free
+  - type: keyvalue
+    name: Magic3T KeyValue
     region: virginia
-    maxmemoryPolicy: allkeys-lru
+    plan: free
     ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
 
 version: "1"

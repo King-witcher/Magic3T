@@ -1,11 +1,11 @@
-import { Division, League, RatingData } from '@magic3t/common-types'
+import { ClientRank, Division, League } from '@magic3t/common-types'
 import { RatingConfigRow, UserDocumentElo } from '@magic3t/database-types'
 import { clamp } from 'lodash'
 
 const baseLeagueIndexes = [League.Bronze, League.Silver, League.Gold, League.Diamond]
 const TOTAL_MASTER_LP = 4 * 400
 
-/** Represents a user rating. */
+/** Represents a user rating. @deprecated */
 export class RatingConverter {
   public eloRow: UserDocumentElo
 
@@ -161,7 +161,7 @@ export class RatingConverter {
 
   /** Gets the rating data (league, division, points, progress). */
   // TODO: Optimize it to not repeat getTotalLP calculations
-  public get ratingData(): RatingData {
+  public get ratingData(): ClientRank {
     return {
       league: this.league,
       division: this.division,

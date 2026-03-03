@@ -7,16 +7,18 @@ import {
   UserDocument,
   UserDocumentElo,
   UserDocumentRole,
+  UserRow,
 } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { unexpected } from '@/common'
+import { UserRepository } from '@/infra/database/repositories/user-repository'
 import { ConfigRepository, UserDocumentRepository } from '@/infra/firestore'
 import { GetResult } from '@/infra/firestore/types/query-types'
 import { WebsocketEmitterService } from '@/infra/websocket/websocket-emitter.service'
 import { RatingService } from '@/modules/rating'
 import { BaseBot, LmmBot, RandomBot } from './bots'
-import { MatchFinishedEvent } from './events/match-finished-event'
+import { FinishedMatchContext } from './events/match-finished-event'
 import { Match, MatchBank, MatchClassEventType, MatchClassSummary, Perspective } from './lib'
 import { matchException } from './types/match-error'
 
@@ -28,7 +30,7 @@ const HUMAN_VS_HUMAN_TIMELIMIT = 240 * 1000 // 4 minutes per player
 export class MatchService {
   constructor(
     private configRepository: ConfigRepository,
-    private userRepository: UserDocumentRepository,
+    private userRepository: UserRepository,
     private matchBank: MatchBank,
     private ratingService: RatingService,
     private eventEmitter: EventEmitter2,
@@ -151,8 +153,8 @@ export class MatchService {
     // Register perspectives for both players in match bank
     this.matchBank.createPerspectives({
       match,
-      orderId: orderProfile.id,
-      chaosId: chaosProfile.id,
+      orderId: orderProfile.firebase_id!,
+      chaosId: chaosProfile.firebase_id!,
     })
 
     // Sync
@@ -206,8 +208,8 @@ export class MatchService {
    */
   private subscribeMatchEvents(
     match: Match,
-    order: GetResult<UserDocument>,
-    chaos: GetResult<UserDocument>,
+    order: UserRow,
+    chaos: UserRow,
     ranked: boolean,
     startedAt: Date
   ) {
@@ -223,9 +225,9 @@ export class MatchService {
         const stateReport = match.stateReport
         for (const player of [order, chaos]) {
           // Validate that the player is not a bot
-          if (player.data.role !== 'bot') {
+          if (player.role !== 'bot') {
             this.websocketEmitterService.send(
-              player.id,
+              player.firebase_id!,
               'match',
               MatchServerEvents.StateReport,
               stateReport
@@ -272,20 +274,20 @@ export class MatchService {
           : chaosRatingConverter.eloRow
 
       // Create a finished event
-      const finishEvent: MatchFinishedEvent = {
+      const finishEvent: FinishedMatchContext = {
         order: {
-          id: order.id,
+          firebaseId: order.id,
           matchScore: orderScore,
           row: order,
-          time: summary.order.timeSpent,
+          timeSpent: summary.order.timeSpent,
           // Do not update rating for bots
           newRating: newOrderRating,
         },
         chaos: {
-          id: chaos.id,
+          firebaseId: chaos.id,
           row: chaos,
           matchScore: 1 - orderScore,
-          time: summary.chaos.timeSpent,
+          timeSpent: summary.chaos.timeSpent,
           newRating: newChaosRating,
         },
         events: match.events,
@@ -310,8 +312,8 @@ export class MatchService {
       : new RandomBot(perspective)
   }
 
-  private async getProfile(userId: string): Promise<GetResult<UserDocument>> {
-    const profile = await this.userRepository.getById(userId)
+  private async getProfile(userId: string): Promise<UserRow> {
+    const profile = await this.userRepository.getByFirebaseId(userId)
     if (!profile)
       unexpected('match service should never try to get a profile that does not exist', userId)
     return profile

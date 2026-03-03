@@ -1,4 +1,4 @@
-import type { Choice, RatingData, Team } from '@magic3t/common-types'
+import type { Choice, ClientRank, Team } from '@magic3t/common-types'
 
 export const enum MatchClientEvents {
   GetAssignments = 'get-assignments',
@@ -60,12 +60,12 @@ export type MatchReportPayload = {
   [Team.Order]: {
     score: number
     lpGain: number
-    newRating: RatingData
+    newRating: ClientRank
   }
   [Team.Chaos]: {
     score: number
     lpGain: number
-    newRating: RatingData
+    newRating: ClientRank
   }
 }
 

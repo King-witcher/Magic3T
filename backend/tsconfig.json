@@ -29,5 +29,5 @@
     },
     "types": ["vitest/globals"]
   },
-  "include": ["src/**/*.ts", "src/modules/rating/rating.service.ts"]
+  "include": ["src/**/*.ts"]
 }

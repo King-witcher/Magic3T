@@ -1,10 +1,9 @@
 import { GetUserResult, ListUsersResult } from '@magic3t/api-types'
-import { UserDocument, UserDocumentRole } from '@magic3t/database-types'
 import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { range } from 'lodash'
 import { respondError } from '@/common'
-import { ConfigRepository, UserDocumentRepository } from '@/infra/firestore'
+import { UserRepository } from '@/infra/database/repositories/user-repository'
 import { AuthGuard } from '@/modules/auth/auth.guard'
 import { UserId } from '@/modules/auth/user-id.decorator'
 import {
@@ -20,8 +19,7 @@ const baseIcons = new Set([...range(0, 30)])
 export class UserController {
   constructor(
     private readonly userService: UserService,
-    private readonly userRepository: UserDocumentRepository,
-    private readonly configRepository: ConfigRepository
+    private readonly userRepository: UserRepository
   ) {}
 
   @Get('id/:id')
@@ -31,8 +29,8 @@ export class UserController {
   @ApiResponse({
     type: 'object',
   })
-  async getById(@Param('id') id: string): Promise<GetUserResult> {
-    const row = await this.userRepository.getById(id)
+  async getById(@Param('id') firebaseId: string): Promise<GetUserResult> {
+    const row = await this.userRepository.getByFirebaseId(firebaseId)
     if (!row) respondError('user-not-found', 404, 'User not found')
     return this.userService.getUserByRow(row)
   }
@@ -63,7 +61,7 @@ export class UserController {
   async getLeaderboard(): Promise<ListUsersResult> {
     const MIN_RANKED_MATCHES = 5
 
-    const rows = await this.userRepository.listBestPlayers(MIN_RANKED_MATCHES, 10)
+    const rows = await this.userRepository.getLeaderboard(MIN_RANKED_MATCHES, 10)
     return {
       data: await Promise.all(rows.map((row) => this.userService.getListedUserByRow(row))),
     }
@@ -78,8 +76,8 @@ export class UserController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
-  async getMe(@UserId() userId: string) {
-    const user = await this.userRepository.getById(userId)
+  async getMe(@UserId() firebaseId: string) {
+    const user = await this.userRepository.getByFirebaseId(firebaseId)
     if (!user) respondError('user-not-found', 404, 'User not found')
     return this.userService.getUserByRow(user)
   }
@@ -94,18 +92,18 @@ export class UserController {
     @UserId() userId: string,
     @Body() { nickname: newNickname }: ChangeNickCommandClass
   ) {
-    const user = await this.userRepository.getById(userId)
+    const user = await this.userRepository.getByFirebaseId(userId)
     // User does not exist
     if (!user) respondError('user-not-found', 404, 'User not found')
 
     // Check nickname change cooldown (30 days)
-    const timeSinceLastChange = Date.now() - user.data.identification.last_changed.getTime()
+    const timeSinceLastChange = Date.now() - user.profile_nickname_date.getTime()
     if (timeSinceLastChange < 1000 * 60 * 60 * 24 * 30) {
       respondError('nickname-change-cooldown', 400, 'Nickname can only be changed every 30 days')
     }
 
     // Same nickname
-    if (user.data.identification.nickname === newNickname) {
+    if (user.profile_nickname === newNickname) {
       respondError('same-nickname', 400, 'New nickname is the same as the current one')
     }
 
@@ -115,7 +113,7 @@ export class UserController {
       respondError('nickname-unavailable', 400, 'This nickname is already taken')
     }
 
-    await this.userRepository.updateNickname(user.id, newNickname)
+    await this.userRepository.updateNickname(user.firebase_id!, newNickname)
   }
 
   @Post('register')
@@ -124,39 +122,12 @@ export class UserController {
   @ApiOperation({
     summary: 'Register an authenticated user in the database information',
   })
-  async register(@UserId() userId: string, @Body() body: RegisterUserCommandClass) {
-    const [previousUserRow, ratingConfig] = await Promise.all([
-      this.userRepository.getById(userId),
-      this.configRepository.cachedGetRatingConfig(),
-    ])
+  async register(@UserId() firebaseId: string, @Body() body: RegisterUserCommandClass) {
+    const previousUserRow = await this.userRepository.getByFirebaseId(firebaseId)
 
     if (previousUserRow) respondError('user-already-registered')
 
-    const userRow: UserDocument = {
-      elo: {
-        k: ratingConfig.initial_k_factor,
-        score: ratingConfig.initial_elo,
-        challenger: false,
-        matches: 0,
-      },
-      experience: 0,
-      identification: {
-        last_changed: new Date(),
-        nickname: body.nickname,
-        unique_id: this.userRepository.slugify(body.nickname),
-      },
-      magic_points: 0,
-      perfect_squares: 0,
-      role: UserDocumentRole.Player,
-      stats: {
-        defeats: 0,
-        draws: 0,
-        wins: 0,
-      },
-      summoner_icon: 29,
-    }
-
-    await this.userRepository.set(userId, userRow)
+    await this.userRepository.register(firebaseId, body.nickname)
   }
 
   @Get('me/icons')
@@ -170,9 +141,9 @@ export class UserController {
     description: 'A list with all icon ids available',
   })
   @ApiBearerAuth()
-  async getIcons(@UserId() userId: string) {
-    const iconAssigments = await this.userRepository.getIconAssignments(userId)
-    const assignedIcons = iconAssigments.map((assigment) => Number.parseInt(assigment.id, 10))
+  async getIcons(@UserId() firebaseId: string) {
+    const icons = await this.userRepository.getUserIcons(firebaseId)
+    const assignedIcons = icons.map((icon) => icon.id)
     return [...assignedIcons, ...baseIcons]
   }
 
@@ -182,15 +153,16 @@ export class UserController {
     summary: 'Update summoner icon',
   })
   @ApiBearerAuth()
-  async changeSummonerIcon(@UserId() userId: string, @Body() { iconId }: ChangeIconCommandClass) {
+  async changeSummonerIcon(
+    @UserId() firebaseId: string,
+    @Body() { iconId }: ChangeIconCommandClass
+  ) {
     if (!baseIcons.has(iconId)) {
-      const userIcons = await await this.userRepository.getIconAssignments(userId)
-      if (!userIcons.some((assignment) => Number(assignment.id) === iconId))
+      const userIcons = await this.userRepository.getUserIcons(firebaseId)
+      if (!userIcons.some((assignment) => assignment.id === iconId))
         respondError('icon-unavailable', 400, 'The user does not own this icon')
     }
 
-    await this.userRepository.update(userId, {
-      summoner_icon: iconId,
-    })
+    await this.userRepository.updateIcon(firebaseId, iconId)
   }
 }

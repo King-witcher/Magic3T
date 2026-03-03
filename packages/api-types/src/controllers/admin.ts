@@ -1,4 +1,4 @@
-import { RatingData } from '@magic3t/common-types'
+import { ClientRank } from '@magic3t/common-types'
 import { UserDocument } from '@magic3t/database-types'
 
 export namespace Admin {
@@ -16,7 +16,7 @@ export namespace Admin {
   } & (
     | {
         userRow: UserDocument
-        rating: RatingData
+        rating: ClientRank
       }
     | {
         userRow: null

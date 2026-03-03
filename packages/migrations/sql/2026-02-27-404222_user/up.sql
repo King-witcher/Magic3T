@@ -14,9 +14,9 @@ CREATE TYPE user_apex_flag AS ENUM (
 
 CREATE TABLE "user"
 (
-    id                    INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id                    INTEGER GENERATED ALWAYS AS IDENTITY,
     uuid                  uuid UNIQUE        NOT NULL DEFAULT gen_random_uuid(),
-    firebase_id           CHAR(28) UNIQUE,
+
     role                  user_role          NOT NULL DEFAULT 'player',
     credits               INTEGER            NOT NULL DEFAULT 0 CHECK ( credits >= 0 ),
     xp                    INTEGER            NOT NULL DEFAULT 0 CHECK ( xp >= 0 ),
@@ -33,21 +33,19 @@ CREATE TABLE "user"
     rating_date           DATE               NOT NULL DEFAULT NOW(),
 
     stats_victories       INTEGER            NOT NULL DEFAULT 0 CHECK ( stats_victories >= 0 ),
-    stats_draws           INTEGER            NOT NULL DEFAULT 0 CHECK ( stats_victories >= 0 ),
-    stats_defeats         INTEGER            NOT NULL DEFAULT 0 CHECK ( stats_victories >= 0 ),
+    stats_draws           INTEGER            NOT NULL DEFAULT 0 CHECK ( stats_draws >= 0 ),
+    stats_defeats         INTEGER            NOT NULL DEFAULT 0 CHECK ( stats_defeats >= 0 ),
 
+    PRIMARY KEY (id),
     FOREIGN KEY (profile_icon) REFERENCES icon (id) ON DELETE SET DEFAULT
 );
 
 COMMENT ON COLUMN "user".id IS 'User''s internal id';
 COMMENT ON COLUMN "user".uuid IS 'User''s external id';
-COMMENT ON COLUMN "user".firebase_id IS 'Firebase Authentication ID';
 COMMENT ON COLUMN "user".rating_k_factor IS 'Dynamic K-Factor used in Elo rating calculation';
 COMMENT ON COLUMN "user".rating_series_played IS 'Number of games played in the initial rating series';
 COMMENT ON COLUMN "user".rating_apex IS 'A flag indicating if the user has reached Challenger or Grandmaster rank';
 
-CREATE INDEX ON "user" (id);
 CREATE INDEX ON "user" (uuid);
-CREATE INDEX ON "user" (firebase_id) WHERE firebase_id IS NOT NULL;
 CREATE INDEX ON "user" (profile_nickname_slug);
 CREATE INDEX ON "user" (rating_score DESC, rating_date ASC);
