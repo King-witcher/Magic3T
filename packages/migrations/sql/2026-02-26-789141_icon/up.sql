@@ -1,6 +1,6 @@
 -- Migration generated on 2026-02-26 21:55:14
 
-CREATE TYPE rarity AS ENUM (
+CREATE TYPE icon_rarity AS ENUM (
     'common',
     'rare',
     'epic',
@@ -19,7 +19,7 @@ CREATE TABLE icon
     year_released SMALLINT,
     content_id    UUID     NOT NULL,
     is_legacy     BOOLEAN  NOT NULL,
-    rarity        rarity   NOT NULL
+    rarity        icon_rarity   NOT NULL
 );
 
 CREATE INDEX idx_icon_content_id ON icon (content_id);

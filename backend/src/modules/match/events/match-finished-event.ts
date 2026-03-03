@@ -1,4 +1,4 @@
-import { MatchRowEvent, RatingConfigRow, UserRow, user_apex_flag } from '@magic3t/database-types'
+import { MatchRowEvent, RatingConfigRow, UserApexFlag, UserRow } from '@magic3t/database-types'
 import { RatingService } from '@/modules/rating'
 
 type FinishedMatchContextPlayer = {
@@ -7,7 +7,7 @@ type FinishedMatchContextPlayer = {
   newRating: {
     score: number
     kFactor: number
-    apexFlag: user_apex_flag
+    apexFlag: UserApexFlag
   }
   prevLp: number | null
   newLp: number | null

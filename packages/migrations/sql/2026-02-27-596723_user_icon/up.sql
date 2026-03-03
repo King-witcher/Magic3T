@@ -2,9 +2,9 @@
 
 CREATE TABLE user_icon
 (
-    user_id    INTEGER   NOT NULL,
-    icon_id    SMALLINT  NOT NULL,
-    granted_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    user_id    INTEGER                  NOT NULL,
+    icon_id    SMALLINT                 NOT NULL,
+    granted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY (user_id, icon_id),
     FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE,

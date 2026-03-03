@@ -1,4 +1,4 @@
-import { UUID } from '../postgres'
+import type { BOOLEAN, SMALLINT, TEXT, UUID } from '../postgres'
 
 export type IconRarity =
   | 'common'
@@ -11,11 +11,11 @@ export type IconRarity =
   | 'transcendent'
 
 export type IconRow = {
-  id: number
-  title: string
-  description: string | null
-  yearReleased: number | null
-  contentId: UUID
-  isLegacy: boolean
+  id: SMALLINT
+  title: TEXT
+  description: TEXT | null
+  year_released: SMALLINT | null
+  content_id: UUID
+  is_legacy: BOOLEAN
   rarity: IconRarity
 }

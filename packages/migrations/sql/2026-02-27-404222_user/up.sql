@@ -15,26 +15,26 @@ CREATE TYPE user_apex_flag AS ENUM (
 CREATE TABLE "user"
 (
     id                    INTEGER GENERATED ALWAYS AS IDENTITY,
-    uuid                  uuid UNIQUE        NOT NULL DEFAULT gen_random_uuid(),
+    uuid                  uuid UNIQUE              NOT NULL DEFAULT gen_random_uuid(),
 
-    role                  user_role          NOT NULL DEFAULT 'player',
-    credits               INTEGER            NOT NULL DEFAULT 0 CHECK ( credits >= 0 ),
-    xp                    INTEGER            NOT NULL DEFAULT 0 CHECK ( xp >= 0 ),
+    role                  user_role                NOT NULL DEFAULT 'player',
+    credits               INTEGER                  NOT NULL DEFAULT 0 CHECK ( credits >= 0 ),
+    xp                    INTEGER                  NOT NULL DEFAULT 0 CHECK ( xp >= 0 ),
 
-    profile_nickname      VARCHAR(16)        NOT NULL,
-    profile_nickname_slug VARCHAR(16) UNIQUE NOT NULL,
-    profile_nickname_date TIMESTAMP          NOT NULL DEFAULT NOW(),
-    profile_icon          SMALLINT           NOT NULL DEFAULT 29,
+    profile_nickname      VARCHAR(16)              NOT NULL,
+    profile_nickname_slug VARCHAR(16) UNIQUE       NOT NULL,
+    profile_nickname_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    profile_icon          SMALLINT                 NOT NULL DEFAULT 29,
 
-    rating_score          REAL               NOT NULL,
-    rating_k_factor       REAL               NOT NULL CHECK ( rating_k_factor >= 0 ),
+    rating_score          REAL                     NOT NULL,
+    rating_k_factor       REAL                     NOT NULL CHECK ( rating_k_factor >= 0 ),
     rating_apex_flag      user_apex_flag,
-    rating_series_played  SMALLINT           NOT NULL DEFAULT 0,
-    rating_date           DATE               NOT NULL DEFAULT NOW(),
+    rating_series_played  SMALLINT                 NOT NULL DEFAULT 0,
+    rating_date           DATE                     NOT NULL DEFAULT NOW(),
 
-    stats_victories       INTEGER            NOT NULL DEFAULT 0 CHECK ( stats_victories >= 0 ),
-    stats_draws           INTEGER            NOT NULL DEFAULT 0 CHECK ( stats_draws >= 0 ),
-    stats_defeats         INTEGER            NOT NULL DEFAULT 0 CHECK ( stats_defeats >= 0 ),
+    stats_victories       INTEGER                  NOT NULL DEFAULT 0 CHECK ( stats_victories >= 0 ),
+    stats_draws           INTEGER                  NOT NULL DEFAULT 0 CHECK ( stats_draws >= 0 ),
+    stats_defeats         INTEGER                  NOT NULL DEFAULT 0 CHECK ( stats_defeats >= 0 ),
 
     PRIMARY KEY (id),
     FOREIGN KEY (profile_icon) REFERENCES icon (id) ON DELETE SET DEFAULT
