@@ -4,7 +4,9 @@ CREATE TABLE legacy_user_identity
 (
     firebase_id CHAR(28) PRIMARY KEY,
     email       VARCHAR(255) UNIQUE NOT NULL,
-    user_id     INTEGER UNIQUE      NOT NULL
+    user_id     INTEGER UNIQUE      NOT NULL,
+
+    FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE
 );
 
 CREATE INDEX ON legacy_user_identity (email);

@@ -4,7 +4,9 @@ CREATE TABLE user_password_identity
 (
     username_slug   VARCHAR(24) PRIMARY KEY,
     password_digest VARCHAR(60)    NOT NULL,
-    user_id         INTEGER UNIQUE NOT NULL
+    user_id         INTEGER UNIQUE NOT NULL,
+
+    FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE
 );
 
 CREATE INDEX ON user_password_identity (user_id);
