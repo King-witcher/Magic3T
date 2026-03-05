@@ -1,6 +1,5 @@
 import { IconRow, UserDocumentRole, UserRow, UserRowRole } from '@magic3t/database-types'
-import { Injectable } from '@nestjs/common'
-import { logger } from '@sentry/nestjs'
+import { Injectable, Logger } from '@nestjs/common'
 import { UserRecord } from 'firebase-admin/auth'
 import { FirebaseAuthService } from '@/infra/firebase'
 import { ConfigRepository, UserDocumentRepository } from '@/infra/firestore'
@@ -17,6 +16,8 @@ const roleMap: Record<UserDocumentRole, UserRowRole> = {
 
 @Injectable()
 export class UserRepository {
+  private readonly logger = new Logger(UserRepository.name, { timestamp: true })
+
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly userDocumentRepository: UserDocumentRepository,
@@ -26,24 +27,30 @@ export class UserRepository {
 
   /** Imports users and their identities from Firebase Auth and Firestore */
   async importFromFirebase() {
-    // Gets all identities from Firebase Auth
-    const [firestoreIdentities] = await this.firebaseAuthService.listFirebaseAccounts()
-    const firestoreIdentityMap = new Map(
-      firestoreIdentities.map((identity) => [identity.uid, identity])
-    )
+    // Gets all identities and users from Firebase
+    const [identities, allUsers] = await Promise.all([
+      this.firebaseAuthService.listFirebaseAccounts().then(([identities]) => {
+        this.logger.log(`Fetched ${identities.length} identities from Firebase Auth`)
+        const map = new Map(identities.map((identity) => [identity.uid, identity]))
+        return map
+      }),
+      this.userDocumentRepository.getAll().then((items) => {
+        this.logger.log(`Fetched ${items.length} user documents from Firestore`)
+        return items
+      }),
+    ])
 
-    // Gets all users from Firestore
-    const firestoreUsers = await this.userDocumentRepository.getAll()
-    console.log(`imported ${firestoreUsers.length} from firestore`)
+    // Filters users that don't have a corresponding identity
+    const mappedUsers = allUsers.filter((user) => identities.has(user.id))
 
     // Map user documents to user rows and hash join them with identities
-    const userRows = firestoreUsers.map((user): [Partial<UserRow>, UserRecord | undefined] => {
+    const userRows = mappedUsers.map((user): [Partial<UserRow>, UserRecord] => {
       const summoner_icon =
         user.data.summoner_icon >= 59 && user.data.summoner_icon <= 78
           ? 29
           : user.data.summoner_icon
 
-      const identity = firestoreIdentityMap.get(user.id)!
+      const identity = identities.get(user.id)!
 
       return [
         {
@@ -59,7 +66,7 @@ export class UserRepository {
           stats_draws: user.data.stats.draws,
           stats_defeats: user.data.stats.defeats,
           profile_nickname_date: user.data.identification.last_changed ?? new Date(),
-          created_at: new Date(identity?.metadata?.creationTime ?? 0) ?? user.createdAt,
+          created_at: new Date(identity.metadata.creationTime),
         },
         identity,
       ]
@@ -67,10 +74,8 @@ export class UserRepository {
 
     await this.databaseService.transaction(async (client) => {
       for (const [user, identity] of userRows) {
-        if (!identity) continue
-        logger.info(`Importing user ${user.profile_nickname}...`)
-
         // Create a user entry in the database
+        this.logger.verbose(`Creating user ${user.profile_nickname}...`)
         const createUserChain = INSERT_INTO('"user"', user).RETURNING`id`
         const [row] = await client.query<{ id: number }>({
           name: 'create_user',
@@ -79,6 +84,7 @@ export class UserRepository {
         })
 
         // Create it's legacy identity entry
+        this.logger.verbose(`Creating legacy identity for user ${user.profile_nickname}...`)
         const identityChain = INSERT_INTO('legacy_user_identity', {
           user_id: row.id,
           firebase_id: identity.uid,
@@ -91,6 +97,8 @@ export class UserRepository {
         })
       }
     })
+
+    this.logger.log(`Successfully imported ${userRows.length} users from Firebase`)
   }
 
   /** Finds a user by their Firebase ID. */
@@ -248,4 +256,6 @@ export class UserRepository {
     `)
     return rows
   }
+
+  private getFirestoreIdentityMap() {}
 }
