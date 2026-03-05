@@ -1,4 +1,4 @@
-import { RatingConfigRow as RatingConfigDocument } from '@magic3t/database-types'
+import { RatingConfigDocument } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
 import { ConfigRepository } from '../firestore'
 

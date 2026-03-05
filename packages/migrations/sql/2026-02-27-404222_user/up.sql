@@ -36,6 +36,8 @@ CREATE TABLE "user"
     stats_draws           INTEGER                  NOT NULL DEFAULT 0 CHECK ( stats_draws >= 0 ),
     stats_defeats         INTEGER                  NOT NULL DEFAULT 0 CHECK ( stats_defeats >= 0 ),
 
+    created_at            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+
     PRIMARY KEY (id),
     FOREIGN KEY (profile_icon) REFERENCES icon (id) ON DELETE SET DEFAULT
 );
@@ -48,4 +50,5 @@ COMMENT ON COLUMN "user".rating_apex_flag IS 'A flag indicating if the user has 
 
 CREATE INDEX ON "user" (uuid);
 CREATE INDEX ON "user" (profile_nickname_slug);
-CREATE INDEX ON "user" (rating_score DESC, rating_date ASC);
+CREATE INDEX ON "user" (rating_score DESC);
+CREATE INDEX ON "user" (rating_apex_flag) WHERE rating_apex_flag IS NOT NULL;

@@ -1,18 +1,18 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common'
 import { respondError } from '@/common'
-import { AuthenticRequest } from './auth-request'
-import { AuthenticSocket } from './auth-socket'
+import { AuthenticRequest } from '../authentic-request'
+import { AuthenticSocket } from '../authentic-socket'
 
-export const UserId = createParamDecorator((_, ctx: ExecutionContext): string => {
+export const UserId = createParamDecorator((_, ctx: ExecutionContext): number => {
   switch (ctx.getType()) {
     case 'http': {
       const request = ctx.switchToHttp().getRequest<AuthenticRequest>()
-      return request.userId
+      return request.session.id
     }
 
     case 'ws': {
       const client = ctx.switchToWs().getClient<AuthenticSocket>()
-      return client.data.userId
+      return client.data.session.id
     }
 
     default:

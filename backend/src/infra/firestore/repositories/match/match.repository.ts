@@ -8,8 +8,8 @@ import { ListResult } from '../../types/query-types'
 import { BaseFirestoreRepository } from '../base-repository'
 
 @Injectable()
-export class MatchRepository extends BaseFirestoreRepository<MatchRow> {
-  matchLogger = new Logger(MatchRepository.name, { timestamp: true })
+export class MatchDocumentRepository extends BaseFirestoreRepository<MatchRow> {
+  matchLogger = new Logger(MatchDocumentRepository.name, { timestamp: true })
 
   constructor(databaseService: FirestoreService, firebaseService: FirebaseService) {
     super(firebaseService.firestore, databaseService, 'matches')

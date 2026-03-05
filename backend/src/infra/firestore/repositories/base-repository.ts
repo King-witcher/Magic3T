@@ -47,7 +47,7 @@ export abstract class BaseFirestoreRepository<T extends {}> {
   /**
    * Lists all rows in the collection.
    */
-  async listAll(): Promise<ListResult<T>> {
+  async getAll(): Promise<ListResult<T>> {
     const snapshot = await this.collection.get()
     this.logger.verbose(`read all ${snapshot.size} from ${this.collection.id}.`)
     return snapshot.docs.map((doc) => {

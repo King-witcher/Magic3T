@@ -11,7 +11,7 @@ export class WebsocketEmitterService {
     TNamespace extends keyof NamespacesMap,
     TEvent extends EventNames<NamespacesMap[TNamespace]>,
   >(
-    userId: string,
+    uuid: string,
     namespace: TNamespace,
     event: TEvent,
     ...data: EventParams<NamespacesMap[TNamespace], TEvent>
@@ -20,7 +20,7 @@ export class WebsocketEmitterService {
       namespace,
       event,
       data,
-      userId,
+      uuid,
     }
     this.eventEmitter.emit('websocket.emit', result)
   }

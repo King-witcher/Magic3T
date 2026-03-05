@@ -17,6 +17,5 @@ export type ClientRank = {
   league: League
   division: Division | null
   points: number | null
-  /** @deprecated Should be queried from the owner */
-  progress: number
+  rankedCount: number
 }

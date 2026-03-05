@@ -11,7 +11,7 @@ export class UserDocumentRepository extends BaseFirestoreRepository<UserDocument
     super(firebaseService.firestore, databaseService, 'users')
   }
 
-  async listAll(): Promise<ListResult<UserDocument>> {
+  async getAll(): Promise<ListResult<UserDocument>> {
     const snapshot = await this.collection.get()
     return snapshot.docs.map((doc) => {
       const data = doc.data()

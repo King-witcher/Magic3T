@@ -1,2 +1,2 @@
+export * from './rank-converter'
 export * from './rating.module'
-export * from './rating.service'

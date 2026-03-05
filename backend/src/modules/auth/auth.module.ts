@@ -15,7 +15,9 @@ import { AuthService } from './auth.service'
         new Keyv({
           store: new CacheableMemory(),
         }),
-        new KeyvValkey(process.env.VALKEY_HOST),
+        new KeyvValkey({
+          host: process.env.VALKEY_HOST,
+        }),
       ],
     }),
   ],

@@ -5,7 +5,7 @@ import { FirestoreService } from './firestore.service'
 import {
   ConfigRepository,
   CrashReportsRepository,
-  MatchRepository,
+  MatchDocumentRepository,
   UserDocumentRepository,
 } from './repositories'
 
@@ -15,14 +15,14 @@ import {
   providers: [
     FirestoreService,
     UserDocumentRepository,
-    MatchRepository,
+    MatchDocumentRepository,
     ConfigRepository,
     CrashReportsRepository,
   ],
   exports: [
     FirestoreService,
     UserDocumentRepository,
-    MatchRepository,
+    MatchDocumentRepository,
     ConfigRepository,
     CrashReportsRepository,
   ],

@@ -1,75 +1,103 @@
-import { IconRow, UserDocumentRole, UserRow, user_role } from '@magic3t/database-types'
+import { IconRow, UserDocumentRole, UserRow, UserRowRole } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
-import { unexpected } from '@/common/errors/unexpected-error'
-import { ConfigRepository, UserDocumentRepository } from '@/infra/firestore'
+import { UserRecord } from 'firebase-admin/auth'
+import { UserDocumentRepository } from '@/infra/firestore'
+import { AuthService } from '@/modules'
 import { INSERT_INTO } from '@/shared/pg-chain'
 import { sql } from '@/shared/sql'
 import { DatabaseService } from '../database.service'
 
-export type CreateUserRow = Omit<
-  UserRow,
-  | 'id'
-  | 'uuid'
-  | 'role'
-  | 'credits'
-  | 'xp'
-  | 'profile_nickname_date'
-  | 'profile_icon'
-  | `rating_series_played`
-  | `stats_${string}`
->
+const roleMap: Record<UserDocumentRole, UserRowRole> = {
+  [UserDocumentRole.Player]: 'player',
+  [UserDocumentRole.Creator]: 'superuser',
+  [UserDocumentRole.Bot]: 'bot',
+}
 
 @Injectable()
 export class UserRepository {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly userDocument: UserDocumentRepository,
-    private readonly configRepository: ConfigRepository
+    private readonly authService: AuthService
   ) {}
 
-  async importFromFirestore() {
-    const users = await this.userDocument.listAll()
-    const roleMap: Record<UserDocumentRole, user_role> = {
-      [UserDocumentRole.Player]: 'player',
-      [UserDocumentRole.Creator]: 'superuser',
-      [UserDocumentRole.Bot]: 'bot',
-    }
+  /** Imports users and their identities from Firebase Auth and Firestore */
+  async importFromFirebase() {
+    // Gets all identities from Firebase Auth
+    const [firestoreIdentities] = await this.authService.listFirebaseAccounts()
+    const firestoreIdentityMap = new Map(
+      firestoreIdentities.map((identity) => [identity.uid, identity])
+    )
 
-    console.log(`imported ${users.length} from firestore`)
+    // Gets all users from Firestore
+    const firestoreUsers = await this.userDocument.getAll()
+    console.log(`imported ${firestoreUsers.length} from firestore`)
 
-    const userRows: Omit<UserRow, 'id' | 'uuid' | 'profile_nickname_date'>[] = users.map((user) => {
+    // Map user documents to user rows and hash join them with identities
+    const userRows = firestoreUsers.map((user): [Partial<UserRow>, UserRecord] => {
       const summoner_icon =
         user.data.summoner_icon >= 59 && user.data.summoner_icon <= 78
           ? 29
           : user.data.summoner_icon
 
-      return {
-        firebase_id: user.data.role !== UserDocumentRole.Bot ? user.id : null,
-        role: roleMap[user.data.role],
-        credits: user.data.magic_points,
-        xp: user.data.experience,
-        profile_nickname: user.data.identification.nickname,
-        profile_nickname_slug: user.data.identification.unique_id,
-        profile_icon: summoner_icon,
-        rating_score: user.data.elo.score,
-        rating_k_factor: user.data.elo.k,
-        rating_apex: user.data.elo.challenger ? 'challenger' : null,
-        rating_series_played: user.data.elo.matches,
-        rating_date: new Date(),
-        stats_victories: user.data.stats.wins,
-        stats_draws: user.data.stats.draws,
-        stats_defeats: user.data.stats.defeats,
-      }
+      const identity = firestoreIdentityMap.get(user.id)!
+
+      return [
+        {
+          role: roleMap[user.data.role],
+          profile_nickname: user.data.identification.nickname,
+          profile_nickname_slug: user.data.identification.unique_id,
+          profile_icon: summoner_icon,
+          rating_score: user.data.elo.score,
+          rating_k_factor: user.data.elo.k,
+          rating_apex_flag: user.data.elo.challenger ? 'challenger' : null,
+          rating_ranked_count: user.data.elo.matches,
+          stats_victories: user.data.stats.wins,
+          stats_draws: user.data.stats.draws,
+          stats_defeats: user.data.stats.defeats,
+          profile_nickname_date: user.data.identification.last_changed,
+        },
+        identity,
+      ]
     })
 
-    await this.bulkCreate(userRows)
+    await this.databaseService.transaction(async (client) => {
+      for (const [user, identity] of userRows) {
+        console.info(`Importing user ${user.profile_nickname}...`)
+
+        // Create a user entry in the database
+        const createUserChain = INSERT_INTO('user', user).RETURNING`id`
+        const {
+          rows: [id],
+        } = await client.query({
+          name: 'create_user',
+          text: createUserChain.text,
+          values: createUserChain.values,
+        })
+
+        // Create it's legacy identity entry
+        const identityChain = INSERT_INTO('legacy_user_identity', {
+          user_id: id,
+          firebase_id: identity.uid,
+          email: identity.email,
+        })
+        await client.query({
+          name: 'create_user_identity',
+          text: identityChain.text,
+          values: identityChain.values,
+        })
+      }
+    })
   }
 
   /** Finds a user by their Firebase ID. */
   async getByFirebaseId(firebaseId: string): Promise<UserRow | null> {
     const [row] = await this.databaseService.query<UserRow>(sql`
-      SELECT * FROM "user"
-      WHERE firebase_id = ${firebaseId}
+      SELECT u.*
+      FROM "user" u
+      RIGHT JOIN legacy_user_identity lui
+      ON lui.user_id = u.id
+      WHERE lui.firebase_id = ${firebaseId}
     `)
     return row ?? null
   }
@@ -79,20 +107,13 @@ export class UserRepository {
     return nickname.toLowerCase().replaceAll(' ', '')
   }
 
-  /** Registers a new user to the database. */
-  async register(firebaseId: string, nickname: string) {
-    const ratingConfig = await this.configRepository.getRatingConfig()
-
-    await this.databaseService.query(
-      INSERT_INTO<Partial<UserRow>>('user', {
-        firebase_id: firebaseId,
-        profile_nickname: nickname,
-        profile_nickname_slug: this.slugify(nickname),
-        rating_score: ratingConfig.initial_elo,
-        rating_k_factor: ratingConfig.initial_k_factor,
-      }) //
-        .RETURNING`*`
-    )
+  async getById(id: number): Promise<UserRow | null> {
+    const [row] = await this.databaseService.query<UserRow>(sql`
+      SELECT *
+      FROM "user"
+      WHERE id = ${id}
+    `)
+    return row ?? null
   }
 
   /** Get a user by their nickname. */
@@ -115,24 +136,24 @@ export class UserRepository {
     return rows
   }
 
-  async updateNickname(firebaseId: string, newNickname: string) {
+  async updateNickname(id: number, newNickname: string) {
     const slug = this.slugify(newNickname)
     const rows = await this.databaseService.query(sql`
       UPDATE "user"
       SET profile_nickname = ${newNickname},
           profile_nickname_slug = ${slug},
           profile_nickname_date = CURRENT_TIMESTAMP
-      WHERE firebase_id = ${firebaseId}
+      WHERE id = ${id}
       RETURNING id
     `)
-    if (rows.length === 0) throw new Error(`User with firebaseId ${firebaseId} not found`)
+    if (rows.length === 0) throw new Error(`User with id ${id} not found`)
   }
 
-  async updateIcon(firebaseId: string, iconId: number) {
+  async updateIcon(id: number, iconId: number) {
     await this.databaseService.query(sql`
       UPDATE "user"
       SET profile_icon = ${iconId}
-      WHERE firebase_id = ${firebaseId}
+      WHERE id = ${id}
     `)
   }
 
@@ -150,26 +171,26 @@ export class UserRepository {
   //   )
   // }
 
-  async setOrReplaceChallengers(newChallengerIds: string[]): Promise<void> {
+  async setOrReplaceChallengers(newChallengerIds: number[]): Promise<void> {
     const oldChallengers = await this.listChallengers()
-    const oldChallengerIdsSet = new Set(oldChallengers.map((c) => c.firebase_id!))
+    const oldChallengerIdsSet = new Set(oldChallengers.map((c) => c.id))
     const newChallengerIdsSet = new Set(newChallengerIds)
 
     await this.databaseService.transaction(async (client) => {
       // Remove challenger status from old challengers not in the new list
-      const toRemove = oldChallengers.filter((c) => !newChallengerIdsSet.has(c.firebase_id!))
+      const toRemove = oldChallengers.filter((c) => !newChallengerIdsSet.has(c.id))
       await client.query(sql`
         UPDATE "user"
-        SET rating_apex = NULL
+        SET rating_apex_flag = NULL
         WHERE id IN (${toRemove.map((c) => c.id)})
       `)
 
       // Add challenger status to new challengers not in the old list
-      const firebaseIdsToAdd = newChallengerIds.filter((id) => !oldChallengerIdsSet.has(id))
+      const idsToAdd = newChallengerIds.filter((id) => !oldChallengerIdsSet.has(id))
       await client.query(sql`
         UPDATE "user"
-        SET rating_apex = 'challenger'
-        WHERE firebase_id IN (${firebaseIdsToAdd})
+        SET rating_apex_flag = 'challenger'
+        WHERE id IN (${idsToAdd})
       `)
     })
   }
@@ -178,63 +199,29 @@ export class UserRepository {
     const rows = await this.databaseService.query<UserRow>(sql`
       SELECT *
       FROM "user"
-      WHERE rating_series_played >= ${minPlayed}
+      WHERE rating_ranked_count >= ${minPlayed}
         AND "role" != 'bot'
-      ORDER BY rating_score DESC, rating_date DESC
+      ORDER BY rating_score DESC, id DESC
       LIMIT ${limit}
     `)
     return rows
   }
 
-  async getUserIcons(firebaseId: string): Promise<IconRow[]> {
+  async getUserIcons(id: number): Promise<IconRow[]> {
     const [user] = await this.databaseService.query<{ id: number }>(sql`
       SELECT id
       FROM "user"
-      WHERE firebase_id = ${firebaseId}
+      WHERE id = ${id}
     `)
-    if (!user) throw new Error(`User with id ${firebaseId} not found`)
+    if (!user) throw new Error(`User with id ${id} not found`)
 
-    const rows = await this.databaseService.query<IconRow>(sql`
-      SELECT *
+    const rows = await this.databaseService.query<IconRow & { granted_at: Date }>(sql`
+      SELECT i.*, ui.granted_at
       FROM user_icon ui
               JOIN icon i ON i.id = ui.icon_id
       WHERE ui.user_id = ${user.id}
       ORDER BY ui.granted_at DESC;
     `)
     return rows
-  }
-
-  private async bulkCreate(userRows: Omit<UserRow, 'id' | 'uuid' | 'profile_nickname_date'>[]) {
-    await this.databaseService.transaction(async (client) => {
-      for (const user of userRows) {
-        console.info(`Importing user ${user.firebase_id ?? user.profile_nickname}`)
-        await client.query({
-          name: 'insert_user',
-          text: `INSERT INTO "user" (
-              firebase_id, role, credits, xp,
-              profile_nickname, profile_nickname_slug, profile_icon,
-              rating_score, rating_k_factor, rating_apex, rating_series_played, rating_date,
-              stats_victories, stats_draws, stats_defeats
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
-          values: [
-            user.firebase_id,
-            user.role,
-            user.credits,
-            user.xp,
-            user.profile_nickname,
-            user.profile_nickname_slug,
-            user.profile_icon,
-            user.rating_score,
-            user.rating_k_factor,
-            user.rating_apex,
-            user.rating_series_played,
-            user.rating_date,
-            user.stats_victories,
-            user.stats_draws,
-            user.stats_defeats,
-          ],
-        })
-      }
-    })
   }
 }

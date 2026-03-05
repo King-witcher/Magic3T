@@ -1,7 +1,8 @@
 import { DefaultEventsMap, Socket } from 'socket.io'
+import { SessionData } from '@/shared/types/session-data'
 
 export type AuthenticSocketData = {
-  userId: string
+  session: SessionData
 }
 
 export type AuthenticSocket = Socket<

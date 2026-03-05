@@ -1,7 +1,9 @@
+import { SessionData } from './shared/types/session-data'
+
 declare global {
   namespace Express {
     export interface Request {
-      session: import('./app/session/session.types').SessionData | null
+      session?: SessionData
     }
   }
 
@@ -28,5 +30,3 @@ declare global {
     }
   }
 }
-
-export {}

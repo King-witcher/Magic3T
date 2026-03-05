@@ -5,7 +5,12 @@ import { FirestoreService } from '@/infra/firestore/firestore.service'
 
 import CollectionReference = firestore.CollectionReference
 
-import { BotConfigRow, BotName, RatingConfigRow, SingleBotConfig } from '@magic3t/database-types'
+import {
+  BotConfigRow,
+  BotName,
+  RatingConfigDocument,
+  SingleBotConfig,
+} from '@magic3t/database-types'
 import { CacheMethod, unexpected } from '@/common'
 
 export type ConfigRepositoryError = 'configs-not-found' | 'bot-not-found'
@@ -43,9 +48,9 @@ export class ConfigRepository {
     return configs[botName] ?? null
   }
 
-  async getRatingConfig(): Promise<RatingConfigRow> {
+  async getRatingConfig(): Promise<RatingConfigDocument> {
     this.logger.verbose('read "rating" from config')
-    const converter = this.databaseService.getDefaultConverter<RatingConfigRow>()
+    const converter = this.databaseService.getDefaultConverter<RatingConfigDocument>()
     const snapshot = await this.collection.withConverter(converter).doc('rating').get()
 
     const data = snapshot.data()

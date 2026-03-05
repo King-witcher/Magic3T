@@ -71,24 +71,24 @@ export class QueueService {
   }
 
   /** Determines if a user is already in the queue. */
-  isInQueue(userId: string) {
-    return this.casualPendingUid === userId || this.rankedPendingUid === userId
+  isInQueue(uuid: string) {
+    return this.casualPendingUid === uuid || this.rankedPendingUid === uuid
   }
 
   /** Dequeues a user from a game mode. If no mode is specified, removes from both */
-  dequeue(userId: string, mode?: 'casual' | 'ranked') {
-    if ((mode || 'casual') === 'casual' && this.casualPendingUid === userId) {
+  dequeue(uuid: string, mode?: 'casual' | 'ranked') {
+    if ((mode || 'casual') === 'casual' && this.casualPendingUid === uuid) {
       this.casualPendingUid = null
-      this.logger.log(`userId ${userId} left casual queue`)
+      this.logger.log(`userId ${uuid} left casual queue`)
     }
 
-    if ((mode || 'ranked') === 'ranked' && this.rankedPendingUid === userId) {
+    if ((mode || 'ranked') === 'ranked' && this.rankedPendingUid === uuid) {
       this.rankedPendingUid = null
-      this.logger.log(`userId ${userId} left ranked queue`)
+      this.logger.log(`userId ${uuid} left ranked queue`)
     }
 
-    const userQueueModes = this.getQueueModes(userId)
-    this.websocketEmitterService.send(userId, 'queue', QueueServerEvents.QueueModes, userQueueModes)
+    const userQueueModes = this.getQueueModes(uuid)
+    this.websocketEmitterService.send(uuid, 'queue', QueueServerEvents.QueueModes, userQueueModes)
   }
 
   /** Gets the count of users currently in each queue mode. */

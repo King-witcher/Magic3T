@@ -2,37 +2,35 @@ import { Match as MatchNamespace, MatchServerEvents } from '@magic3t/api-types'
 import { Team } from '@magic3t/common-types'
 import {
   BotName,
+  MatchEventRow,
   MatchRow,
   SingleBotConfig,
-  UserDocument,
-  UserDocumentElo,
-  UserDocumentRole,
+  UserRatingSnapshotRow,
   UserRow,
 } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { unexpected } from '@/common'
 import { UserRepository } from '@/infra/database/repositories/user-repository'
-import { ConfigRepository, UserDocumentRepository } from '@/infra/firestore'
-import { GetResult } from '@/infra/firestore/types/query-types'
+import { ConfigRepository } from '@/infra/firestore'
 import { WebsocketEmitterService } from '@/infra/websocket/websocket-emitter.service'
-import { RatingService } from '@/modules/rating'
+import { RankConverter, RatingState } from '@/modules/rating'
 import { BaseBot, LmmBot, RandomBot } from './bots'
 import { FinishedMatchContext } from './events/match-finished-event'
-import { Match, MatchBank, MatchClassEventType, MatchClassSummary, Perspective } from './lib'
+import { Match, MatchClassEventType, MatchClassSummary, MatchStore, Perspective } from './lib'
 import { matchException } from './types/match-error'
 
 export type MatchCreationError = 'user-not-found' | 'bot-not-found'
 const HUMAN_VS_BOT_TIMELIMIT = 180 * 1000 // 3 minutes per player
 const HUMAN_VS_HUMAN_TIMELIMIT = 240 * 1000 // 4 minutes per player
+const TEAMS: [Team, Team] = [Team.Order, Team.Chaos]
 
 @Injectable()
 export class MatchService {
   constructor(
     private configRepository: ConfigRepository,
     private userRepository: UserRepository,
-    private matchBank: MatchBank,
-    private ratingService: RatingService,
+    private matchBank: MatchStore,
     private eventEmitter: EventEmitter2,
     private websocketEmitterService: WebsocketEmitterService
   ) {}
@@ -52,7 +50,7 @@ export class MatchService {
     ])
 
     // Coin flip sides
-    const humanTeam = Math.round(Math.random()) as Team
+    const humanTeam = TEAMS[Math.round(Math.random())]
     const [orderProfile, chaosProfile] =
       humanTeam === Team.Order ? [userProfile, botProfile] : [botProfile, userProfile]
 
@@ -62,8 +60,8 @@ export class MatchService {
     })
     const { orderPerspective, chaosPerspective } = this.matchBank.createPerspectives({
       match,
-      orderId: orderProfile.id,
-      chaosId: chaosProfile.id,
+      orderId: orderProfile.uuid,
+      chaosId: chaosProfile.uuid,
     })
 
     // Get bot, passing perspective
@@ -99,7 +97,7 @@ export class MatchService {
     ])
 
     // Coinflip profiles
-    const sideOfFirst = <Team>Math.round(Math.random())
+    const sideOfFirst = TEAMS[Math.round(Math.random())]
     const [orderProfile, chaosProfile] =
       sideOfFirst === Team.Order ? [profile1, profile2] : [profile2, profile1]
 
@@ -141,7 +139,7 @@ export class MatchService {
     ])
 
     // Coinflips sides
-    const sideOfFirst = <Team>Math.round(Math.random())
+    const sideOfFirst = TEAMS[Math.round(Math.random())]
     const [orderProfile, chaosProfile] =
       sideOfFirst === Team.Order ? [profile1, profile2] : [profile2, profile1]
 
@@ -153,8 +151,8 @@ export class MatchService {
     // Register perspectives for both players in match bank
     this.matchBank.createPerspectives({
       match,
-      orderId: orderProfile.firebase_id!,
-      chaosId: chaosProfile.firebase_id!,
+      orderId: orderProfile.uuid,
+      chaosId: chaosProfile.uuid,
     })
 
     // Sync
@@ -179,27 +177,133 @@ export class MatchService {
     return !this.matchBank.containsUser(userId)
   }
 
-  async getMatchByRow(match: GetResult<MatchRow>): Promise<MatchNamespace.GetCurrentMatchResult> {
+  async getEventByRow(row: MatchEventRow): Promise<MatchNamespace.GetMatchResultEvent> {
+    if (row.type === 'forfeit' || row.type === 'timeout') {
+      return {
+        event: row.type,
+        team: row.team,
+        time: row.time_ms,
+      }
+    }
     return {
-      events: match.data.events,
-      id: match.id,
-      order: match.data[Team.Order],
-      chaos: match.data[Team.Chaos],
-      winner: match.data.winner,
-      date: match.data.timestamp,
+      choice: row.choice!,
+      event: 'choice',
+      team: row.team,
+      time: row.time_ms,
+    }
+  }
+
+  async getMatchByRow(
+    match: MatchRow & {
+      events: MatchEventRow[]
+      orderRating: UserRatingSnapshotRow
+      chaosRating: UserRatingSnapshotRow
+    },
+    rankConverter?: RankConverter
+  ): Promise<MatchNamespace.GetMatchResult> {
+    const converter = await (async () => {
+      if (rankConverter) return rankConverter
+      const ratingConfig = await this.configRepository.getRatingConfig()
+      return new RankConverter(ratingConfig)
+    })()
+
+    const orderRank = converter.getRankFromElo(
+      match.orderRating.score,
+      match.orderRating.hidden ? 0 : null,
+      match.orderRating.apex_flag
+    )
+
+    const orderGain =
+      match.order_delta !== null
+        ? converter.getTotalLP(match.order_delta) - converter.getTotalLP(0)
+        : null
+
+    const chaosRank = converter.getRankFromElo(
+      match.chaosRating.score,
+      match.chaosRating.hidden ? 0 : null,
+      match.chaosRating.apex_flag
+    )
+
+    const chaosGain =
+      match.chaos_delta !== null
+        ? converter.getTotalLP(match.chaos_delta) - converter.getTotalLP(0)
+        : null
+
+    return {
+      uuid: match.uuid,
+      events: match.events.map(this.getEventByRow.bind(this)),
+      date: match.date,
+      winner: match.winner,
+      order: {
+        lpGain: orderGain,
+        nickname: match.order_nickname,
+        rank: orderRank,
+        score: match.order_match_score,
+        uuid: match.order_uuid,
+      },
+      chaos: {
+        lpGain: chaosGain,
+        nickname: match.chaos_nickname,
+        rank: chaosRank,
+        score: match.chaos_match_score,
+        uuid: match.chaos_uuid,
+      },
     }
   }
 
   async getListedMatchByRow(
-    match: GetResult<MatchRow>
+    match: MatchRow & {
+      orderRating: UserRatingSnapshotRow
+      chaosRating: UserRatingSnapshotRow
+    },
+    rankConverter?: RankConverter
   ): Promise<MatchNamespace.ListMatchesResultItem> {
+    const converter = await (async () => {
+      if (rankConverter) return rankConverter
+      const ratingConfig = await this.configRepository.getRatingConfig()
+      return new RankConverter(ratingConfig)
+    })()
+
+    const orderRank = converter.getRankFromElo(
+      match.orderRating.score,
+      match.orderRating.hidden ? 0 : null,
+      match.orderRating.apex_flag
+    )
+
+    const orderGain =
+      match.order_delta !== null
+        ? converter.getTotalLP(match.order_delta) - converter.getTotalLP(0)
+        : null
+
+    const chaosRank = converter.getRankFromElo(
+      match.chaosRating.score,
+      match.chaosRating.hidden ? 0 : null,
+      match.chaosRating.apex_flag
+    )
+
+    const chaosGain =
+      match.chaos_delta !== null
+        ? converter.getTotalLP(match.chaos_delta) - converter.getTotalLP(0)
+        : null
+
     return {
-      events: match.data.events,
-      id: match.id,
-      order: match.data[Team.Order],
-      chaos: match.data[Team.Chaos],
-      winner: match.data.winner,
-      date: match.data.timestamp,
+      uuid: match.uuid,
+      date: match.date,
+      winner: match.winner,
+      order: {
+        lpGain: orderGain,
+        nickname: match.order_nickname,
+        rank: orderRank,
+        score: match.order_match_score,
+        uuid: match.order_uuid,
+      },
+      chaos: {
+        lpGain: chaosGain,
+        nickname: match.chaos_nickname,
+        rank: chaosRank,
+        score: match.chaos_match_score,
+        uuid: match.chaos_uuid,
+      },
     }
   }
 
@@ -227,7 +331,7 @@ export class MatchService {
           // Validate that the player is not a bot
           if (player.role !== 'bot') {
             this.websocketEmitterService.send(
-              player.firebase_id!,
+              player.uuid,
               'match',
               MatchServerEvents.StateReport,
               stateReport
@@ -240,59 +344,50 @@ export class MatchService {
     // Subscribe to match finished event
     match.on(MatchClassEventType.Finish, async (summary) => {
       const orderScore = computeOrderScore(summary)
+      const chaosScore = 1 - orderScore
 
-      // Get rating converters
-      const orderRatingConverter = await this.ratingService.getRatingConverter(order.data.elo)
-      const chaosRatingConverter = await this.ratingService.getRatingConverter(chaos.data.elo)
+      const [newOrderRating, newChaosRating, rankConverter] = await (async () => {
+        const orderRatingState: RatingState = {
+          elo: order.rating_score,
+          kFactor: order.rating_k_factor,
+          rankedCount: order.rating_ranked_count,
+          apexFlag: order.rating_apex_flag,
+        }
+        const chaosRatingState: RatingState = {
+          elo: chaos.rating_score,
+          kFactor: chaos.rating_k_factor,
+          rankedCount: chaos.rating_ranked_count,
+          apexFlag: chaos.rating_apex_flag,
+        }
+        if (!ranked) return [orderRatingState, chaosRatingState, null]
 
-      if (ranked) {
-        // Update ratings
-        orderRatingConverter.updateRatings(chaosRatingConverter, orderScore)
-
-        // Update K-factors and match counts
-        orderRatingConverter.updateKFactor()
-        chaosRatingConverter.updateKFactor()
-        orderRatingConverter.eloRow.matches++
-        chaosRatingConverter.eloRow.matches++
-      }
-
-      // Do not update ratings for bots
-      const newOrderRating: UserDocumentElo =
-        order.data.role === UserDocumentRole.Bot
-          ? {
-              ...order.data.elo,
-              matches: order.data.elo.matches + 1,
-            }
-          : orderRatingConverter.eloRow
-
-      const newChaosRating: UserDocumentElo =
-        chaos.data.role === UserDocumentRole.Bot
-          ? {
-              ...chaos.data.elo,
-              matches: chaos.data.elo.matches + 1,
-            }
-          : chaosRatingConverter.eloRow
+        const ratingConfig = await this.configRepository.getRatingConfig()
+        const rankConverter = new RankConverter(ratingConfig)
+        return [
+          ...rankConverter.updateRatings([orderRatingState, chaosRatingState], orderScore),
+          rankConverter,
+        ]
+      })()
 
       // Create a finished event
       const finishEvent: FinishedMatchContext = {
         order: {
-          firebaseId: order.id,
-          matchScore: orderScore,
           row: order,
+          matchScore: orderScore,
           timeSpent: summary.order.timeSpent,
-          // Do not update rating for bots
           newRating: newOrderRating,
         },
         chaos: {
-          firebaseId: chaos.id,
           row: chaos,
-          matchScore: 1 - orderScore,
+          matchScore: chaosScore,
           timeSpent: summary.chaos.timeSpent,
           newRating: newChaosRating,
         },
         events: match.events,
         ranked,
+        rankConverter: rankConverter!,
         startedAt,
+        winner: match.winner,
       }
 
       // Emit the finished event for other services to persist results, send events, etc.

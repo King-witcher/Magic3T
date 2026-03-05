@@ -2,6 +2,7 @@ import { IconRarity, IconRow } from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import z from 'zod'
+import { INSERT_INTO } from '@/shared/pg-chain'
 import { DatabaseService } from '../database.service'
 
 const RIOT_ICON_SCHEMA = z.object({
@@ -121,9 +122,9 @@ export class IconRepository {
       id: icon.id,
       title: icon.title,
       description,
-      yearReleased: icon.yearReleased || null,
-      contentId: icon.contentId,
-      isLegacy: icon.isLegacy,
+      year_released: icon.yearReleased || null,
+      content_id: icon.contentId,
+      is_legacy: icon.isLegacy,
       rarity,
     }
   }
@@ -131,18 +132,11 @@ export class IconRepository {
   private async bulkCreate(iconRows: IconRow[]) {
     await this.databaseService.transaction(async (client) => {
       for (const icon of iconRows) {
+        const chain = INSERT_INTO('icon', icon)
         await client.query({
-          name: 'insert-icon',
-          text: 'INSERT INTO icon (id, title, description, year_released, content_id, is_legacy, rarity) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-          values: [
-            icon.id,
-            icon.title,
-            icon.description,
-            icon.yearReleased,
-            icon.contentId,
-            icon.isLegacy,
-            icon.rarity,
-          ],
+          name: 'insert_icon',
+          text: chain.text,
+          values: chain.values,
         })
       }
     })

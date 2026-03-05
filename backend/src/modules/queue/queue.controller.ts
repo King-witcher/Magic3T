@@ -3,7 +3,7 @@ import { Body, Controller, Delete, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { respondError } from '@/common'
 import { AuthGuard } from '@/modules/auth/auth.guard'
-import { UserId } from '@/modules/auth/user-id.decorator'
+import { UserId } from '@/modules/auth/decorators/user-id.decorator'
 import { EnqueueDto, QueueMode } from './dtos/enqueue-dto'
 import { QueueService } from './queue.service'
 

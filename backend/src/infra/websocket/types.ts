@@ -16,7 +16,7 @@ export type WebsocketEmitterEvent<
   TNamespace extends keyof NamespacesMap = keyof NamespacesMap,
   TEvent extends EventNames<NamespacesMap[TNamespace]> = EventNames<NamespacesMap[TNamespace]>,
 > = {
-  userId?: string
+  uuid?: string
   namespace: TNamespace
   event: TEvent
   data: EventParams<NamespacesMap[TNamespace], TEvent>

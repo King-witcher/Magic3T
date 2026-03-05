@@ -1,5 +1,14 @@
 import { CacheModule } from '@nestjs/cache-manager'
-import { DynamicModule, ForwardReference, Global, Module, Provider, Type } from '@nestjs/common'
+import {
+  DynamicModule,
+  ForwardReference,
+  Global,
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  Provider,
+  Type,
+} from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { APP_FILTER, APP_GUARD } from '@nestjs/core'
 import { EventEmitterModule } from '@nestjs/event-emitter'
@@ -12,6 +21,7 @@ import { AppController } from './app.controller'
 import { AppGateway } from './app.gateway'
 import { HttpExceptionFilter } from './common/filters/http-exception.filter'
 import { InfrastructureModule } from './infra/infrastructure.module'
+import { AuthMiddleware } from './modules/auth/auth.middleware'
 import { HoneypotModule } from './modules/honeypot'
 
 const EXTERNAL_MODULES: (
@@ -101,4 +111,8 @@ const FILTERS: Provider[] = [
     AppGateway,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthMiddleware).forRoutes('*')
+  }
+}

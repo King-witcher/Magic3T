@@ -1,6 +1,6 @@
 import type { DATE, INTEGER, REAL, SMALLINT, TIMESTAMPTZ, UUID, VARCHAR } from '../postgres'
 
-export type UserRole = 'bot' | 'player' | 'admin' | 'superuser'
+export type UserRowRole = 'bot' | 'player' | 'admin' | 'superuser'
 
 export type UserApexFlag = 'challenger' | 'grandmaster'
 
@@ -8,7 +8,7 @@ export type UserRow = {
   id: INTEGER
   uuid: UUID
 
-  role: UserRole
+  role: UserRowRole
   credits: INTEGER
   xp: INTEGER
 
@@ -20,10 +20,12 @@ export type UserRow = {
   rating_score: REAL
   rating_k_factor: REAL
   rating_apex_flag: UserApexFlag | null
-  rating_series_played: SMALLINT
+  rating_ranked_count: SMALLINT
   rating_date: DATE
 
   stats_victories: INTEGER
   stats_draws: INTEGER
   stats_defeats: INTEGER
+
+  created_at: TIMESTAMPTZ
 }

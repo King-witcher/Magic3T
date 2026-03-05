@@ -169,36 +169,36 @@ export class HoneypotController {
     logHoneypotAccess(ip, '/.env')
     await randomDelay(200, 500)
     // Completely fake credentials that lead nowhere
-    res.send(`APP_NAME=Magic3T
+    res.send(`APP_NAME=magestic
 APP_ENV=production
 APP_KEY=base64:dGhpcyBpcyBhIGZha2Uga2V5IGZvciB0aGUgaG9uZXlwb3Q=
 APP_DEBUG=false
-APP_URL=https://magic3t.com
+APP_URL=https://magestic.com
 
 LOG_CHANNEL=stack
 LOG_LEVEL=debug
 
 DB_CONNECTION=mysql
-DB_HOST=internal-db-prod-01.magic3t.local
+DB_HOST=internal-db-prod-01.magestic.local
 DB_PORT=3306
-DB_DATABASE=magic3t_prod
+DB_DATABASE=magestic_prod
 DB_USERNAME=app_readonly
 DB_PASSWORD=r34d0nly_n0_4cc3ss!
 
-REDIS_HOST=cache-prod-01.magic3t.local
+REDIS_HOST=cache-prod-01.magestic.local
 REDIS_PASSWORD=c4ch3_p4ss_2024!
 REDIS_PORT=6379
 
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.mailtrap.io
 MAIL_PORT=587
-MAIL_USERNAME=fakemailer@magic3t.com
+MAIL_USERNAME=fakemailer@magestic.com
 MAIL_PASSWORD=m41l_p4ssw0rd!
 
 AWS_ACCESS_KEY_ID=AKIAIOSFODNN7FAKE001
 AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYFAKEKEY001
 AWS_DEFAULT_REGION=us-east-1
-AWS_BUCKET=magic3t-assets
+AWS_BUCKET=magestic-assets
 
 STRIPE_KEY=pk_live_fake_51234567890abcdef
 STRIPE_SECRET=sk_live_fake_51234567890abcdef
@@ -214,7 +214,7 @@ STRIPE_SECRET=sk_live_fake_51234567890abcdef
     logHoneypotAccess(ip, '/wp-config.php')
     await randomDelay(200, 500)
     res.send(`<?php
-define( 'DB_NAME', 'magic3t_wordpress' );
+define( 'DB_NAME', 'magestic_wordpress' );
 define( 'DB_USER', 'wp_admin' );
 define( 'DB_PASSWORD', 'Wp_S3cur3_P4ss#2024!' );
 define( 'DB_HOST', 'db-wp-prod.magic3t.local' );

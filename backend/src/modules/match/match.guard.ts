@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common'
 import { respondError, unexpected } from '@/common'
-import { MatchBank } from './lib'
+import { MatchStore } from './lib'
 import { MatchSocket } from './types'
 import { MatchRequest } from './types/match-request'
 
@@ -8,7 +8,7 @@ import { MatchRequest } from './types/match-request'
 export class MatchGuard implements CanActivate {
   private readonly logger = new Logger(MatchGuard.name, { timestamp: true })
 
-  constructor(private readonly matchBank: MatchBank) {}
+  constructor(private readonly matchBank: MatchStore) {}
 
   canActivate(context: ExecutionContext) {
     try {
@@ -31,10 +31,10 @@ export class MatchGuard implements CanActivate {
   }
 
   private validateHttp(request: MatchRequest): boolean {
-    const userId = request.userId
-    if (!userId) throw new Error('http client is not authenticated. auth guard must run before.')
+    const uuid = request.session.uuid
+    if (!uuid) return false
 
-    const perspective = this.matchBank.getPerspective(userId)
+    const perspective = this.matchBank.getPerspective(uuid)
     if (!perspective) respondError('not-in-match', 400)
 
     request.perspective = perspective
@@ -42,10 +42,10 @@ export class MatchGuard implements CanActivate {
   }
 
   private validateWs(socket: MatchSocket): boolean {
-    const userId = socket.data.userId
-    if (!userId) unexpected('unauthenticated socket connection.')
+    const uuid = socket.data.session.uuid
+    if (!uuid) unexpected('unauthenticated socket connection.')
 
-    const perspective = this.matchBank.getPerspective(userId)
+    const perspective = this.matchBank.getPerspective(uuid)
     if (!perspective) respondError('not-in-match', 400)
 
     socket.data.perspective = perspective
