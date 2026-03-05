@@ -8,6 +8,8 @@ import { UserRepository } from '@/infra/database/repositories'
 import { FirebaseAuthService } from '@/infra/firebase'
 import { SessionData } from '@/shared/types/session-data'
 
+const ONE_WEEK = 1000 * 60 * 60 * 24 * 7
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -43,7 +45,7 @@ export class AuthService {
 
   async createSession(sessionData: SessionData): Promise<string> {
     const sessionToken = `MT3SID${randomUUID()}`
-    this.cacheManager.set(`session:${sessionToken}`, sessionData, 60 * 60 * 24 * 7) // 7 days
+    this.cacheManager.set(`session:${sessionToken}`, sessionData, ONE_WEEK)
     return sessionToken
   }
 

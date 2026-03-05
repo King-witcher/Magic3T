@@ -29,7 +29,7 @@ export class AuthController {
     return {
       sessionId,
       profile: {
-        uuid: user.id,
+        uuid: user.uuid,
         nickname: user.profile_nickname,
         role: user.role,
       },

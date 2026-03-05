@@ -56,7 +56,7 @@ export class UserRepository {
           stats_victories: user.data.stats.wins,
           stats_draws: user.data.stats.draws,
           stats_defeats: user.data.stats.defeats,
-          profile_nickname_date: user.data.identification.last_changed,
+          profile_nickname_date: user.data.identification.last_changed ?? new Date(),
         },
         identity,
       ]
