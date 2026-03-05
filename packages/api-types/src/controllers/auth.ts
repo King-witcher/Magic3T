@@ -2,7 +2,9 @@ import type { UserRole } from '@magic3t/common-types'
 import type { OAuthProvider } from '../common'
 
 export namespace AuthNamespace {
-  export type SignInFirebaseCommand = string
+  export type SignInFirebaseCommand = {
+    token: string
+  }
   export type SignInFirebaseResponse = {
     sessionId: string
     profile: {

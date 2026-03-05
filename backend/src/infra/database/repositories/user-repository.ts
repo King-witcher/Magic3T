@@ -1,5 +1,6 @@
 import { IconRow, UserDocumentRole, UserRow, UserRowRole } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
+import { logger } from '@sentry/nestjs'
 import { UserRecord } from 'firebase-admin/auth'
 import { FirebaseAuthService } from '@/infra/firebase'
 import { UserDocumentRepository } from '@/infra/firestore'
@@ -34,7 +35,7 @@ export class UserRepository {
     console.log(`imported ${firestoreUsers.length} from firestore`)
 
     // Map user documents to user rows and hash join them with identities
-    const userRows = firestoreUsers.map((user): [Partial<UserRow>, UserRecord] => {
+    const userRows = firestoreUsers.map((user): [Partial<UserRow>, UserRecord | undefined] => {
       const summoner_icon =
         user.data.summoner_icon >= 59 && user.data.summoner_icon <= 78
           ? 29
@@ -63,13 +64,14 @@ export class UserRepository {
 
     await this.databaseService.transaction(async (client) => {
       for (const [user, identity] of userRows) {
-        console.info(`Importing user ${user.profile_nickname}...`)
+        if (!identity) continue
+        logger.info(`Importing user ${user.profile_nickname}...`)
 
         // Create a user entry in the database
-        const createUserChain = INSERT_INTO('user', user).RETURNING`id`
+        const createUserChain = INSERT_INTO('"user"', user).RETURNING`id`
         const {
-          rows: [id],
-        } = await client.query({
+          rows: [row],
+        } = await client.query<{ id: number }>({
           name: 'create_user',
           text: createUserChain.text,
           values: createUserChain.values,
@@ -77,7 +79,7 @@ export class UserRepository {
 
         // Create it's legacy identity entry
         const identityChain = INSERT_INTO('legacy_user_identity', {
-          user_id: id,
+          user_id: row.id,
           firebase_id: identity.uid,
           email: identity.email,
         })

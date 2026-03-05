@@ -1,5 +1,12 @@
 import { Injectable } from '@nestjs/common'
-import { Pool, PoolClient, QueryConfig, QueryConfigValues } from 'pg'
+import {
+  DatabaseError as PgDatabaseError,
+  Pool,
+  PoolClient,
+  QueryConfig,
+  QueryConfigValues,
+} from 'pg'
+import { DatabaseError } from './database-error'
 
 @Injectable()
 export class DatabaseService {
@@ -26,8 +33,20 @@ export class DatabaseService {
     queryTextOrConfig: string | QueryConfig<I>,
     values?: QueryConfigValues<I>
   ): Promise<T[]> {
-    const result = await this.pool.query(queryTextOrConfig, values)
-    return result.rows
+    try {
+      const result = await this.pool.query(queryTextOrConfig, values)
+      return result.rows
+    } catch (error) {
+      if (error instanceof PgDatabaseError) {
+        return Promise.reject(
+          new DatabaseError(
+            error,
+            typeof queryTextOrConfig === 'string' ? queryTextOrConfig : queryTextOrConfig.text
+          )
+        )
+      }
+      return Promise.reject(error)
+    }
   }
 
   async transaction<T>(callback: (client: PoolClient) => Promise<T>): Promise<T> {
@@ -39,6 +58,9 @@ export class DatabaseService {
       return result
     } catch (error) {
       await client.query('ROLLBACK')
+      if (error instanceof PgDatabaseError) {
+        return Promise.reject(new DatabaseError(error))
+      }
       return Promise.reject(error)
     } finally {
       client.release()

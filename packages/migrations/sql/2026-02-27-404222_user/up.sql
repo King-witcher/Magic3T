@@ -29,7 +29,7 @@ CREATE TABLE "user"
     rating_score          REAL                     NOT NULL,
     rating_k_factor       REAL                     NOT NULL CHECK ( rating_k_factor >= 0 ),
     rating_apex_flag      user_apex_flag,
-    rating_series_played  SMALLINT                 NOT NULL DEFAULT 0,
+    rating_ranked_count   SMALLINT                 NOT NULL DEFAULT 0,
     rating_date           DATE                     NOT NULL DEFAULT NOW(),
 
     stats_victories       INTEGER                  NOT NULL DEFAULT 0 CHECK ( stats_victories >= 0 ),
@@ -45,7 +45,7 @@ CREATE TABLE "user"
 COMMENT ON COLUMN "user".id IS 'User''s internal id';
 COMMENT ON COLUMN "user".uuid IS 'User''s external id';
 COMMENT ON COLUMN "user".rating_k_factor IS 'Dynamic K-Factor used in Elo rating calculation';
-COMMENT ON COLUMN "user".rating_series_played IS 'Number of games played in the initial rating series';
+COMMENT ON COLUMN "user".rating_ranked_count IS 'Number of games played in the initial rating series';
 COMMENT ON COLUMN "user".rating_apex_flag IS 'A flag indicating if the user has reached Challenger or Grandmaster rank';
 
 CREATE INDEX ON "user" (uuid);

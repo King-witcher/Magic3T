@@ -4,6 +4,7 @@ import { Global, Module } from '@nestjs/common'
 import { CacheableMemory } from 'cacheable'
 import Keyv from 'keyv'
 import { FirebaseModule } from '@/infra/firebase'
+import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
 
 @Global()
@@ -21,6 +22,7 @@ import { AuthService } from './auth.service'
       ],
     }),
   ],
+  controllers: [AuthController],
   providers: [AuthService],
   exports: [AuthService],
 })

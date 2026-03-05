@@ -1,6 +1,5 @@
 import { ArgumentsHost, Catch, ExceptionFilter, Logger } from '@nestjs/common'
 import { ThrottlerException } from '@nestjs/throttler'
-import { Socket } from 'socket.io'
 import { respondError } from '../errors'
 
 /**
@@ -15,8 +14,8 @@ export class ThrottlingFilter implements ExceptionFilter {
     const context = argumentsHost.getType()
     switch (context) {
       case 'ws': {
-        const host = argumentsHost.switchToWs()
-        const client = argumentsHost.switchToWs().getClient()
+        const ctx = argumentsHost.switchToWs()
+        const client = ctx.getClient()
         client.emit('error', respondError('TooManyRequests', 429))
         return
       }

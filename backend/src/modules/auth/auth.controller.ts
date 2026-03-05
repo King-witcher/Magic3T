@@ -1,4 +1,6 @@
+import { AuthNamespace } from '@magic3t/api-types'
 import { Body, Controller, Post } from '@nestjs/common'
+import { ApiOperation } from '@nestjs/swagger'
 import { respondError } from '@/common'
 import { AuthService } from './auth.service'
 
@@ -7,8 +9,9 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('signin/firebase')
-  async signInFirebase(@Body() body: string) {
-    if (typeof body !== 'string') {
+  @ApiOperation({ summary: 'Signs in a user using a Firebase token.' })
+  async signInFirebase(@Body() body: AuthNamespace.SignInFirebaseCommand) {
+    if (typeof body.token !== 'string') {
       respondError(
         'InvalidToken',
         400,
@@ -16,7 +19,7 @@ export class AuthController {
       )
     }
 
-    const validateResult = await this.authService.validateFirebaseToken(body)
+    const validateResult = await this.authService.validateFirebaseToken(body.token)
     if (!validateResult) {
       respondError('Unauthorized', 401, 'Invalid Firebase token.')
     }

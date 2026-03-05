@@ -55,6 +55,6 @@ CREATE TABLE match_event
 );
 
 CREATE INDEX ON match (uuid);
-CREATE INDEX ON match (order_id) WHERE order_id IS NOT NULL;
-CREATE INDEX ON match (chaos_id) WHERE chaos_id IS NOT NULL;
+CREATE INDEX ON match (order_uuid) WHERE order_uuid IS NOT NULL;
+CREATE INDEX ON match (chaos_uuid) WHERE order_uuid IS NOT NULL;
 CREATE INDEX ON match_event (match_id);

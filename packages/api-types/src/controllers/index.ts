@@ -1,4 +1,5 @@
 export * from './admin'
+export * from './auth'
 export * from './match'
 export * from './root'
 export * from './root'
