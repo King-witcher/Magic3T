@@ -30,7 +30,7 @@ CREATE TABLE "user"
     rating_k_factor       REAL                     NOT NULL CHECK ( rating_k_factor >= 0 ),
     rating_apex_flag      user_apex_flag,
     rating_ranked_count   SMALLINT                 NOT NULL DEFAULT 0,
-    rating_date           DATE                     NOT NULL DEFAULT NOW(),
+    rating_date           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     stats_victories       INTEGER                  NOT NULL DEFAULT 0 CHECK ( stats_victories >= 0 ),
     stats_draws           INTEGER                  NOT NULL DEFAULT 0 CHECK ( stats_draws >= 0 ),

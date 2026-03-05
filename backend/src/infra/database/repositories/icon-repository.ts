@@ -2,7 +2,7 @@ import { IconRarity, IconRow } from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import z from 'zod'
-import { INSERT_INTO } from '@/shared/pg-chain'
+import { INSERT_INTO } from '@/shared/database/pg-chain'
 import { DatabaseService } from '../database.service'
 
 const RIOT_ICON_SCHEMA = z.object({

@@ -119,7 +119,8 @@ export class AdminController {
   // }
 
   @ApiOperation({
-    summary: 'Synchronize icons with Riot API',
+    summary: 'Sync Icons',
+    description: 'Fetches the latest icons from Riot API and updates the local database.',
   })
   @Post('sync-icons')
   async syncIcons() {
@@ -127,7 +128,8 @@ export class AdminController {
   }
 
   @ApiOperation({
-    summary: 'Import users from Firestore',
+    summary: 'Import users from Firebase',
+    description: 'Imports user data from Firebase into the local database.',
   })
   @Post('import-users')
   async importUsers() {

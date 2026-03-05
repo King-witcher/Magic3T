@@ -3,9 +3,10 @@ import { Injectable } from '@nestjs/common'
 import { logger } from '@sentry/nestjs'
 import { UserRecord } from 'firebase-admin/auth'
 import { FirebaseAuthService } from '@/infra/firebase'
-import { UserDocumentRepository } from '@/infra/firestore'
-import { INSERT_INTO } from '@/shared/pg-chain'
-import { sql } from '@/shared/sql'
+import { ConfigRepository, UserDocumentRepository } from '@/infra/firestore'
+import { IDbClient } from '@/shared/database/db-client'
+import { INSERT_INTO } from '@/shared/database/pg-chain'
+import { sql } from '@/shared/database/sql'
 import { DatabaseService } from '../database.service'
 
 const roleMap: Record<UserDocumentRole, UserRowRole> = {
@@ -19,7 +20,8 @@ export class UserRepository {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly userDocumentRepository: UserDocumentRepository,
-    private readonly firebaseAuthService: FirebaseAuthService
+    private readonly firebaseAuthService: FirebaseAuthService,
+    private readonly configRepository: ConfigRepository
   ) {}
 
   /** Imports users and their identities from Firebase Auth and Firestore */
@@ -69,9 +71,7 @@ export class UserRepository {
 
         // Create a user entry in the database
         const createUserChain = INSERT_INTO('"user"', user).RETURNING`id`
-        const {
-          rows: [row],
-        } = await client.query<{ id: number }>({
+        const [row] = await client.query<{ id: number }>({
           name: 'create_user',
           text: createUserChain.text,
           values: createUserChain.values,
@@ -107,6 +107,27 @@ export class UserRepository {
   /** Slugifies a nickname. */
   slugify(nickname: string): string {
     return nickname.toLowerCase().replaceAll(' ', '')
+  }
+
+  /** Creates a new user with the given nickname. */
+  async create(nickname: string, client?: IDbClient): Promise<UserRow> {
+    client ??= this.databaseService
+
+    const ratingConfig = await this.configRepository.getRatingConfig()
+
+    const slug = this.slugify(nickname)
+    const [created] =
+      await client.query<UserRow>(
+        INSERT_INTO<Partial<UserRow>>('"user"', {
+          profile_icon: 29,
+          profile_nickname: nickname,
+          profile_nickname_slug: slug,
+          rating_score: ratingConfig.initial_elo,
+          rating_k_factor: ratingConfig.initial_k_factor,
+        }).RETURNING`*`
+      )
+
+    return created
   }
 
   async getById(id: number): Promise<UserRow | null> {

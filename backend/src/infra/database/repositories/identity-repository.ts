@@ -1,6 +1,6 @@
 import { LegacyUserIdentityRow } from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
-import { sql } from '@/shared/sql'
+import { sql } from '@/shared/database/sql'
 import { DatabaseService } from '../database.service'
 
 @Injectable()

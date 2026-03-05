@@ -9,10 +9,14 @@ import { captureException, logger } from '@sentry/nestjs'
 import * as z from 'zod'
 import { respondError } from '@/common'
 import { CrashReportsRepository } from '@/infra'
+import { UserRepository } from './infra/database/repositories'
 
 @Controller()
 export class AppController {
-  constructor(private readonly crashReportRepository: CrashReportsRepository) {}
+  constructor(
+    private readonly crashReportRepository: CrashReportsRepository,
+    private userRepository: UserRepository
+  ) {}
 
   @Get('/')
   @Redirect('/api')
@@ -25,6 +29,8 @@ export class AppController {
   })
   @Get('teapot')
   async teapot() {
+    await this.userRepository.create('Test User')
+
     logger.debug('Teapot endpoint called', { endpoint: 'teapot' })
     respondError('Teapot', 418, 'I am a teapot')
   }

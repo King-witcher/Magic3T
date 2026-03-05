@@ -4,6 +4,5 @@
     "source.organizeImports.biome": "always"
   },
   "editor.defaultFormatter": "biomejs.biome",
-  "editor.formatOnSave": true,
   "material-icon-theme.activeIconPack": "nest"
 }
