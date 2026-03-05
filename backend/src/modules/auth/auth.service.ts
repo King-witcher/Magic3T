@@ -3,26 +3,24 @@ import { UserRow } from '@magic3t/database-types'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { HttpStatus, Inject, Injectable } from '@nestjs/common'
 import { Cache } from 'cache-manager'
-import { UserRecord } from 'firebase-admin/auth'
 import { respondError, unexpected } from '@/common'
 import { UserRepository } from '@/infra/database/repositories'
-import { FirebaseService } from '@/infra/firebase'
+import { FirebaseAuthService } from '@/infra/firebase'
 import { SessionData } from '@/shared/types/session-data'
 
 @Injectable()
 export class AuthService {
   constructor(
-    private firebaseService: FirebaseService,
+    private firebaseAuthService: FirebaseAuthService,
     private userRepository: UserRepository,
     @Inject(CACHE_MANAGER) private cacheManager: Cache
   ) {}
 
   async validateFirebaseToken(firebaseToken: string): Promise<[SessionData, UserRow]> {
-    const decoded = await this.firebaseService.firebaseAuth
-      .verifyIdToken(firebaseToken)
-      .catch(() => {
-        respondError('InvalidFirebaseToken', HttpStatus.UNAUTHORIZED)
-      })
+    const decoded = await this.firebaseAuthService.validateToken(firebaseToken)
+    if (!decoded) {
+      respondError('InvalidFirebaseToken', HttpStatus.UNAUTHORIZED)
+    }
 
     const user = await this.userRepository.getByFirebaseId(decoded.uid)
 
@@ -56,14 +54,5 @@ export class AuthService {
   async getSession(token: string): Promise<SessionData | null> {
     const session = await this.cacheManager.get<SessionData>(`session:${token}`)
     return session ?? null
-  }
-
-  /**
-   * Gets all user records from Firebase Auth, up to 100.
-   */
-  async listFirebaseAccounts(nextPageToken?: string): Promise<[UserRecord[], string?]> {
-    const firebaseAuth = this.firebaseService.firebaseAuth
-    const listResult = await firebaseAuth.listUsers(100, nextPageToken)
-    return [listResult.users, listResult.pageToken]
   }
 }

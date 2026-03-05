@@ -1,8 +1,8 @@
 import { IconRow, UserDocumentRole, UserRow, UserRowRole } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
 import { UserRecord } from 'firebase-admin/auth'
+import { FirebaseAuthService } from '@/infra/firebase'
 import { UserDocumentRepository } from '@/infra/firestore'
-import { AuthService } from '@/modules'
 import { INSERT_INTO } from '@/shared/pg-chain'
 import { sql } from '@/shared/sql'
 import { DatabaseService } from '../database.service'
@@ -17,20 +17,20 @@ const roleMap: Record<UserDocumentRole, UserRowRole> = {
 export class UserRepository {
   constructor(
     private readonly databaseService: DatabaseService,
-    private readonly userDocument: UserDocumentRepository,
-    private readonly authService: AuthService
+    private readonly userDocumentRepository: UserDocumentRepository,
+    private readonly firebaseAuthService: FirebaseAuthService
   ) {}
 
   /** Imports users and their identities from Firebase Auth and Firestore */
   async importFromFirebase() {
     // Gets all identities from Firebase Auth
-    const [firestoreIdentities] = await this.authService.listFirebaseAccounts()
+    const [firestoreIdentities] = await this.firebaseAuthService.listFirebaseAccounts()
     const firestoreIdentityMap = new Map(
       firestoreIdentities.map((identity) => [identity.uid, identity])
     )
 
     // Gets all users from Firestore
-    const firestoreUsers = await this.userDocument.getAll()
+    const firestoreUsers = await this.userDocumentRepository.getAll()
     console.log(`imported ${firestoreUsers.length} from firestore`)
 
     // Map user documents to user rows and hash join them with identities
