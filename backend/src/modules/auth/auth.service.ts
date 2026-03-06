@@ -3,6 +3,7 @@ import { UserRow } from '@magic3t/database-types'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { HttpStatus, Inject, Injectable } from '@nestjs/common'
 import { Cache } from 'cache-manager'
+import { DecodedIdToken } from 'firebase-admin/auth'
 import { respondError, unexpected } from '@/common'
 import { UserRepository } from '@/infra/database/repositories'
 import { FirebaseAuthService } from '@/infra/firebase'
@@ -14,33 +15,15 @@ const ONE_WEEK = 1000 * 60 * 60 * 24 * 7
 export class AuthService {
   constructor(
     private firebaseAuthService: FirebaseAuthService,
-    private userRepository: UserRepository,
     @Inject(CACHE_MANAGER) private cacheManager: Cache
   ) {}
 
-  async validateFirebaseToken(firebaseToken: string): Promise<[SessionData, UserRow]> {
+  async validateFirebaseToken(firebaseToken: string): Promise<DecodedIdToken> {
     const decoded = await this.firebaseAuthService.validateToken(firebaseToken)
     if (!decoded) {
       respondError('InvalidFirebaseToken', HttpStatus.UNAUTHORIZED)
     }
-
-    const user = await this.userRepository.getByFirebaseId(decoded.uid)
-
-    if (!user) {
-      unexpected(
-        'UserNotFound',
-        `User with Firebase ID ${decoded.uid} not found in database after successful token verification.`
-      )
-    }
-
-    return [
-      {
-        id: user.id,
-        role: user.role,
-        uuid: user.uuid,
-      },
-      user,
-    ]
+    return decoded
   }
 
   async createSession(sessionData: SessionData): Promise<string> {
