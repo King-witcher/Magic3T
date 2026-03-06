@@ -1,6 +1,7 @@
-import { BadRequestException, Body, PipeTransform } from '@nestjs/common'
+import { Body, PipeTransform } from '@nestjs/common'
 import z from 'zod'
-import { BODY_SCHEMA_METADATA_KEY } from './body-schema.decorator'
+import { respondError } from '../errors'
+import { BODY_SCHEMA } from './body-schema.decorator'
 
 /**
  * Lazy pipe: reads the Zod schema from @BodySchema metadata on the first request,
@@ -16,15 +17,14 @@ class LazyBodySchemaPipe implements PipeTransform {
 
   transform(value: unknown) {
     if (this.schema === undefined) {
-      this.schema =
-        Reflect.getMetadata(BODY_SCHEMA_METADATA_KEY, this.target, this.propertyKey) ?? null
+      this.schema = Reflect.getMetadata(BODY_SCHEMA, this.target, this.propertyKey) ?? null
     }
 
     if (!this.schema) return value
 
     const result = this.schema.safeParse(value)
     if (!result.success) {
-      throw new BadRequestException(z.treeifyError(result.error))
+      respondError('ValidationError', 400, z.treeifyError(result.error))
     }
     return result.data
   }
