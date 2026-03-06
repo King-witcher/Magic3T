@@ -7,7 +7,7 @@ export class RegisterUserCommandClass implements RegisterUserCommand {
   @IsString()
   @MinLength(3)
   @MaxLength(16)
-  @Matches(/^[a-zA-Z0-9áÁâÂãÃàÀäÄéÉêÊèÈëËíÍîÎìÌïÏóÓôÔõÕòÒöÖúÚûÛùÙüÜçÇñÑ\s]*$/)
+  @Matches(/^[a-zA-Z0-9áÁâÂãÃàÀäÄéÉêÊèÈëËíÍîÎìÌïÏóÓôÔõÕòÒöÖúÚûÛùÙüÜçÇñÑ[ ]]*$/)
   @ApiProperty({
     type: 'string',
     description: 'The user nickname',
@@ -22,7 +22,7 @@ export class ChangeNickCommandClass implements ChangeNicknameCommand {
   @IsString()
   @MinLength(3)
   @MaxLength(16)
-  @Matches(/^[a-zA-Z0-9áÁâÂãÃàÀäÄéÉêÊèÈëËíÍîÎìÌïÏóÓôÔõÕòÒöÖúÚûÛùÙüÜçÇñÑ\s]*$/)
+  @Matches(/^[a-zA-Z0-9áÁâÂãÃàÀäÄéÉêÊèÈëËíÍîÎìÌïÏóÓôÔõÕòÒöÖúÚûÛùÙüÜçÇñÑ[ ]]*$/)
   @ApiProperty({
     minLength: 3,
     maxLength: 16,

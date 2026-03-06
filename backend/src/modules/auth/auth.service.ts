@@ -5,7 +5,8 @@ import { HttpStatus, Inject, Injectable } from '@nestjs/common'
 import { Cache } from 'cache-manager'
 import { DecodedIdToken } from 'firebase-admin/auth'
 import { respondError, unexpected } from '@/common'
-import { UserRepository } from '@/infra/database/repositories'
+import { DatabaseService } from '@/infra/database'
+import { IdentityRepository, UserRepository } from '@/infra/database/repositories'
 import { FirebaseAuthService } from '@/infra/firebase'
 import { SessionData } from '@/shared/types/session-data'
 
@@ -15,7 +16,10 @@ const ONE_WEEK = 1000 * 60 * 60 * 24 * 7
 export class AuthService {
   constructor(
     private firebaseAuthService: FirebaseAuthService,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private databaseService: DatabaseService,
+    private userRepository: UserRepository,
+    private identityRepository: IdentityRepository
   ) {}
 
   async validateFirebaseToken(firebaseToken: string): Promise<DecodedIdToken> {
@@ -24,6 +28,29 @@ export class AuthService {
       respondError('InvalidFirebaseToken', HttpStatus.UNAUTHORIZED)
     }
     return decoded
+  }
+
+  async registerFirebaseUser(decodedToken: DecodedIdToken, nickname: string): Promise<UserRow> {
+    // This should never happen, as the token would be rejected in validateFirebaseToken
+    const email = decodedToken.email
+    if (!email) {
+      unexpected('Decoded Firebase token is missing email')
+    }
+
+    const user = await this.databaseService.transaction(async (client) => {
+      const user = await this.userRepository.create(nickname, client)
+      await this.identityRepository.createFirebaseIdentity(
+        {
+          email: email,
+          firebase_id: decodedToken.uid,
+          user_id: user.id,
+        },
+        client
+      )
+      return user
+    })
+
+    return user
   }
 
   async createSession(sessionData: SessionData): Promise<string> {

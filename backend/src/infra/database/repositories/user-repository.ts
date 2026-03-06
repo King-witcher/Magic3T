@@ -3,10 +3,12 @@ import { Injectable, Logger } from '@nestjs/common'
 import { UserRecord } from 'firebase-admin/auth'
 import { FirebaseAuthService } from '@/infra/firebase'
 import { ConfigRepository, UserDocumentRepository } from '@/infra/firestore'
+import { DatabaseError } from '@/shared/database/database-error'
 import { IDbClient } from '@/shared/database/db-client'
 import { INSERT_INTO } from '@/shared/database/pg-chain'
 import { sql } from '@/shared/database/sql'
 import { DatabaseService } from '../database.service'
+import { UserRepositoryError } from './user-repository-error'
 
 const roleMap: Record<UserDocumentRole, UserRowRole> = {
   [UserDocumentRole.Player]: 'player',
@@ -170,15 +172,22 @@ export class UserRepository {
 
   async updateNickname(id: number, newNickname: string) {
     const slug = this.slugify(newNickname)
-    const rows = await this.databaseService.query(sql`
-      UPDATE "user"
-      SET profile_nickname = ${newNickname},
-          profile_nickname_slug = ${slug},
-          profile_nickname_date = CURRENT_TIMESTAMP
-      WHERE id = ${id}
-      RETURNING id
-    `)
-    if (rows.length === 0) throw new Error(`User with id ${id} not found`)
+    try {
+      const rows = await this.databaseService.query(sql`
+        UPDATE "user"
+        SET profile_nickname = ${newNickname},
+            profile_nickname_slug = ${slug},
+            profile_nickname_date = CURRENT_TIMESTAMP
+        WHERE id = ${id}
+        RETURNING id
+      `)
+      if (rows.length === 0) throw new Error(`User with id ${id} not found`)
+    } catch (error) {
+      if (error instanceof DatabaseError && error.code === '23505') {
+        throw new UserRepositoryError('NicknameAlreadyTaken')
+      }
+      throw error
+    }
   }
 
   async updateIcon(id: number, iconId: number) {
@@ -256,6 +265,4 @@ export class UserRepository {
     `)
     return rows
   }
-
-  private getFirestoreIdentityMap() {}
 }
