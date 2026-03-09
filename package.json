@@ -6,6 +6,7 @@
 	"scripts": {
 		"lint": "biome check . --write",
 		"migrate": "npm run migrate --workspace=packages/migrations",
+		"migrate:clear": "npm run clear --workspace=packages/migrations",
 		"migrate:production": "npm run migrate:production --workspace=packages/migrations"
 	},
 	"version": "1.0.0",

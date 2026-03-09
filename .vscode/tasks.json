@@ -213,6 +213,37 @@
       }
     },
 
+    {
+      "label": "Clear Migrations",
+      "icon": {
+        "id": "database",
+        "color": "terminal.ansiRed",
+      },
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "migrate:clear"
+      ],
+      "problemMatcher": {
+        "owner": "migrations",
+        "pattern": {
+          "regexp": "^([^\\\\s].*)\\\\((\\\\d+,\\\\d+)\\\\):\\\\s*(.*)$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        }
+      },
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    },
+
     //////////////// CI Test
 
     // build backend

@@ -5,6 +5,7 @@
   "scripts": {
     "new": "tsx scripts/generate.ts",
     "migrate": "tsx --env-file .env scripts/migrate.ts",
+    "clear": "tsx --env-file .env scripts/clear.ts",
     "migrate:production": "tsx scripts/migrate.ts"
   },
   "dependencies": {

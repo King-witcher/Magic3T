@@ -1,12 +1,13 @@
 -- Migration generated on 2026-03-02 13:55:21
 
-CREATE TABLE user_password_identity
+CREATE TABLE user_credential
 (
     username_slug   VARCHAR(24) PRIMARY KEY,
     password_digest VARCHAR(60)    NOT NULL,
     user_id         INTEGER UNIQUE NOT NULL,
+    last_changed    timestamptz    NOT NULL DEFAULT NOW(),
 
     FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE
 );
 
-CREATE INDEX ON user_password_identity (user_id);
+CREATE INDEX ON user_credential (user_id);
