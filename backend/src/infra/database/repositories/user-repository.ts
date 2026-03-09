@@ -121,14 +121,14 @@ export class UserRepository {
   }
 
   /** Creates a new user with the given nickname. */
-  async create(nickname: string, client?: IDbClient): Promise<UserRow> {
-    client ??= this.databaseService
+  async createWithNickname(nickname: string, conn?: IDbClient): Promise<UserRow> {
+    conn ??= this.databaseService
 
     const ratingConfig = await this.configRepository.getRatingConfig()
 
     const slug = this.slugify(nickname)
     const [created] =
-      await client.query<UserRow>(
+      await conn.query<UserRow>(
         INSERT_INTO<Partial<UserRow>>('"user"', {
           profile_icon: 29,
           profile_nickname: nickname,

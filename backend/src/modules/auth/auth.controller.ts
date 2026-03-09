@@ -1,18 +1,21 @@
 import {
+  RegisterCommand,
   RegisterFirebaseCommand,
   RegisterFirebaseResponse,
+  RegisterResult,
   SignInFirebaseCommand,
   SignInFirebaseResponse,
   ValidateSessionResponse,
 } from '@magic3t/api-types'
 import { Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
+import { Throttle } from '@nestjs/throttler'
 import z from 'zod'
 import { respondError, unexpected, ValidatedBody } from '@/common'
 import { BodySchema } from '@/common/decorators/body-schema.decorator'
 import { ResponseSchema } from '@/common/decorators/response-schema.decorator'
 import { UserRepository } from '@/infra/database/repositories'
-import { NICKNAME_REGEX } from '@/shared/constants/nickname-regex'
+import { NICKNAME_SCHEMA } from '@/shared/validation'
 import { AuthGuard } from './auth.guard'
 import { AuthControllerService } from './auth-controller.service'
 import { SessionId, UserId } from './decorators'
@@ -27,7 +30,7 @@ export class AuthController {
   /**
    * Signs in a user using a Firebase token.
    */
-  @Post('sign-in/firebase')
+  @Post('firebase/login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Sign in with Firebase',
@@ -93,7 +96,7 @@ export class AuthController {
     }
   }
 
-  @Post('register/firebase')
+  @Post('firebase/register')
   @ApiOperation({
     summary: 'Register with Firebase',
     description:
@@ -103,12 +106,7 @@ export class AuthController {
     schema: z.object({
       token: z.string().describe('Firebase ID token obtained from the client'),
       data: z.object({
-        nickname: z
-          .string()
-          .max(16)
-          .min(4)
-          .regex(NICKNAME_REGEX)
-          .describe('Nickname for the new user'),
+        nickname: NICKNAME_SCHEMA.describe('Desired nickname for the new account'),
       }),
     }),
   })
@@ -120,7 +118,7 @@ export class AuthController {
         uuid: z.string().describe('Unique identifier for the user'),
         nickname: z.string().describe("User's display name"),
         summonerIcon: z.number().describe("User's summoner icon"),
-        role: z.string().describe("User's role in the system"),
+        role: z.literal('player').describe("User's role in the system"),
       }),
     }),
     status: HttpStatus.CREATED,
@@ -170,6 +168,71 @@ export class AuthController {
     }
   }
 
+  @Post('register')
+  @ApiOperation({
+    summary: 'Register',
+    description: 'Registers a new user with the provided information.',
+  })
+  @BodySchema({
+    description: 'Request body containing registration information.',
+    schema: z.object({
+      nickname: NICKNAME_SCHEMA.describe('Desired nickname for the new account'),
+      username: z.string().min(4).max(24).describe('Desired username for the new account'),
+      password: z
+        .string()
+        .min(8)
+        .max(128)
+        .regex(/[a-zA-Z]+/)
+        .regex(/[0-9]+/)
+        .describe('Password for the new account'),
+    }),
+  })
+  @ResponseSchema({
+    description: 'Successfully registered.',
+    schema: z.object({
+      sessionId: z.string().describe('Session token'),
+      sessionData: z.object({
+        uuid: z.uuid().describe('Unique identifier for the user'),
+        nickname: z.string().describe("User's display name"),
+        summonerIcon: z.number().describe("User's summoner icon"),
+        role: z.literal('player').describe("User's role in the system"),
+      }),
+    }),
+    status: HttpStatus.CREATED,
+  })
+  @ResponseSchema({
+    status: HttpStatus.CONFLICT,
+    description: 'The nickname or username is already taken.',
+    schema: z.object({
+      errorCode: z.enum(['NicknameAlreadyTaken', 'UsernameAlreadyTaken']),
+      metadata: z.any().optional(),
+    }),
+  })
+  @ResponseSchema({
+    status: HttpStatus.TOO_MANY_REQUESTS,
+    description:
+      "Too many requests. You can't register more than 5 times per hour from the same IP.",
+    schema: z.object({
+      errorCode: z.literal('TooManyRequests'),
+      metadata: z.any().optional(),
+    }),
+  })
+  @Throttle({ medium: { limit: 2 }, long: { limit: 5 } })
+  async register(@ValidatedBody() body: RegisterCommand): Promise<RegisterResult> {
+    const user = await this.service.registerWithCredential(body)
+    const sessionId = await this.service.createSession({
+      id: user.id,
+      uuid: user.uuid,
+      role: user.role,
+    })
+    const clientSession = this.service.getClientSessionDataFromRow(user)
+
+    return {
+      sessionId,
+      sessionData: clientSession,
+    }
+  }
+
   @Get('validate-session')
   @ApiOperation({
     summary: 'Get current authenticated profile',
@@ -178,7 +241,7 @@ export class AuthController {
   @ResponseSchema({
     description: 'Successfully retrieved user profile.',
     schema: z.object({
-      uuid: z.string().describe('Unique identifier for the user'),
+      uuid: z.uuid().describe('Unique identifier for the user'),
       nickname: z.string().describe("User's display name"),
       summonerIcon: z.number().describe("User's summoner icon"),
       role: z.string().describe("User's role in the system"),

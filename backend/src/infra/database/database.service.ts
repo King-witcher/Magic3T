@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { DatabaseError as PgDatabaseError, Pool, QueryConfig, QueryConfigValues } from 'pg'
+import { DatabaseError } from '@/shared/database/database-error'
 import { DbClient, IDbClient } from '@/shared/database/db-client'
-import { DatabaseError } from '../../shared/database/database-error'
 
 @Injectable()
 export class DatabaseService implements IDbClient {

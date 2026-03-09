@@ -11,7 +11,7 @@ export class IdentityRepository {
 
   async findByFirebaseId(firebaseId: string): Promise<LegacyUserIdentityRow | null> {
     const [result] = await this.databaseService.query<LegacyUserIdentityRow>(sql`
-      SELECT * FROM legacy_user_identities WHERE firebase_id = ${firebaseId}
+      SELECT * FROM legacy_user_identity WHERE firebase_id = ${firebaseId}
     `)
     return result ?? null
   }

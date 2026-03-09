@@ -2,10 +2,10 @@
 
 CREATE TABLE user_credential
 (
-    username_slug   VARCHAR(24) PRIMARY KEY,
-    password_digest VARCHAR(60)    NOT NULL,
-    user_id         INTEGER UNIQUE NOT NULL,
-    last_changed    timestamptz    NOT NULL DEFAULT NOW(),
+    username_slug         VARCHAR(24) PRIMARY KEY,
+    password_digest       VARCHAR(60)              NOT NULL,
+    user_id               INTEGER UNIQUE           NOT NULL,
+    password_last_changed TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE
 );
