@@ -47,7 +47,7 @@ export class FirebaseClient {
   private async getToken(): Promise<string | null> {
     const user = auth.currentUser
     if (!user) return null
-    return getIdToken(user)
+    return getIdToken(user, true)
   }
 }
 

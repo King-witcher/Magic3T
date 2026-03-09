@@ -65,11 +65,7 @@ interface Props {
 export const AuthContext = createContext<AuthContextData | null>(null)
 
 export function AuthProvider({ children }: Props) {
-  const [sessionId, setSessionId] = useLocalStorage(
-    AUTH_SESSION_STORAGE_KEY,
-    null,
-    z.string().nullable()
-  )
+  const [sessionId, setSessionId] = useLocalStorage(AUTH_SESSION_STORAGE_KEY)
   // If session id is undefined, we don't even have to check anything else.
   const [loadingInitSession, setLoadingInitSession] = useState(sessionId !== null)
   const [shouldRegister, setShouldRegister] = useState(false)

@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, Navigate, redirect } from '@tanstack/react-router'
 import { ChooseNicknameTemplate } from '@/components/templates'
 import { AuthState, useAuth } from '@/contexts/auth-context'
 
@@ -26,7 +26,7 @@ function RouteComponent() {
   }
 
   if (auth.state !== AuthState.SignedInUnregistered) {
-    redirect({ to: '/sign-in', search: referrer ? { referrer } : undefined })
+    return <Navigate to={referrer ?? '/sign-in'} />
   }
 
   return <ChooseNicknameTemplate onChooseNickname={registerNickname} redirect={referrer} />
