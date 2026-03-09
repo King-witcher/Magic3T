@@ -14,6 +14,7 @@ function RouteComponent() {
   const { match: matchId } = Route.useParams()
 
   const matchQuery = useClientQuery(apiClient.match, 'getById', matchId)
+
   switch (matchQuery.status) {
     case 'pending':
       return <Loading />
@@ -27,7 +28,7 @@ function RouteComponent() {
         <div className="min-h-full p-4 sm:p-8 flex justify-center items-start">
           <div className="w-full max-w-2xl">
             <Panel>
-              <MatchDetail match={matchQuery.data} />
+              <MatchDetail matchId={matchId} />
             </Panel>
           </div>
         </div>

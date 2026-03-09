@@ -17,9 +17,11 @@ export class FirebaseAuthService {
 
   async validateToken(token: string): Promise<DecodedIdToken | null> {
     try {
+      console.log(token)
       const decoded = await this.firebaseService.firebaseAuth.verifyIdToken(token)
       return decoded
-    } catch {
+    } catch (e) {
+      console.error(e)
       return null
     }
   }

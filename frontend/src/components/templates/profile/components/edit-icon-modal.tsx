@@ -41,7 +41,7 @@ function EditIconModalInner({ currentIcon, onClose }: InnerProps) {
   const [selectedIcon, setSelectedIcon] = useState(currentIcon)
   const auth = useSignedAuth()
 
-  const userQuery = useClientQuery(apiClient.user, 'getById', auth.userId, { authenticated: false })
+  const userQuery = useClientQuery(apiClient.user, 'getById', auth.uuid, { authenticated: false })
   const iconsQuery = useClientQuery(apiClient.user, 'getMyIcons', {
     staleTime: 60 * 1000, // 1 minute
   })

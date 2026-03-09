@@ -3,28 +3,32 @@ import {
   RegisterFirebaseResponse,
   SignInFirebaseCommand,
   SignInFirebaseResponse,
+  ValidateSessionResponse,
 } from '@magic3t/api-types'
-import { Controller, HttpStatus, Post } from '@nestjs/common'
+import { Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
 import z from 'zod'
-import { respondError, ValidatedBody } from '@/common'
+import { respondError, unexpected, ValidatedBody } from '@/common'
 import { BodySchema } from '@/common/decorators/body-schema.decorator'
 import { ResponseSchema } from '@/common/decorators/response-schema.decorator'
 import { UserRepository } from '@/infra/database/repositories'
 import { NICKNAME_REGEX } from '@/shared/constants/nickname-regex'
-import { AuthService } from './auth.service'
+import { AuthGuard } from './auth.guard'
+import { AuthControllerService } from './auth-controller.service'
+import { UserId } from './decorators'
 
 @Controller('auth')
 export class AuthController {
   constructor(
-    private authService: AuthService,
+    private service: AuthControllerService,
     private userRepository: UserRepository
   ) {}
 
   /**
    * Signs in a user using a Firebase token.
    */
-  @Post('signin/firebase')
+  @Post('sign-in/firebase')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Sign in with Firebase',
     description:
@@ -33,34 +37,24 @@ export class AuthController {
   @BodySchema({
     description: 'Request body containing the Firebase ID token.',
     schema: z.object({
-      token: z
-        .jwt()
-        .max(2000)
-        .default('aaaa.bbbb.cccc')
-        .describe('Firebase ID token obtained from the client'),
+      token: z.jwt().max(2000).describe('Firebase ID token obtained from the client'),
     }),
   })
   @ResponseSchema({
     description: 'Successfully signed in.',
     schema: z.object({
-      status: z.literal('signed_in').describe('Indicates a successful sign-in'),
-      sessionId: z.string().describe('Session token'),
-      profile: z.object({
-        uuid: z.string().describe('Unique identifier for the user'),
-        nickname: z.string().describe("User's display name"),
-        summonerIcon: z.number().describe("User's summoner icon"),
-        role: z.string().describe("User's role in the system"),
-      }),
+      status: z.enum(['unregistered', 'registered']).describe('Indicates the sign-in status'),
+      sessionId: z.string().describe('Session token').nullable(),
+      sessionData: z
+        .object({
+          uuid: z.string().describe('Unique identifier for the user'),
+          nickname: z.string().describe("User's display name"),
+          summonerIcon: z.number().describe("User's summoner icon"),
+          role: z.string().describe("User's role in the system"),
+        })
+        .nullable(),
     }),
-    status: HttpStatus.CREATED,
-  })
-  @ResponseSchema({
-    description: 'The token is valid, but the user is not registered yet.',
-    schema: z.object({
-      errorCode: z.literal('UnregisteredUser'),
-      metadata: z.string().describe('Some extra description'),
-    }),
-    status: HttpStatus.NOT_FOUND,
+    status: HttpStatus.OK,
   })
   @ResponseSchema({
     description: 'The token is invalid.',
@@ -73,31 +67,29 @@ export class AuthController {
   async signInFirebase(
     @ValidatedBody() body: SignInFirebaseCommand
   ): Promise<SignInFirebaseResponse> {
-    const validateResult = await this.authService.validateFirebaseToken(body.token)
+    const validateResult = await this.service.validateFirebaseToken(body.token)
 
     const user = await this.userRepository.getByFirebaseId(validateResult.uid)
     if (!user) {
-      respondError(
-        'UnregisteredUser',
-        HttpStatus.UNAUTHORIZED,
-        'The token is valid but the user is not registered yet.'
-      )
+      return {
+        status: 'unregistered',
+        sessionId: null,
+        sessionData: null,
+      }
     }
 
-    const sessionId = await this.authService.createSession({
+    const sessionId = await this.service.createSession({
       id: user.id,
       uuid: user.uuid,
       role: user.role,
     })
 
+    const clientSession = this.service.getClientSessionDataFromRow(user)
+
     return {
+      status: 'registered',
       sessionId,
-      profile: {
-        uuid: user.uuid,
-        summonerIcon: user.profile_icon,
-        nickname: user.profile_nickname,
-        role: user.role,
-      },
+      sessionData: clientSession,
     }
   }
 
@@ -124,7 +116,7 @@ export class AuthController {
     description: 'Successfully registered and signed in.',
     schema: z.object({
       sessionId: z.string().describe('Session token'),
-      profile: z.object({
+      sessionData: z.object({
         uuid: z.string().describe('Unique identifier for the user'),
         nickname: z.string().describe("User's display name"),
         summonerIcon: z.number().describe("User's summoner icon"),
@@ -153,7 +145,7 @@ export class AuthController {
   async registerFirebase(
     @ValidatedBody() body: RegisterFirebaseCommand
   ): Promise<RegisterFirebaseResponse> {
-    const validateResult = await this.authService.validateFirebaseToken(body.token)
+    const validateResult = await this.service.validateFirebaseToken(body.token)
 
     // TODO: Optimize it
     const existingUser = await this.userRepository.getByFirebaseId(validateResult.uid)
@@ -161,23 +153,48 @@ export class AuthController {
       respondError('UserAlreadyRegistered', HttpStatus.CONFLICT, 'The user is already registered.')
     }
 
-    const user = await this.authService.registerFirebaseUser(validateResult, body.data.nickname)
+    const user = await this.service.registerFirebaseUser(validateResult, body.data.nickname)
 
     // After registration, sign in the user by reusing the sign-in logic
-    const sessionId = await this.authService.createSession({
+    const sessionId = await this.service.createSession({
       id: user.id,
       uuid: user.uuid,
       role: user.role,
     })
 
+    const clientSession = this.service.getClientSessionDataFromRow(user)
+
     return {
       sessionId,
-      profile: {
-        uuid: user.uuid,
-        summonerIcon: user.profile_icon,
-        nickname: user.profile_nickname,
-        role: user.role,
-      },
+      sessionData: clientSession,
+    }
+  }
+
+  @Get('validate-session')
+  @ApiOperation({
+    summary: 'Get current authenticated profile',
+    description: 'Returns the profile of the currently authenticated user.',
+  })
+  @ResponseSchema({
+    description: 'Successfully retrieved user profile.',
+    schema: z.object({
+      uuid: z.string().describe('Unique identifier for the user'),
+      nickname: z.string().describe("User's display name"),
+      summonerIcon: z.number().describe("User's summoner icon"),
+      role: z.string().describe("User's role in the system"),
+    }),
+    status: HttpStatus.OK,
+  })
+  @UseGuards(AuthGuard)
+  async validateSession(@UserId() id: number): Promise<ValidateSessionResponse> {
+    const user = await this.userRepository.getById(id)
+    if (!user) unexpected('Session is valid but no user found. This should not happen.')
+
+    return {
+      uuid: user.uuid,
+      nickname: user.profile_nickname,
+      summonerIcon: user.profile_icon,
+      role: user.role,
     }
   }
 }

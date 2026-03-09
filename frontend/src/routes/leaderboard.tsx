@@ -38,11 +38,11 @@ export function LeaderboardTemplate() {
             <div className="space-y-2">
               {query.data.data.map((user, index) => {
                 const isApex =
-                  user.rating.league === League.Master || user.rating.league === League.Challenger
-                const leagueInfo = leaguesMap[user.rating.league]
+                  user.rank.league === League.Master || user.rank.league === League.Challenger
+                const leagueInfo = leaguesMap[user.rank.league]
                 const isTop1 = index === 0
                 const isTopThree = index < 3
-                const divisionString = user.rating.division ? divisionMap[user.rating.division] : ''
+                const divisionString = user.rank.division ? divisionMap[user.rank.division] : ''
 
                 return (
                   <Link
@@ -61,7 +61,7 @@ export function LeaderboardTemplate() {
                     from="/leaderboard"
                     to="/users/$nickname"
                     params={{ nickname: user.nickname?.replaceAll(' ', '') ?? '' }}
-                    key={user.id}
+                    key={user.uuid}
                   >
                     <div className="flex items-center sm:gap-4 p-3 sm:p-5">
                       {/* Rank Number */}
@@ -90,7 +90,7 @@ export function LeaderboardTemplate() {
                                 <GiRobotGrab className="text-gold-4 size-6" />
                               </Tooltip>
                             )}
-                            {user.role === UserDocumentRole.Creator && (
+                            {user.role === 'superuser' && (
                               <Tooltip text="This account belongs to the creator of the game">
                                 <GiCrown className="text-gold-4 size-6" />
                               </Tooltip>
@@ -105,7 +105,7 @@ export function LeaderboardTemplate() {
                       {/* Rank Badge */}
                       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                         <Tooltip
-                          text={`${leagueInfo.name} ${divisionString} - ${user.rating.points} LP`}
+                          text={`${leagueInfo.name} ${divisionString} - ${user.rank.points} LP`}
                         >
                           <img
                             className="w-8 sm:w-10 h-8 sm:h-10 drop-shadow-lg"
@@ -117,7 +117,7 @@ export function LeaderboardTemplate() {
                         <div className="text-right">
                           <div className="text-sm sm:text-base font-semibold text-gold-1">
                             {!isApex && divisionString}
-                            {isApex && `${user.rating.points} LP`}
+                            {isApex && `${user.rank.points} LP`}
                           </div>
                         </div>
                       </div>

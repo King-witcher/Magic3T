@@ -18,7 +18,7 @@ export class UserService {
     )
 
     return {
-      id: row.uuid,
+      uuid: row.uuid,
       role: row.role,
       nickname: row.profile_nickname,
       summonerIcon: row.profile_icon,
@@ -41,7 +41,7 @@ export class UserService {
     )
 
     return {
-      id: row.uuid,
+      uuid: row.uuid,
       role: row.role,
       nickname: row.profile_nickname,
       summonerIcon: row.profile_icon,

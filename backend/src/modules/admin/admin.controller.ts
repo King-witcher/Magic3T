@@ -1,10 +1,8 @@
-import { Controller, Post, UseGuards } from '@nestjs/common'
+import { Controller, Post } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { respondError } from '@/common'
 import { IconRepository } from '@/infra/database/repositories/icon-repository'
 import { UserRepository } from '@/infra/database/repositories/user-repository'
-import { AuthGuard } from '@/modules/auth/auth.guard'
-import { AdminGuard } from './admin.guard'
 
 @Controller('admin')
 // @UseGuards(AuthGuard, AdminGuard)

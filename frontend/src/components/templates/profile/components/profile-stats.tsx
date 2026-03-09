@@ -16,7 +16,7 @@ export function ProfileStats({ user, className, ...props }: ProfileStatsProps) {
       </h2>
 
       <div className="flex gap-4 flex-col md:flex-row md:gap-0 w-full items-center justify-evenly">
-        <RankingEmblem rating={user.rating} />
+        <RankingEmblem rating={user.rank} />
         <StatsChart user={user} />
       </div>
     </div>

@@ -48,7 +48,7 @@ export function QueueProvider({ children }: QueueContextProps) {
       queue: 0,
     },
   })
-  const { user, state: authState } = useAuth()
+  const { session, state: authState } = useAuth()
   const gameCtx = useGame()
 
   const gateway = useGateway<QueueServerEventsMap, QueueClientEventsMap>(
@@ -97,7 +97,7 @@ export function QueueProvider({ children }: QueueContextProps) {
 
       await apiClient.queue.enqueue(mode)
     },
-    [gateway, user, setQueueModes]
+    [gateway, session, setQueueModes]
   )
 
   const dequeue = useCallback(

@@ -1,11 +1,13 @@
 import { GetUserResult, ListUsersResult } from '@magic3t/api-types'
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, HttpStatus, Param, Patch, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { range } from 'lodash'
-import { respondError } from '@/common'
+import z from 'zod'
+import { ResponseSchema, respondError, unexpected } from '@/common'
 import { UserRepository } from '@/infra/database/repositories/user-repository'
 import { AuthGuard } from '@/modules/auth/auth.guard'
 import { UserId } from '@/modules/auth/decorators/user-id.decorator'
+import { getUserResultSchema } from './swagger/get-user-schema'
 import { ChangeIconCommandClass, ChangeNickCommandClass } from './swagger/user-commands'
 import { UserService } from './user.service'
 
@@ -65,16 +67,26 @@ export class UserController {
 
   @Get('me')
   @ApiOperation({
-    summary: 'Get the currently connected user',
+    summary: 'Get current authenticated profile',
+    description: 'Returns the profile of the currently authenticated user.',
   })
-  @ApiResponse({
-    type: 'object',
+  @ResponseSchema({
+    description: 'Successfully retrieved user profile.',
+    schema: getUserResultSchema,
+  })
+  @ResponseSchema({
+    description: 'The session ID is missing or invalid.',
+    schema: z.object({
+      errorCode: z.literal('InvalidSession'),
+      metadata: z.string().describe('Some extra description'),
+    }),
+    status: HttpStatus.UNAUTHORIZED,
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   async getMe(@UserId() id: number) {
     const user = await this.userRepository.getById(id)
-    if (!user) respondError('user-not-found', 404, 'User not found')
+    if (!user) unexpected('UserNotFound', 'User not found for current session')
     return this.userService.getUserByRow(user)
   }
 
@@ -113,20 +125,6 @@ export class UserController {
 
     await this.userRepository.updateNickname(userId, newNickname)
   }
-
-  // @Post('register')
-  // @UseGuards(AuthGuard)
-  // @ApiBearerAuth()
-  // @ApiOperation({
-  //   summary: 'Register an authenticated user in the database information',
-  // })
-  // async register(@UserId() firebaseId: string, @Body() body: RegisterUserCommandClass) {
-  //   const previousUserRow = await this.userRepository.getByFirebaseId(firebaseId)
-
-  //   if (previousUserRow) respondError('UserAlreadyRegistered', 400, 'User is already registered')
-
-  //   await this.userRepository.register(firebaseId, body.nickname)
-  // }
 
   @Get('me/icons')
   @UseGuards(AuthGuard)

@@ -19,8 +19,8 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ user }: ProfileHeaderProps) {
-  const auth = useSignedAuth()
-  const isOwnProfile = auth.userId === user.id
+  const session = useSignedAuth()
+  const isOwnProfile = session.uuid === user.uuid
   const [editIconOpen, setEditIconOpen] = useState(false)
 
   return (
@@ -28,11 +28,11 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
       <div className="flex flex-col items-center gap-6">
         {/* Profile Avatar */}
         <AvatarRoot className="mt-24">
-          <AvatarWingAnimation league={user.rating.league} />
+          <AvatarWingAnimation league={user.rank.league} />
           <AvatarImage icon={user.summonerIcon} />
           {isOwnProfile && <EditAvatarOverlay onClick={() => setEditIconOpen(true)} />}
-          <AvatarWing league={user.rating.league} type="wing" />
-          {user.rating.division && <AvatarDivision division={user.rating.division} />}
+          <AvatarWing league={user.rank.league} type="wing" />
+          {user.rank.division && <AvatarDivision division={user.rank.division} />}
         </AvatarRoot>
 
         {/* User Info */}
@@ -44,7 +44,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
                 <GiRobotGrab className="text-gold-4 size-7" />
               </Tooltip>
             )}
-            {user.role === UserDocumentRole.Creator && (
+            {user.role === 'superuser' && (
               <Tooltip text="Game Creator">
                 <GiCrown className="text-gold-4 size-7" />
               </Tooltip>

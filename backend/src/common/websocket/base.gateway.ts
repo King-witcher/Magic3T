@@ -47,8 +47,11 @@ export class BaseGateway<
   async handleConnection(client: Socket) {
     const skipAuth = Reflect.getMetadata(SKIP_AUTH_KEY, this.constructor)
     if (skipAuth) return
-    await this.requireAuth(client)
-    await this.joinRoom(client)
+    const session = await this.requireAuth(client)
+
+    if (session) {
+      await this.joinRoom(client)
+    }
   }
 
   /** Send an event to a specific user in a namespace. */
@@ -80,7 +83,7 @@ export class BaseGateway<
     }
   }
 
-  private async requireAuth(client: Socket): Promise<void> {
+  private async requireAuth(client: Socket): Promise<SessionData | null> {
     const token = client.handshake.auth.token
     let session: SessionData | null = null
     if (token && typeof token === 'string') {
@@ -93,12 +96,13 @@ export class BaseGateway<
         errorCode: 'unauthorized',
       })
       client.disconnect()
-      return
+      return null
     }
 
     // Attach user ID to the socket data
     const authClient = client as AuthenticSocket
     authClient.data.session = session
+    return session
   }
 
   private async joinRoom(client: AuthenticSocket) {

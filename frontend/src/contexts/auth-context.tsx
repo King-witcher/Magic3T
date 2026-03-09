@@ -1,4 +1,4 @@
-import { GetUserResult } from '@magic3t/api-types'
+import { ClientSessionData } from '@magic3t/api-types'
 import {
   createContext,
   type ReactNode,
@@ -8,52 +8,54 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react'
-import { useClientQuery } from '@/hooks/use-client-query'
+import z from 'zod'
 import { useRegisterCommand } from '@/hooks/use-register-command'
-import { authClient } from '@/lib/auth-client'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { Console } from '@/lib/console'
+import { firebaseClient } from '@/lib/firebase-client'
 import { apiClient } from '@/services/clients/api-client'
-import { NotFoundError } from '@/services/clients/client-error'
+import { ClientError } from '@/services/clients/client-error'
 
 export enum AuthState {
   /** The authentication session is being loaded */
   LoadingSession = 'loading-session',
   /** The user is not signed in */
   NotSignedIn = 'not-signed-in',
-  /** The user is signed in but the user data is still being loaded */
-  LoadingUserData = 'loading-user-data',
   /** Means that the user is signed in but has not completed the registration process (e.g., choosing a nickname). */
   SignedInUnregistered = 'unregistered',
   /** The user is signed in and user data has been loaded */
   SignedIn = 'signed-in',
 }
 
+export const AUTH_SESSION_STORAGE_KEY = 'auth-session'
+
 type AuthContextData =
   | {
-      user: null
-      userId: null
+      session: null
+      uuid: null
       signedIn: false
-      state: AuthState.NotSignedIn | AuthState.LoadingSession
+      state: AuthState.NotSignedIn
+      signInWithGoogle: () => Promise<void>
     }
   | {
-      user: null
-      userId: string
+      session: null
+      uuid: null
       signedIn: false
-      state: AuthState.LoadingUserData
+      state: AuthState.LoadingSession
     }
   | {
-      user: null
-      userId: string
-      signedIn: true
+      session: null
+      uuid: null
+      signedIn: false
       state: AuthState.SignedInUnregistered
-      refetchUser: () => Promise<void>
+      registerWithGoogle: (nickname: string) => Promise<void>
     }
   | {
-      user: GetUserResult
-      userId: string
+      session: ClientSessionData
+      uuid: string
       signedIn: true
       state: AuthState.SignedIn
-      refetchUser: () => Promise<void>
+      signOut: () => Promise<void>
     }
 
 interface Props {
@@ -63,85 +65,168 @@ interface Props {
 export const AuthContext = createContext<AuthContextData | null>(null)
 
 export function AuthProvider({ children }: Props) {
-  // This state is only true while we're waiting for the initial auth state to load
-  const [loadingSession, setLoadingSession] = useState(true)
-  useEffect(() => {
-    Console.log('Loading session...')
-    const unlisten = authClient.onAuthStateChanged(firstListener)
-    function firstListener(userId: string | null) {
-      Console.log(`Session loaded: ${userId ? `signed in as ${userId}` : 'Not signed in'}`)
-      setLoadingSession(false)
-      unlisten()
-    }
-  }, [])
+  const [sessionId, setSessionId] = useLocalStorage(
+    AUTH_SESSION_STORAGE_KEY,
+    null,
+    z.string().nullable()
+  )
+  // If session id is undefined, we don't even have to check anything else.
+  const [loadingInitSession, setLoadingInitSession] = useState(sessionId !== null)
+  const [shouldRegister, setShouldRegister] = useState(false)
 
-  const userId = useSyncExternalStore(
-    (sub) => authClient.onAuthStateChanged(sub),
-    () => authClient.userId ?? null
+  const [sessionData, setSessionData] = useState<ClientSessionData | null>(null)
+
+  const firebaseId = useSyncExternalStore(
+    (sub) => firebaseClient.onAuthStateChanged(sub),
+    () => firebaseClient.userId ?? null
   )
 
-  const userQuery = useClientQuery(apiClient.user, 'getById', userId!, {
-    enabled: !!userId,
-    authenticated: false,
-  })
+  useEffect(function loadInitialState() {
+    async function loadSession() {
+      firebaseClient.signOut()
+      if (sessionId) {
+        Console.log('Validating session token...')
+        try {
+          const response = await apiClient.auth.validateSession()
+          setSessionData(response)
+        } catch (e) {
+          setSessionId(null)
+          setSessionData(null)
+          Console.log('Failed to validate session token.')
+          console.error(e)
+        } finally {
+          setLoadingInitSession(false)
+        }
+      } else {
+        Console.log('No session detected.')
+        // Ensure we are signed out of Firebase if there's no session, to avoid confusion.
+        firebaseClient.signOut()
+      }
+    }
+    loadSession()
+  }, [])
+
+  async function signInFirebase() {
+    try {
+      await firebaseClient.signInWithGoogle()
+      const token = await firebaseClient.token
+      if (!token) throw new Error('Failed to obtain Firebase token after sign-in')
+      const data = await apiClient.auth.signInFirebase({ token })
+      if (data.status === 'registered') {
+        // If user is registered, sign out from Firebase.
+        setSessionData(data.sessionData)
+        setSessionId(data.sessionId)
+        firebaseClient.signOut()
+      } else {
+        // Otherwise, Firebase session is needed for registration.
+        setShouldRegister(true)
+        setSessionData(null)
+        setSessionId(null)
+      }
+    } catch (error) {
+      setSessionData(null)
+      setSessionId(null)
+      await firebaseClient.signOut()
+      Console.log((error as Error).message)
+      console.error(error)
+    }
+  }
+
+  async function registerFirebase(nickname: string) {
+    try {
+      const token = await firebaseClient.token
+      if (!token) throw new Error('Failed to obtain Firebase token for registration')
+      const response = await apiClient.auth.registerFirebase({
+        data: { nickname },
+        token,
+      })
+      setSessionData(response.sessionData)
+      setSessionId(response.sessionId)
+      setShouldRegister(false)
+      firebaseClient.signOut()
+    } catch (error) {
+      if (error instanceof ClientError && (await error.errorCode) === 'NicknameUnavailable') {
+        throw new Error('Nickname is already taken. Please choose another one.')
+      }
+    }
+  }
 
   useRegisterCommand(
     {
-      description: 'Generate and print your authentication token',
-      name: 'gentoken',
+      description: 'Generate and print your Firebase authentication token',
+      name: 'firebase-token',
       async handler(ctx) {
-        if (!userId) {
-          ctx.console.print('You are not signed in')
+        if (!firebaseId) {
+          ctx.console.print('You are not signed in on firebase')
           return 1
         }
 
         ctx.console.print('Generating token')
-        const token = await authClient.token
+        const token = await firebaseClient.token
         ctx.console.print(token ?? 'null')
         return 0
       },
     },
-    [userId]
+    [firebaseId]
+  )
+
+  useRegisterCommand(
+    {
+      description: 'Prints your Session ID',
+      name: 'showsid',
+      async handler(ctx) {
+        if (!sessionId) {
+          ctx.console.print('You are not signed in')
+          return 1
+        }
+        ctx.console.print(sessionId ?? 'null')
+        if (sessionId) {
+          ctx.console.print('Session ID copied to clipboard')
+        }
+        return 0
+      },
+    },
+    [sessionId]
   )
 
   const contextData = useMemo<AuthContextData>((): AuthContextData => {
-    if (loadingSession) {
-      return { user: null, userId: null, signedIn: false, state: AuthState.LoadingSession }
+    if (loadingInitSession) {
+      return {
+        session: null,
+        uuid: null,
+        signedIn: false,
+        state: AuthState.LoadingSession,
+      }
     }
-    if (!userId) {
-      return { user: null, userId: null, signedIn: false, state: AuthState.NotSignedIn }
+
+    if (shouldRegister) {
+      return {
+        session: null,
+        uuid: null,
+        signedIn: false,
+        state: AuthState.SignedInUnregistered,
+        registerWithGoogle: registerFirebase,
+      }
     }
-    switch (userQuery.status) {
-      case 'pending':
-        return { user: null, userId, signedIn: false, state: AuthState.LoadingUserData }
-      case 'error':
-        // User not found (unregistered)
-        if (userQuery.error instanceof NotFoundError) {
-          return {
-            user: null,
-            userId,
-            signedIn: true,
-            state: AuthState.SignedInUnregistered,
-            refetchUser: async () => {
-              await userQuery.refetch()
-            },
-          }
-        }
-        // Unexpected error
-        console.error('Error loading user data:', userQuery.error)
-        return { user: null, userId: null, signedIn: false, state: AuthState.NotSignedIn }
-      case 'success':
-        return {
-          user: userQuery.data,
-          userId,
-          signedIn: true,
-          state: AuthState.SignedIn,
-          refetchUser: async () => {
-            await userQuery.refetch()
-          },
-        }
+
+    if (!sessionData) {
+      return {
+        session: null,
+        uuid: null,
+        signedIn: false,
+        state: AuthState.NotSignedIn,
+        signInWithGoogle: signInFirebase,
+      }
     }
-  }, [loadingSession, userId, userQuery.status, userQuery.data, userQuery.error, userQuery.refetch])
+
+    return {
+      session: sessionData,
+      uuid: sessionData.uuid,
+      signedIn: true,
+      state: AuthState.SignedIn,
+      signOut: async () => {},
+    }
+  }, [loadingInitSession, sessionData, shouldRegister])
 
   return <AuthContext value={contextData}>{children}</AuthContext>
 }
@@ -158,7 +243,7 @@ export function useSignedAuth(): Exclude<AuthContextData, { signedIn: false }> {
   return auth
 }
 
-export function useUser(): GetUserResult | null {
+export function useSession(): ClientSessionData | null {
   const auth = useAuth()
-  return auth.user
+  return auth.session
 }

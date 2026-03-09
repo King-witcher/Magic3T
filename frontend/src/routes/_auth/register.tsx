@@ -7,8 +7,8 @@ import { useForm } from 'react-hook-form'
 import { RiGoogleFill } from 'react-icons/ri'
 import { Button, Input, Spinner } from '@/components/atoms'
 import { Label } from '@/components/ui/label'
-import { authClient } from '@/lib/auth-client'
 import { Console } from '@/lib/console'
+import { firebaseClient } from '@/lib/firebase-client'
 
 interface FormData {
   email: string
@@ -52,7 +52,7 @@ function RouteComponent() {
   const registerWithEmailMutation = useMutation({
     mutationKey: ['register-email'],
     async mutationFn({ email, password }: { email: string; password: string }) {
-      return authClient.registerWithEmail(email, password)
+      return firebaseClient.registerWithEmail(email, password)
     },
     onMutate: () => {
       setErrorCode(null)
@@ -69,7 +69,7 @@ function RouteComponent() {
   const signInGoogleMutation = useMutation({
     mutationKey: ['sign-in-google'],
     async mutationFn() {
-      return authClient.signInWithGoogle()
+      return firebaseClient.signInWithGoogle()
     },
     onMutate: () => {
       setErrorCode(null)

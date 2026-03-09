@@ -1,3 +1,4 @@
+import { useMutation } from '@tanstack/react-query'
 import { useRouter } from '@tanstack/react-router'
 import { ChangeEvent, SubmitEvent, useState } from 'react'
 import { GiCrystalShine } from 'react-icons/gi'
@@ -5,23 +6,24 @@ import { toast } from 'sonner'
 import { Button, Input } from '@/components/atoms'
 import { Label } from '@/components/ui/label'
 import { Panel, PanelDivider } from '@/components/ui/panel'
-import { useSignedAuth } from '@/contexts/auth-context'
-import { useClientMutation } from '@/hooks/use-client-mutation'
-import { apiClient } from '@/services/clients/api-client'
 
-export function ChooseNicknameTemplate() {
+type Props = {
+  redirect?: string
+  onChooseNickname: (nickname: string) => Promise<void>
+}
+
+export function ChooseNicknameTemplate({ redirect, onChooseNickname }: Props) {
   const [nickname, setNickname] = useState('')
-  const auth = useSignedAuth()
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  const changeNickMutation = useClientMutation(apiClient.user, 'register', {
+  const registerMutation = useMutation({
+    mutationFn: onChooseNickname,
     onMutate() {
       setError(null)
     },
     onSuccess() {
-      auth.refetchUser()
-      router.navigate({ to: '/tutorial' })
+      if (redirect) router.navigate({ to: redirect })
     },
     onError(e) {
       const error = e.message.replace(/^(.)/, (match) => match.toUpperCase())
@@ -42,7 +44,7 @@ export function ChooseNicknameTemplate() {
 
   function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
-    changeNickMutation.mutate({ nickname })
+    registerMutation.mutate(nickname)
   }
 
   return (
@@ -87,7 +89,7 @@ export function ChooseNicknameTemplate() {
               value={nickname}
               onChange={handleChageNickname}
               onPaste={(e) => e.preventDefault()}
-              disabled={changeNickMutation.isPending}
+              disabled={registerMutation.isPending}
               spellCheck={false}
               error={!!error}
               className="text-center font-serif text-2xl h-14 tracking-wide"
@@ -118,11 +120,11 @@ export function ChooseNicknameTemplate() {
           {/* Submit Button */}
           <Button
             type="submit"
-            disabled={changeNickMutation.isPending || nickname.length < 3}
+            disabled={registerMutation.isPending || nickname.length < 3}
             size="lg"
             className="w-full"
           >
-            {changeNickMutation.isPending ? 'Saving...' : 'Confirm Summoner Name'}
+            {registerMutation.isPending ? 'Saving...' : 'Confirm Summoner Name'}
           </Button>
         </form>
       </Panel>

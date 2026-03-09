@@ -1,4 +1,4 @@
-import { UserRole } from '@magic3t/common-types'
+import { ClientSessionData } from '../../common'
 
 export type RegisterFirebaseCommand = {
   token: string
@@ -9,10 +9,7 @@ export type RegisterFirebaseCommand = {
 
 export type RegisterFirebaseResponse = {
   sessionId: string
-  profile: {
-    uuid: string
-    nickname: string
-    summonerIcon: number
-    role: UserRole
-  }
+  sessionData: ClientSessionData
 }
+
+export type RegisterFirebaseErrorCode = 'NicknameUnavailable' | 'UserAlreadyRegistered'

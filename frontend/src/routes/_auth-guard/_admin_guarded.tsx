@@ -1,13 +1,12 @@
-import { UserDocumentRole } from '@magic3t/database-types'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { NotFoundTemplate } from '@/components/templates'
 import { useAuth } from '@/contexts/auth-context'
 
-export const Route = createFileRoute('/_auth-guarded/_admin_guarded')({
+export const Route = createFileRoute('/_auth-guard/_admin_guarded')({
   component: () => {
-    const { user } = useAuth()
+    const { session } = useAuth()
 
-    if (user?.role !== UserDocumentRole.Creator) {
+    if (session?.role !== 'superuser') {
       return <NotFoundTemplate />
     }
 

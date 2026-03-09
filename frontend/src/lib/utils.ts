@@ -1,3 +1,4 @@
+import { Team } from '@magic3t/common-types'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -44,4 +45,8 @@ export function getDateFromId(id: string): Date {
 
 export function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+export function opposite(team: Team): Team {
+  return team === Team.Chaos ? Team.Order : Team.Chaos
 }

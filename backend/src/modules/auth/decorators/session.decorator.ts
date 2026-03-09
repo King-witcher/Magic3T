@@ -4,7 +4,7 @@ import { SessionData } from '@/shared/types/session-data'
 import { AuthenticRequest } from '../authentic-request'
 import { AuthenticSocket } from '../authentic-socket'
 
-export const Session = createParamDecorator((_, ctx: ExecutionContext): SessionData => {
+export const Session = createParamDecorator((_, ctx: ExecutionContext): SessionData | undefined => {
   switch (ctx.getType()) {
     case 'http': {
       const request = ctx.switchToHttp().getRequest<AuthenticRequest>()

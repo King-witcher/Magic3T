@@ -12,7 +12,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - D://data/magic3t-postgres:/var/lib/postgresql
+      - ${PG_DATA}:/var/lib/postgresql
   valkey:
     image: valkey/valkey:8.1.6-alpine
     container_name: magic3t-valkey

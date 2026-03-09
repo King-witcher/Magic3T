@@ -6,6 +6,7 @@ import Keyv from 'keyv'
 import { FirebaseModule } from '@/infra/firebase'
 import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
+import { AuthControllerService } from './auth-controller.service'
 
 @Global()
 @Module({
@@ -23,7 +24,7 @@ import { AuthService } from './auth.service'
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthControllerService, AuthService],
   exports: [AuthService],
 })
 export class AuthModule {}

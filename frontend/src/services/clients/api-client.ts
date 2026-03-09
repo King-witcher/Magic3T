@@ -1,12 +1,14 @@
 import { CrashReportCommand, GetStatusResponse } from '@magic3t/api-types'
 import { BaseApiClient } from './base-api-client'
 import { AdminApiClient, ApiMatchClient, ApiQueueClient, ApiUserClient } from './namespaces'
+import { AuthApiClient } from './namespaces/auth-client'
 
 export class ApiClient extends BaseApiClient<undefined> {
-  public readonly user = new ApiUserClient()
+  public readonly admin = new AdminApiClient()
+  public readonly auth = new AuthApiClient()
   public readonly match = new ApiMatchClient()
   public readonly queue = new ApiQueueClient()
-  public readonly admin = new AdminApiClient()
+  public readonly user = new ApiUserClient()
 
   constructor() {
     super(undefined)

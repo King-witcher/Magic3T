@@ -1,6 +1,8 @@
 import type { Choice, ClientRank } from '@magic3t/common-types'
 
 export namespace Match {
+  export type MatchEventType = GetMatchResultEvent['event']
+
   export type GetMatchResultEvent =
     | {
         event: 'forfeit' | 'timeout'

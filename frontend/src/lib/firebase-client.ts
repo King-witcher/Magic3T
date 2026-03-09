@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth'
 import { auth, provider } from '@/services/firebase'
 
-export class AuthClient {
+export class FirebaseClient {
   async signInWithGoogle(): Promise<void> {
     await signInWithPopup(auth, provider)
   }
@@ -51,5 +51,5 @@ export class AuthClient {
   }
 }
 
-// This is a singleton instance of the AuthClient for now.
-export const authClient = new AuthClient()
+// This is a singleton instance of the FirebaseClient for now.
+export const firebaseClient = new FirebaseClient()

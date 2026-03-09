@@ -22,7 +22,7 @@ export function MatchHistoryItem({
   ...props
 }: MatchHistoryItemProps) {
   // Determine which side the current user played on
-  const isOrder = match.order.uid === currentUserId
+  const isOrder = match.order.uuid === currentUserId
   const currentPlayer = isOrder ? match.order : match.chaos
   const opponent = isOrder ? match.chaos : match.order
 
@@ -34,7 +34,7 @@ export function MatchHistoryItem({
   }
 
   const result = getResult()
-  const opponentLeagueInfo = leaguesMap[opponent.league]
+  const opponentLeagueInfo = leaguesMap[opponent.rank.league]
 
   // Format date
   const matchDate = new Date(match.date)
@@ -49,7 +49,7 @@ export function MatchHistoryItem({
   })
 
   // LP change styling
-  const lpGain = currentPlayer.lp_gain
+  const lpGain = currentPlayer.lpGain ?? 0
   const lpColor = lpGain > 0 ? 'text-green-400' : lpGain < 0 ? 'text-red-400' : 'text-grey-1'
   const lpPrefix = lpGain > 0 ? '+' : ''
 
@@ -97,13 +97,13 @@ export function MatchHistoryItem({
             {/* Opponent Icon */}
             <AvatarRoot className="size-8">
               <AvatarImage icon={29} />
-              <AvatarWing league={opponent.league} />
+              <AvatarWing league={opponent.rank.league} />
             </AvatarRoot>
 
             {/* Opponent Name */}
             <div className="min-w-0">
               <span className="text-gold-1 font-bold font-serif truncate block">
-                {opponent.name}
+                {opponent.nickname}
               </span>
               <div className="flex items-center gap-1 text-xs text-grey-1">
                 <Tooltip text={opponentLeagueInfo.name}>
@@ -111,7 +111,7 @@ export function MatchHistoryItem({
                 </Tooltip>
                 <span className="font-serif">
                   {opponentLeagueInfo.name}{' '}
-                  {opponent.division ? DIVISIONS[opponent.division - 1] : ''}
+                  {opponent.rank.division ? DIVISIONS[opponent.rank.division - 1] : ''}
                 </span>
               </div>
             </div>

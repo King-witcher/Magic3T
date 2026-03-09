@@ -1,18 +1,37 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common'
-import { respondError } from '@/common'
+import { respondError, unexpected } from '@/common'
 import { AuthenticRequest } from '../authentic-request'
 import { AuthenticSocket } from '../authentic-socket'
 
-export const UserId = createParamDecorator((_, ctx: ExecutionContext): number => {
+/**
+ * Retrieves the current signed-in user's ID.
+ *
+ * Should be used in conjunction with authentication guards that populate the session data.
+ */
+export const UserId = createParamDecorator((_, ctx: ExecutionContext): number | undefined => {
   switch (ctx.getType()) {
     case 'http': {
       const request = ctx.switchToHttp().getRequest<AuthenticRequest>()
-      return request.session.id
+      const id = request.session?.id
+      if (id === undefined) {
+        unexpected(
+          'InvalidSession',
+          'UserId decorator should be used with authenticated routes, but no session ID was found.'
+        )
+      }
+      return id
     }
 
     case 'ws': {
       const client = ctx.switchToWs().getClient<AuthenticSocket>()
-      return client.data.session.id
+      const id = client.data.session?.id
+      if (id === undefined) {
+        unexpected(
+          'InvalidSession',
+          'UserId decorator should be used with authenticated routes, but no session ID was found.'
+        )
+      }
+      return id
     }
 
     default:

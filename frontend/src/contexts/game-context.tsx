@@ -22,7 +22,7 @@ import { useGateway } from '@/hooks/use-gateway'
 import { useListener } from '@/hooks/use-listener'
 import { useObservable } from '@/hooks/use-observable'
 import { Console } from '@/lib/console'
-import { Timer } from '@/lib/Timer'
+import { Timer } from '@/lib/timer'
 import { apiClient } from '@/services/clients/api-client'
 import { AuthState, useAuth } from './auth-context'
 
@@ -119,15 +119,15 @@ export function GameProvider({ children }: Props) {
       setOrderId(assignments[Team.Order].profile.id)
       setChaosId(assignments[Team.Chaos].profile.id)
 
-      if (assignments[Team.Order].profile.id === auth.user?.id) {
+      if (assignments[Team.Order].profile.id === auth.uuid) {
         setCurrentTeam(Team.Order)
-      } else if (assignments[Team.Chaos].profile.id === auth.user?.id) {
+      } else if (assignments[Team.Chaos].profile.id === auth.uuid) {
         setCurrentTeam(Team.Chaos)
       } else {
         setCurrentTeam(null)
       }
     },
-    [auth.user?.id]
+    [auth.uuid]
   )
 
   // Handles state updates from the server.
@@ -156,20 +156,20 @@ export function GameProvider({ children }: Props) {
       orderQuery.setData((oldData: GetUserResult | undefined) => {
         return {
           ...oldData!,
-          rating: report[Team.Order].newRating,
+          rating: report[Team.Order].newRank,
         }
       })
       chaosQuery.setData((oldData: GetUserResult | undefined) => {
         return {
           ...oldData!,
-          rating: report[Team.Chaos].newRating,
+          rating: report[Team.Chaos].newRank,
         }
       })
       setFinalReport(report)
       emitFinishMatch(report)
-      auth.refetchUser()
+      // auth.refetchUser()
     },
-    [gateway.socket, auth.userId]
+    [gateway.socket, auth.uuid]
   )
 
   // Refactor with keys

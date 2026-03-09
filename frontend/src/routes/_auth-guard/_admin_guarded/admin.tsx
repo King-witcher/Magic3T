@@ -14,7 +14,7 @@ import { apiClient } from '@/services/clients/api-client'
 import { divisionMap, leaguesMap } from '@/utils/ranks'
 import { getIconUrl } from '@/utils/utils'
 
-export const Route = createFileRoute('/_auth-guarded/_admin_guarded/admin')({
+export const Route = createFileRoute('/_auth-guard/_admin_guarded/admin')({
   component: AdminPage,
 })
 

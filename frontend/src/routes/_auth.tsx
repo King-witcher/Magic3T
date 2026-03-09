@@ -20,12 +20,18 @@ function RouteComponent() {
   const { referrer } = Route.useSearch()
   const { state: authState } = useAuth()
 
-  if (authState === AuthState.LoadingSession || authState === AuthState.LoadingUserData) {
+  if (authState === AuthState.LoadingSession) {
     return <LoadingSessionTemplate />
   }
 
-  if (authState === AuthState.SignedIn || authState === AuthState.SignedInUnregistered) {
+  // Redirects the user to the referrer or homepage if they're already signed in
+  if (authState === AuthState.SignedIn) {
     return <Navigate to={referrer ?? '/'} replace />
+  }
+
+  // Redirects the user to choose-nickname if they're not registerd
+  if (authState === AuthState.SignedInUnregistered) {
+    return <Navigate to="/choose-nickname" search={referrer ? { referrer } : undefined} replace />
   }
 
   return (

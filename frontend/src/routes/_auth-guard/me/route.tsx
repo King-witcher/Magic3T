@@ -1,18 +1,20 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { ProfileTemplate } from '@/components/templates'
-import { useUser } from '@/contexts/auth-context'
+import { useSession } from '@/contexts/auth-context'
 import { useClientQuery } from '@/hooks/use-client-query'
 import { apiClient } from '@/services/clients/api-client'
 
-export const Route = createFileRoute('/_auth-guarded/me')({
+export const Route = createFileRoute('/_auth-guard/me')({
   component: () => {
-    const user = useUser()
+    const user = useSession()
 
     const matchesQuery = useClientQuery(apiClient.match, 'listUserMatches', {
-      userId: user!.id,
+      userId: user!.uuid,
       limit: 20,
     })
 
-    return <ProfileTemplate user={user!} matchesQuery={matchesQuery} />
+    return 'temporarily disabled'
+
+    // return <ProfileTemplate user={user!} matchesQuery={matchesQuery} />
   },
 })

@@ -1,15 +1,15 @@
-import { League, RatingData } from '@magic3t/common-types'
+import { ClientRank, League } from '@magic3t/common-types'
 import { leaguesMap } from '@/utils/ranks'
 
 const DIVISION_STRINGS = ['I', 'II', 'III', 'IV', 'V']
 
 type Props = {
-  rating: RatingData
+  rating: ClientRank
 }
 
 export function RankingEmblem({ rating }: Props) {
   const leagueInfo = leaguesMap[rating.league]
-  const bestOf5Status = rating.progress / 20
+  const bestOf5Status = rating.rankedCount
 
   return (
     <div className="flex flex-col items-center">

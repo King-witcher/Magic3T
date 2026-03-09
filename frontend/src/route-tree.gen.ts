@@ -11,21 +11,22 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as ErrorRouteImport } from './routes/error'
+import { Route as ChooseNicknameRouteImport } from './routes/choose-nickname'
 import { Route as BiancaRouteImport } from './routes/bianca'
-import { Route as AuthGuardedRouteImport } from './routes/_auth-guarded'
+import { Route as AuthGuardRouteImport } from './routes/_auth-guard'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as TutorialRouteRouteImport } from './routes/tutorial/route'
 import { Route as PlaygroundRouteRouteImport } from './routes/playground/route'
-import { Route as AuthGuardedIndexRouteImport } from './routes/_auth-guarded/index'
+import { Route as AuthGuardIndexRouteImport } from './routes/_auth-guard/index'
 import { Route as UsersNicknameRouteImport } from './routes/users/$nickname'
 import { Route as MatchesMatchRouteImport } from './routes/matches/$match'
 import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
-import { Route as AuthGuardedStoreRouteImport } from './routes/_auth-guarded/store'
-import { Route as AuthGuardedAdmin_guardedRouteImport } from './routes/_auth-guarded/_admin_guarded'
-import { Route as AuthGuardedMeRouteRouteImport } from './routes/_auth-guarded/me/route'
+import { Route as AuthGuardStoreRouteImport } from './routes/_auth-guard/store'
+import { Route as AuthGuardAdmin_guardedRouteImport } from './routes/_auth-guard/_admin_guarded'
+import { Route as AuthGuardMeRouteRouteImport } from './routes/_auth-guard/me/route'
 import { Route as UsersIdUserIdRouteImport } from './routes/users/id/$userId'
-import { Route as AuthGuardedAdmin_guardedAdminRouteImport } from './routes/_auth-guarded/_admin_guarded/admin'
+import { Route as AuthGuardAdmin_guardedAdminRouteImport } from './routes/_auth-guard/_admin_guarded/admin'
 
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
@@ -37,13 +38,18 @@ const ErrorRoute = ErrorRouteImport.update({
   path: '/error',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChooseNicknameRoute = ChooseNicknameRouteImport.update({
+  id: '/choose-nickname',
+  path: '/choose-nickname',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BiancaRoute = BiancaRouteImport.update({
   id: '/bianca',
   path: '/bianca',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthGuardedRoute = AuthGuardedRouteImport.update({
-  id: '/_auth-guarded',
+const AuthGuardRoute = AuthGuardRouteImport.update({
+  id: '/_auth-guard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -60,10 +66,10 @@ const PlaygroundRouteRoute = PlaygroundRouteRouteImport.update({
   path: '/playground',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthGuardedIndexRoute = AuthGuardedIndexRouteImport.update({
+const AuthGuardIndexRoute = AuthGuardIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AuthGuardedRoute,
+  getParentRoute: () => AuthGuardRoute,
 } as any)
 const UsersNicknameRoute = UsersNicknameRouteImport.update({
   id: '/users/$nickname',
@@ -85,63 +91,64 @@ const AuthRegisterRoute = AuthRegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => AuthRoute,
 } as any)
-const AuthGuardedStoreRoute = AuthGuardedStoreRouteImport.update({
+const AuthGuardStoreRoute = AuthGuardStoreRouteImport.update({
   id: '/store',
   path: '/store',
-  getParentRoute: () => AuthGuardedRoute,
+  getParentRoute: () => AuthGuardRoute,
 } as any)
-const AuthGuardedAdmin_guardedRoute =
-  AuthGuardedAdmin_guardedRouteImport.update({
-    id: '/_admin_guarded',
-    getParentRoute: () => AuthGuardedRoute,
-  } as any)
-const AuthGuardedMeRouteRoute = AuthGuardedMeRouteRouteImport.update({
+const AuthGuardAdmin_guardedRoute = AuthGuardAdmin_guardedRouteImport.update({
+  id: '/_admin_guarded',
+  getParentRoute: () => AuthGuardRoute,
+} as any)
+const AuthGuardMeRouteRoute = AuthGuardMeRouteRouteImport.update({
   id: '/me',
   path: '/me',
-  getParentRoute: () => AuthGuardedRoute,
+  getParentRoute: () => AuthGuardRoute,
 } as any)
 const UsersIdUserIdRoute = UsersIdUserIdRouteImport.update({
   id: '/users/id/$userId',
   path: '/users/id/$userId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthGuardedAdmin_guardedAdminRoute =
-  AuthGuardedAdmin_guardedAdminRouteImport.update({
+const AuthGuardAdmin_guardedAdminRoute =
+  AuthGuardAdmin_guardedAdminRouteImport.update({
     id: '/admin',
     path: '/admin',
-    getParentRoute: () => AuthGuardedAdmin_guardedRoute,
+    getParentRoute: () => AuthGuardAdmin_guardedRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/playground': typeof PlaygroundRouteRoute
   '/tutorial': typeof TutorialRouteRoute
-  '/': typeof AuthGuardedIndexRoute
+  '/': typeof AuthGuardIndexRoute
   '/bianca': typeof BiancaRoute
+  '/choose-nickname': typeof ChooseNicknameRoute
   '/error': typeof ErrorRoute
   '/leaderboard': typeof LeaderboardRoute
-  '/me': typeof AuthGuardedMeRouteRoute
-  '/store': typeof AuthGuardedStoreRoute
+  '/me': typeof AuthGuardMeRouteRoute
+  '/store': typeof AuthGuardStoreRoute
   '/register': typeof AuthRegisterRoute
   '/sign-in': typeof AuthSignInRoute
   '/matches/$match': typeof MatchesMatchRoute
   '/users/$nickname': typeof UsersNicknameRoute
-  '/admin': typeof AuthGuardedAdmin_guardedAdminRoute
+  '/admin': typeof AuthGuardAdmin_guardedAdminRoute
   '/users/id/$userId': typeof UsersIdUserIdRoute
 }
 export interface FileRoutesByTo {
   '/playground': typeof PlaygroundRouteRoute
   '/tutorial': typeof TutorialRouteRoute
-  '/': typeof AuthGuardedIndexRoute
+  '/': typeof AuthGuardIndexRoute
   '/bianca': typeof BiancaRoute
+  '/choose-nickname': typeof ChooseNicknameRoute
   '/error': typeof ErrorRoute
   '/leaderboard': typeof LeaderboardRoute
-  '/me': typeof AuthGuardedMeRouteRoute
-  '/store': typeof AuthGuardedStoreRoute
+  '/me': typeof AuthGuardMeRouteRoute
+  '/store': typeof AuthGuardStoreRoute
   '/register': typeof AuthRegisterRoute
   '/sign-in': typeof AuthSignInRoute
   '/matches/$match': typeof MatchesMatchRoute
   '/users/$nickname': typeof UsersNicknameRoute
-  '/admin': typeof AuthGuardedAdmin_guardedAdminRoute
+  '/admin': typeof AuthGuardAdmin_guardedAdminRoute
   '/users/id/$userId': typeof UsersIdUserIdRoute
 }
 export interface FileRoutesById {
@@ -149,19 +156,20 @@ export interface FileRoutesById {
   '/playground': typeof PlaygroundRouteRoute
   '/tutorial': typeof TutorialRouteRoute
   '/_auth': typeof AuthRouteWithChildren
-  '/_auth-guarded': typeof AuthGuardedRouteWithChildren
+  '/_auth-guard': typeof AuthGuardRouteWithChildren
   '/bianca': typeof BiancaRoute
+  '/choose-nickname': typeof ChooseNicknameRoute
   '/error': typeof ErrorRoute
   '/leaderboard': typeof LeaderboardRoute
-  '/_auth-guarded/me': typeof AuthGuardedMeRouteRoute
-  '/_auth-guarded/_admin_guarded': typeof AuthGuardedAdmin_guardedRouteWithChildren
-  '/_auth-guarded/store': typeof AuthGuardedStoreRoute
+  '/_auth-guard/me': typeof AuthGuardMeRouteRoute
+  '/_auth-guard/_admin_guarded': typeof AuthGuardAdmin_guardedRouteWithChildren
+  '/_auth-guard/store': typeof AuthGuardStoreRoute
   '/_auth/register': typeof AuthRegisterRoute
   '/_auth/sign-in': typeof AuthSignInRoute
   '/matches/$match': typeof MatchesMatchRoute
   '/users/$nickname': typeof UsersNicknameRoute
-  '/_auth-guarded/': typeof AuthGuardedIndexRoute
-  '/_auth-guarded/_admin_guarded/admin': typeof AuthGuardedAdmin_guardedAdminRoute
+  '/_auth-guard/': typeof AuthGuardIndexRoute
+  '/_auth-guard/_admin_guarded/admin': typeof AuthGuardAdmin_guardedAdminRoute
   '/users/id/$userId': typeof UsersIdUserIdRoute
 }
 export interface FileRouteTypes {
@@ -171,6 +179,7 @@ export interface FileRouteTypes {
     | '/tutorial'
     | '/'
     | '/bianca'
+    | '/choose-nickname'
     | '/error'
     | '/leaderboard'
     | '/me'
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/tutorial'
     | '/'
     | '/bianca'
+    | '/choose-nickname'
     | '/error'
     | '/leaderboard'
     | '/me'
@@ -202,19 +212,20 @@ export interface FileRouteTypes {
     | '/playground'
     | '/tutorial'
     | '/_auth'
-    | '/_auth-guarded'
+    | '/_auth-guard'
     | '/bianca'
+    | '/choose-nickname'
     | '/error'
     | '/leaderboard'
-    | '/_auth-guarded/me'
-    | '/_auth-guarded/_admin_guarded'
-    | '/_auth-guarded/store'
+    | '/_auth-guard/me'
+    | '/_auth-guard/_admin_guarded'
+    | '/_auth-guard/store'
     | '/_auth/register'
     | '/_auth/sign-in'
     | '/matches/$match'
     | '/users/$nickname'
-    | '/_auth-guarded/'
-    | '/_auth-guarded/_admin_guarded/admin'
+    | '/_auth-guard/'
+    | '/_auth-guard/_admin_guarded/admin'
     | '/users/id/$userId'
   fileRoutesById: FileRoutesById
 }
@@ -222,8 +233,9 @@ export interface RootRouteChildren {
   PlaygroundRouteRoute: typeof PlaygroundRouteRoute
   TutorialRouteRoute: typeof TutorialRouteRoute
   AuthRoute: typeof AuthRouteWithChildren
-  AuthGuardedRoute: typeof AuthGuardedRouteWithChildren
+  AuthGuardRoute: typeof AuthGuardRouteWithChildren
   BiancaRoute: typeof BiancaRoute
+  ChooseNicknameRoute: typeof ChooseNicknameRoute
   ErrorRoute: typeof ErrorRoute
   LeaderboardRoute: typeof LeaderboardRoute
   MatchesMatchRoute: typeof MatchesMatchRoute
@@ -247,6 +259,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ErrorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/choose-nickname': {
+      id: '/choose-nickname'
+      path: '/choose-nickname'
+      fullPath: '/choose-nickname'
+      preLoaderRoute: typeof ChooseNicknameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/bianca': {
       id: '/bianca'
       path: '/bianca'
@@ -254,11 +273,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BiancaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_auth-guarded': {
-      id: '/_auth-guarded'
+    '/_auth-guard': {
+      id: '/_auth-guard'
       path: ''
       fullPath: '/'
-      preLoaderRoute: typeof AuthGuardedRouteImport
+      preLoaderRoute: typeof AuthGuardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth': {
@@ -282,12 +301,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlaygroundRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_auth-guarded/': {
-      id: '/_auth-guarded/'
+    '/_auth-guard/': {
+      id: '/_auth-guard/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof AuthGuardedIndexRouteImport
-      parentRoute: typeof AuthGuardedRoute
+      preLoaderRoute: typeof AuthGuardIndexRouteImport
+      parentRoute: typeof AuthGuardRoute
     }
     '/users/$nickname': {
       id: '/users/$nickname'
@@ -317,26 +336,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRegisterRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth-guarded/store': {
-      id: '/_auth-guarded/store'
+    '/_auth-guard/store': {
+      id: '/_auth-guard/store'
       path: '/store'
       fullPath: '/store'
-      preLoaderRoute: typeof AuthGuardedStoreRouteImport
-      parentRoute: typeof AuthGuardedRoute
+      preLoaderRoute: typeof AuthGuardStoreRouteImport
+      parentRoute: typeof AuthGuardRoute
     }
-    '/_auth-guarded/_admin_guarded': {
-      id: '/_auth-guarded/_admin_guarded'
+    '/_auth-guard/_admin_guarded': {
+      id: '/_auth-guard/_admin_guarded'
       path: ''
       fullPath: '/'
-      preLoaderRoute: typeof AuthGuardedAdmin_guardedRouteImport
-      parentRoute: typeof AuthGuardedRoute
+      preLoaderRoute: typeof AuthGuardAdmin_guardedRouteImport
+      parentRoute: typeof AuthGuardRoute
     }
-    '/_auth-guarded/me': {
-      id: '/_auth-guarded/me'
+    '/_auth-guard/me': {
+      id: '/_auth-guard/me'
       path: '/me'
       fullPath: '/me'
-      preLoaderRoute: typeof AuthGuardedMeRouteRouteImport
-      parentRoute: typeof AuthGuardedRoute
+      preLoaderRoute: typeof AuthGuardMeRouteRouteImport
+      parentRoute: typeof AuthGuardRoute
     }
     '/users/id/$userId': {
       id: '/users/id/$userId'
@@ -345,12 +364,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UsersIdUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_auth-guarded/_admin_guarded/admin': {
-      id: '/_auth-guarded/_admin_guarded/admin'
+    '/_auth-guard/_admin_guarded/admin': {
+      id: '/_auth-guard/_admin_guarded/admin'
       path: '/admin'
       fullPath: '/admin'
-      preLoaderRoute: typeof AuthGuardedAdmin_guardedAdminRouteImport
-      parentRoute: typeof AuthGuardedAdmin_guardedRoute
+      preLoaderRoute: typeof AuthGuardAdmin_guardedAdminRouteImport
+      parentRoute: typeof AuthGuardAdmin_guardedRoute
     }
   }
 }
@@ -367,44 +386,45 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
-interface AuthGuardedAdmin_guardedRouteChildren {
-  AuthGuardedAdmin_guardedAdminRoute: typeof AuthGuardedAdmin_guardedAdminRoute
+interface AuthGuardAdmin_guardedRouteChildren {
+  AuthGuardAdmin_guardedAdminRoute: typeof AuthGuardAdmin_guardedAdminRoute
 }
 
-const AuthGuardedAdmin_guardedRouteChildren: AuthGuardedAdmin_guardedRouteChildren =
+const AuthGuardAdmin_guardedRouteChildren: AuthGuardAdmin_guardedRouteChildren =
   {
-    AuthGuardedAdmin_guardedAdminRoute: AuthGuardedAdmin_guardedAdminRoute,
+    AuthGuardAdmin_guardedAdminRoute: AuthGuardAdmin_guardedAdminRoute,
   }
 
-const AuthGuardedAdmin_guardedRouteWithChildren =
-  AuthGuardedAdmin_guardedRoute._addFileChildren(
-    AuthGuardedAdmin_guardedRouteChildren,
+const AuthGuardAdmin_guardedRouteWithChildren =
+  AuthGuardAdmin_guardedRoute._addFileChildren(
+    AuthGuardAdmin_guardedRouteChildren,
   )
 
-interface AuthGuardedRouteChildren {
-  AuthGuardedMeRouteRoute: typeof AuthGuardedMeRouteRoute
-  AuthGuardedAdmin_guardedRoute: typeof AuthGuardedAdmin_guardedRouteWithChildren
-  AuthGuardedStoreRoute: typeof AuthGuardedStoreRoute
-  AuthGuardedIndexRoute: typeof AuthGuardedIndexRoute
+interface AuthGuardRouteChildren {
+  AuthGuardMeRouteRoute: typeof AuthGuardMeRouteRoute
+  AuthGuardAdmin_guardedRoute: typeof AuthGuardAdmin_guardedRouteWithChildren
+  AuthGuardStoreRoute: typeof AuthGuardStoreRoute
+  AuthGuardIndexRoute: typeof AuthGuardIndexRoute
 }
 
-const AuthGuardedRouteChildren: AuthGuardedRouteChildren = {
-  AuthGuardedMeRouteRoute: AuthGuardedMeRouteRoute,
-  AuthGuardedAdmin_guardedRoute: AuthGuardedAdmin_guardedRouteWithChildren,
-  AuthGuardedStoreRoute: AuthGuardedStoreRoute,
-  AuthGuardedIndexRoute: AuthGuardedIndexRoute,
+const AuthGuardRouteChildren: AuthGuardRouteChildren = {
+  AuthGuardMeRouteRoute: AuthGuardMeRouteRoute,
+  AuthGuardAdmin_guardedRoute: AuthGuardAdmin_guardedRouteWithChildren,
+  AuthGuardStoreRoute: AuthGuardStoreRoute,
+  AuthGuardIndexRoute: AuthGuardIndexRoute,
 }
 
-const AuthGuardedRouteWithChildren = AuthGuardedRoute._addFileChildren(
-  AuthGuardedRouteChildren,
+const AuthGuardRouteWithChildren = AuthGuardRoute._addFileChildren(
+  AuthGuardRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
   PlaygroundRouteRoute: PlaygroundRouteRoute,
   TutorialRouteRoute: TutorialRouteRoute,
   AuthRoute: AuthRouteWithChildren,
-  AuthGuardedRoute: AuthGuardedRouteWithChildren,
+  AuthGuardRoute: AuthGuardRouteWithChildren,
   BiancaRoute: BiancaRoute,
+  ChooseNicknameRoute: ChooseNicknameRoute,
   ErrorRoute: ErrorRoute,
   LeaderboardRoute: LeaderboardRoute,
   MatchesMatchRoute: MatchesMatchRoute,

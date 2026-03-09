@@ -13,7 +13,7 @@ interface MatchHistoryProps {
 }
 
 export function MatchHistory({ matchesQuery, currentUserId }: MatchHistoryProps) {
-  const [selectedMatch, setSelectedMatch] = useState<Match.FindMatchResult | null>(null)
+  const [selectedMatch, setSelectedMatch] = useState<Match.ListMatchesResultItem | null>(null)
   const [matchModalOpen, setMatchModalOpen] = useState(false)
 
   return (
@@ -54,7 +54,7 @@ export function MatchHistory({ matchesQuery, currentUserId }: MatchHistoryProps)
           <div className="space-y-2">
             {matchesQuery.data.matches.map((match) => (
               <MatchHistoryItem
-                key={match.id}
+                key={match.uuid}
                 match={match}
                 currentUserId={currentUserId}
                 onClick={() => {
@@ -69,7 +69,7 @@ export function MatchHistory({ matchesQuery, currentUserId }: MatchHistoryProps)
         <DialogContent className="sm:max-w-2xl">
           {selectedMatch && (
             <div className="max-h-[80vh] overflow-y-auto overflow-x-hidden">
-              <MatchDetail match={selectedMatch} />
+              <MatchDetail matchId={selectedMatch.uuid} />
             </div>
           )}
         </DialogContent>

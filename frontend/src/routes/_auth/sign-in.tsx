@@ -7,8 +7,9 @@ import { useForm } from 'react-hook-form'
 import { RiGoogleFill } from 'react-icons/ri'
 import { Button, Input, Spinner } from '@/components/atoms'
 import { Label } from '@/components/ui/label'
-import { authClient } from '@/lib/auth-client'
+import { AuthState, useAuth } from '@/contexts/auth-context'
 import { Console } from '@/lib/console'
+import { firebaseClient } from '@/lib/firebase-client'
 import { auth } from '@/services/firebase'
 import { isValidEmail } from '@/utils/isValidEmail'
 
@@ -37,6 +38,7 @@ const ERROR_MAP: Partial<Record<FirebaseAuthErrorCode, string>> = {
 }
 
 function Page() {
+  const auth = useAuth()
   const [errorCode, setErrorCode] = useState<string | null>(null)
   const [hideResetPassword, setHideResetPassword] = useState(false)
 
@@ -59,7 +61,7 @@ function Page() {
   const signInWithEmailMutation = useMutation({
     mutationKey: ['sign-in-email'],
     async mutationFn(data: { email: string; password: string }) {
-      return authClient.signInWithEmail(data.email, data.password)
+      return firebaseClient.signInWithEmail(data.email, data.password)
     },
     onMutate: () => {
       setErrorCode(null)
@@ -76,7 +78,9 @@ function Page() {
   const signInGoogleMutation = useMutation({
     mutationKey: ['sign-in-google'],
     async mutationFn() {
-      return authClient.signInWithGoogle()
+      if (auth.state === AuthState.NotSignedIn) {
+        await auth.signInWithGoogle()
+      }
     },
     onMutate: () => {
       setErrorCode(null)
@@ -84,51 +88,49 @@ function Page() {
     onError(e) {
       console.error(e)
       if (e instanceof FirebaseError) {
-        Console.log(`Failed to sign in with email: ${e.message}`)
+        Console.log(`Failed to sign in with Google: ${e.message}`)
         setErrorCode(e.code)
       }
     },
   })
 
-  const recoverPasswordMutation = useMutation({
-    mutationKey: ['recover-password'],
-    async mutationFn(email: string) {
-      return sendPasswordResetEmail(auth, email)
-    },
-    onMutate: () => {
-      setErrorCode(null)
-    },
-    onError(e) {
-      console.error(e)
-      if (e instanceof FirebaseError) {
-        Console.log(`Failed to sign in with email: ${e.message}`)
-        setErrorCode(e.code)
-      }
-    },
-  })
+  // const recoverPasswordMutation = useMutation({
+  //   mutationKey: ['recover-password'],
+  //   async mutationFn(email: string) {
+  //     return sendPasswordResetEmail(auth, email)
+  //   },
+  //   onMutate: () => {
+  //     setErrorCode(null)
+  //   },
+  //   onError(e) {
+  //     console.error(e)
+  //     if (e instanceof FirebaseError) {
+  //       Console.log(`Failed to sign in with email: ${e.message}`)
+  //       setErrorCode(e.code)
+  //     }
+  //   },
+  // })
 
   function signInEmail(data: { email: string; password: string }) {
     signInWithEmailMutation.mutate(data)
   }
 
-  const handleRecover = useCallback(async () => {
-    if (!isValidEmail(email)) {
-      setFormError('email', {})
-      setErrorCode('auth/invalid-email')
-      return
-    }
+  // const handleRecover = useCallback(async () => {
+  //   if (!isValidEmail(email)) {
+  //     setFormError('email', {})
+  //     setErrorCode('auth/invalid-email')
+  //     return
+  //   }
 
-    setErrorCode(null)
-    clearErrors()
-    setHideResetPassword(true)
-    setTimeout(() => setHideResetPassword(false), 5000)
-    await sendPasswordResetEmail(auth, email)
-  }, [email, setFormError, clearErrors])
+  //   setErrorCode(null)
+  //   clearErrors()
+  //   setHideResetPassword(true)
+  //   setTimeout(() => setHideResetPassword(false), 5000)
+  //   await sendPasswordResetEmail(auth, email)
+  // }, [email, setFormError, clearErrors])
 
-  const isPending =
-    signInWithEmailMutation.isPending ||
-    signInGoogleMutation.isPending ||
-    recoverPasswordMutation.isPending
+  const isPending = signInWithEmailMutation.isPending || signInGoogleMutation.isPending || false
+  // recoverPasswordMutation.isPending
 
   const errorMessage = errorCode
     ? (ERROR_MAP[errorCode as FirebaseAuthErrorCode] ?? errorCode)
@@ -197,7 +199,7 @@ function Page() {
             type="button"
             variant="ghost"
             size="sm"
-            onClick={handleRecover}
+            // onClick={handleRecover}
             className="normal-case! tracking-normal! p-0! h-auto"
           >
             Forgot password?

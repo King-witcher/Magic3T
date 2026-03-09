@@ -1,15 +1,17 @@
-import type { UserRole } from '@magic3t/common-types'
+import { ClientSessionData } from '../../common'
 
 export type SignInFirebaseCommand = {
   token: string
 }
 
-export type SignInFirebaseResponse = {
-  sessionId: string
-  profile: {
-    uuid: string
-    nickname: string
-    summonerIcon: number
-    role: UserRole
-  }
-}
+export type SignInFirebaseResponse =
+  | {
+      status: 'unregistered'
+      sessionId: null
+      sessionData: null
+    }
+  | {
+      status: 'registered'
+      sessionId: string
+      sessionData: ClientSessionData
+    }

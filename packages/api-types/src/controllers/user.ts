@@ -1,7 +1,7 @@
 import type { ClientRank, UserRole } from '@magic3t/common-types'
 
 export type GetUserResult = {
-  id: string
+  uuid: string
   nickname: string
   summonerIcon: number
   role: UserRole
@@ -14,7 +14,7 @@ export type GetUserResult = {
 }
 
 export type ListUsersResultData = {
-  id: string
+  uuid: string
   nickname: string
   summonerIcon: number
   rank: ClientRank
