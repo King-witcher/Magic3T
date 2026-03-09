@@ -4,18 +4,19 @@ import { GiBookCover, GiCrown, GiTargetArrows, GiTrophy } from 'react-icons/gi'
 import { IoLogOutOutline, IoPerson } from 'react-icons/io5'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { AuthState, useAuth } from '@/contexts/auth-context'
-import { firebaseClient } from '@/lib/firebase-client'
 import { cn } from '@/lib/utils'
 import { getIconUrl } from '@/utils/utils'
 import { LogoutDialog } from './logout-dialog'
 import { NavLink } from './nav-link'
 
 export function Navbar() {
-  const { state: authState, session } = useAuth()
+  const auth = useAuth()
   const [logoutOpen, setLogoutOpen] = useState(false)
 
   const handleLogout = () => {
-    firebaseClient.signOut()
+    if (auth.state === AuthState.SignedIn) {
+      auth.logout()
+    }
     setLogoutOpen(false)
   }
 
@@ -115,7 +116,7 @@ export function Navbar() {
       </NavLink>
 
       {/* Admin Button */}
-      {authState === AuthState.SignedIn && session.role === 'superuser' && (
+      {auth.state === AuthState.SignedIn && auth.session.role === 'superuser' && (
         <NavLink href="/admin" tooltip="Creator Zone" className="hidden md:flex">
           <GiCrown size={20} />
           <span className="hidden lg:inline-block">Admin</span>
@@ -123,7 +124,7 @@ export function Navbar() {
       )}
 
       {/* Logout button for unregistered users */}
-      {authState === AuthState.SignedInUnregistered && (
+      {auth.state === AuthState.SignedInUnregistered && (
         <>
           {/* Divider */}
           <div className="hidden xs:block w-px h-8 bg-gold-6 mx-2" />
@@ -139,7 +140,7 @@ export function Navbar() {
       )}
 
       {/* Profile button */}
-      {authState === AuthState.SignedIn && (
+      {auth.state === AuthState.SignedIn && (
         <>
           {/* Divider */}
           <div className="hidden xs:block w-px h-8 bg-gold-6 mx-2" />
@@ -155,11 +156,11 @@ export function Navbar() {
               >
                 <img
                   alt="icon"
-                  src={getIconUrl(session.summonerIcon)}
+                  src={getIconUrl(auth.session.summonerIcon)}
                   className="size-10 border-gold-7 border"
                 />
                 <span className="text-gold-1 text-lg font-serif tracking-wide hidden sm:inline-block">
-                  {session.nickname}
+                  {auth.session.nickname}
                 </span>
               </div>
             </PopoverTrigger>
@@ -172,7 +173,7 @@ export function Navbar() {
                   <IoPerson />
                   My Profile
                 </Link>
-                {authState === AuthState.SignedIn && session.role === 'superuser' && (
+                {auth.state === AuthState.SignedIn && auth.session.role === 'superuser' && (
                   <Link
                     to={'/admin' as '/'}
                     className="flex gap-2 items-center hover:bg-blue-4/20 p-3 cursor-pointer md:hidden"

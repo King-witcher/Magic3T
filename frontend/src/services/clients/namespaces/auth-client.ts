@@ -25,24 +25,21 @@ export class AuthApiClient extends BaseApiClient<'auth'> {
   /**
    * Registers a user using a Firebase token, returning a session ID and user profile on success.
    */
-  registerFirebase(
-    command: RegisterFirebaseCommand,
-    signal?: AbortSignal
-  ): Promise<RegisterFirebaseResponse> {
-    return this.post('register/firebase', command, {
-      signal,
-    })
+  registerFirebase(command: RegisterFirebaseCommand): Promise<RegisterFirebaseResponse> {
+    return this.post('register/firebase', command)
   }
 
   /**
    * Signs in a user using a Firebase token, returning a session ID and user profile on success.
    */
-  signInFirebase(
-    command: SignInFirebaseCommand,
-    signal?: AbortSignal
-  ): Promise<SignInFirebaseResponse> {
-    return this.post('sign-in/firebase', command, {
-      signal,
+  signInFirebase(command: SignInFirebaseCommand): Promise<SignInFirebaseResponse> {
+    return this.post('sign-in/firebase', command)
+  }
+
+  /** Deletes the current user session, effectively logging out the user. */
+  logout(): Promise<void> {
+    return this.post('logout', undefined, {
+      authenticated: true,
     })
   }
 }

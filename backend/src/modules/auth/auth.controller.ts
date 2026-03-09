@@ -15,7 +15,7 @@ import { UserRepository } from '@/infra/database/repositories'
 import { NICKNAME_REGEX } from '@/shared/constants/nickname-regex'
 import { AuthGuard } from './auth.guard'
 import { AuthControllerService } from './auth-controller.service'
-import { UserId } from './decorators'
+import { SessionId, UserId } from './decorators'
 
 @Controller('auth')
 export class AuthController {
@@ -196,5 +196,16 @@ export class AuthController {
       summonerIcon: user.profile_icon,
       role: user.role,
     }
+  }
+
+  @Post('logout')
+  @ApiOperation({
+    summary: 'Logout',
+    description: 'Invalidates the current user session id.',
+  })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard)
+  async logout(@SessionId() id: string): Promise<void> {
+    await this.service.deleteSession(id)
   }
 }

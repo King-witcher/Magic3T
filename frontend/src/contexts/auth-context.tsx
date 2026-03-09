@@ -8,7 +8,6 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react'
-import z from 'zod'
 import { useRegisterCommand } from '@/hooks/use-register-command'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { Console } from '@/lib/console'
@@ -55,7 +54,7 @@ type AuthContextData =
       uuid: string
       signedIn: true
       state: AuthState.SignedIn
-      signOut: () => Promise<void>
+      logout: () => void
     }
 
 interface Props {
@@ -69,7 +68,6 @@ export function AuthProvider({ children }: Props) {
   // If session id is undefined, we don't even have to check anything else.
   const [loadingInitSession, setLoadingInitSession] = useState(sessionId !== null)
   const [shouldRegister, setShouldRegister] = useState(false)
-
   const [sessionData, setSessionData] = useState<ClientSessionData | null>(null)
 
   const firebaseId = useSyncExternalStore(
@@ -147,6 +145,16 @@ export function AuthProvider({ children }: Props) {
     }
   }
 
+  function logout() {
+    // This is purposely not awaited, since the user does not need to wait for the server to delete the session.
+    apiClient.auth.logout().catch((e) => {
+      Console.log('Failed to sign out from server')
+      console.error(e)
+    })
+    setSessionData(null)
+    setSessionId(null)
+  }
+
   useRegisterCommand(
     {
       description: 'Generate and print your Firebase authentication token',
@@ -220,7 +228,7 @@ export function AuthProvider({ children }: Props) {
       uuid: sessionData.uuid,
       signedIn: true,
       state: AuthState.SignedIn,
-      signOut: async () => {},
+      logout: logout,
     }
   }, [loadingInitSession, sessionData, shouldRegister])
 
