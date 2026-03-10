@@ -1,6 +1,8 @@
+import { applyDecorators, UsePipes } from '@nestjs/common'
 import { ApiBody } from '@nestjs/swagger'
 import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
 import z from 'zod'
+import { ZodValidationPipe } from '../pipes'
 
 export const BODY_SCHEMA = Symbol('BODY_SCHEMA')
 
@@ -23,11 +25,11 @@ export type BodySchemaOptions = {
  */
 export function BodySchema(options: BodySchemaOptions): MethodDecorator {
   const bodySchema = options.schema?.toJSONSchema() as SchemaObject
-  return (target, propertyKey, descriptor) => {
-    Reflect.defineMetadata(BODY_SCHEMA, options.schema, target, propertyKey)
+  return applyDecorators(
     ApiBody({
       description: options.description,
       schema: bodySchema,
-    })(target, propertyKey, descriptor)
-  }
+    }),
+    UsePipes(new ZodValidationPipe(options.schema))
+  )
 }

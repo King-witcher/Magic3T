@@ -7,11 +7,11 @@ import {
   SignInFirebaseResponse,
   ValidateSessionResponse,
 } from '@magic3t/api-types'
-import { Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
 import { Throttle } from '@nestjs/throttler'
 import z from 'zod'
-import { respondError, unexpected, ValidatedBody } from '@/common'
+import { respondError, unexpected } from '@/common'
 import { BodySchema } from '@/common/decorators/body-schema.decorator'
 import { ResponseSchema } from '@/common/decorators/response-schema.decorator'
 import { UserRepository } from '@/infra/database/repositories'
@@ -67,9 +67,7 @@ export class AuthController {
     }),
     status: HttpStatus.UNAUTHORIZED,
   })
-  async signInFirebase(
-    @ValidatedBody() body: SignInFirebaseCommand
-  ): Promise<SignInFirebaseResponse> {
+  async signInFirebase(@Body() body: SignInFirebaseCommand): Promise<SignInFirebaseResponse> {
     const validateResult = await this.service.validateFirebaseToken(body.token)
 
     const user = await this.userRepository.getByFirebaseId(validateResult.uid)
@@ -140,9 +138,7 @@ export class AuthController {
     }),
     status: HttpStatus.UNAUTHORIZED,
   })
-  async registerFirebase(
-    @ValidatedBody() body: RegisterFirebaseCommand
-  ): Promise<RegisterFirebaseResponse> {
+  async registerFirebase(@Body() body: RegisterFirebaseCommand): Promise<RegisterFirebaseResponse> {
     const validateResult = await this.service.validateFirebaseToken(body.token)
 
     // TODO: Optimize it
@@ -217,8 +213,8 @@ export class AuthController {
       metadata: z.any().optional(),
     }),
   })
-  @Throttle({ medium: { limit: 2 }, long: { limit: 5 } })
-  async register(@ValidatedBody() body: RegisterCommand): Promise<RegisterResult> {
+  @Throttle({ medium: { limit: 10 }, long: { limit: 30 } })
+  async register(@Body() body: RegisterCommand): Promise<RegisterResult> {
     const user = await this.service.registerWithCredential(body)
     const sessionId = await this.service.createSession({
       id: user.id,

@@ -15,3 +15,15 @@ export type ClientSessionData = {
 }
 
 export type OAuthProvider = 'firebase'
+
+export type ValidationErrorResponse = {
+  errorCode: 'ValidationError'
+  metadata: Record<
+    string,
+    {
+      code?: string
+      path: string[]
+      message: string
+    }
+  >
+}
