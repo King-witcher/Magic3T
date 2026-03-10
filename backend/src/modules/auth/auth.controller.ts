@@ -1,4 +1,6 @@
 import {
+  LoginCommand,
+  LoginResult,
   RegisterCommand,
   RegisterFirebaseCommand,
   RegisterFirebaseResponse,
@@ -224,6 +226,46 @@ export class AuthController {
     })
     const clientSession = this.service.getClientSessionDataFromRow(user)
 
+    return {
+      sessionId,
+      sessionData: clientSession,
+    }
+  }
+
+  @Post('login')
+  @ApiOperation({
+    summary: 'Login',
+    description: 'Authenticates a user with their username and password.',
+  })
+  @BodySchema({
+    description: 'Request body containing login credentials.',
+    schema: z.object({
+      username: USERNAME_SCHEMA.describe('The username of the account'),
+      password: z.string().min(1).describe('The password of the account'),
+    }),
+  })
+  @ResponseSchema({
+    status: HttpStatus.OK,
+    description: 'Successfully authenticated.',
+    schema: z.object({
+      sessionId: z.string().describe('Session token'),
+      sessionData: z.object({
+        uuid: z.uuid().describe('Unique identifier for the user'),
+        nickname: z.string().describe("User's nickname"),
+        summonerIcon: z.number().describe("User's summoner icon"),
+        role: z.enum(['player', 'admin', 'superuser']).describe("User's role in the system"),
+      }),
+    }),
+  })
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() body: LoginCommand): Promise<LoginResult> {
+    const user = await this.service.validateCredentials(body.username, body.password)
+    const clientSession = this.service.getClientSessionDataFromRow(user)
+    const sessionId = await this.service.createSession({
+      id: user.id,
+      uuid: user.uuid,
+      role: user.role,
+    })
     return {
       sessionId,
       sessionData: clientSession,

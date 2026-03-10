@@ -96,6 +96,28 @@ export class AuthControllerService {
     return user
   }
 
+  /** Validates user credentials and return a user row */
+  async validateCredentials(username: string, password: string): Promise<UserRow> {
+    const credential = await this.credentialRepository.findByUsername(username)
+    if (!credential) {
+      // Prevent timing attacks by hashing anyway
+      await bcrypt.compare(password, '$2b$12$invalidsaltinvalidsaltinv.uNq')
+      respondError('InvalidCredentials', HttpStatus.UNAUTHORIZED)
+    }
+
+    const passwordMatches = await bcrypt.compare(password, credential.password_digest)
+    if (!passwordMatches) {
+      respondError('InvalidCredentials', HttpStatus.UNAUTHORIZED)
+    }
+
+    const user = await this.userRepository.getById(credential.user_id)
+    if (!user) {
+      unexpected(`User with ID ${credential.user_id} not found for valid credential`)
+    }
+
+    return user
+  }
+
   async createSession(sessionData: SessionData): Promise<string> {
     const sessionToken = `MT3SID${randomUUID()}`
     this.cacheManager.set(`session:${sessionToken}`, sessionData, ONE_WEEK)
