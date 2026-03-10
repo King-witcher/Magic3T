@@ -1,4 +1,8 @@
 import z from 'zod'
-import { NICKNAME_REGEX } from './nickname-regex'
 
-export const NICKNAME_SCHEMA = z.string().max(16).min(4).regex(NICKNAME_REGEX)
+export const NICKNAME_REGEX = /^[a-zA-Z0-9áÁâÂãÃàÀäÄéÉêÊèÈëËíÍîÎìÌïÏóÓôÔõÕòÒöÖúÚûÛùÙüÜçÇñÑ\s]*$/
+export const NICKNAME_SCHEMA = z
+  .string()
+  .max(16)
+  .min(4)
+  .regex(NICKNAME_REGEX, 'Nickname can only contain letters, numbers and spaces')

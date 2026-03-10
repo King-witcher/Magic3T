@@ -16,6 +16,7 @@ import { BodySchema } from '@/common/decorators/body-schema.decorator'
 import { ResponseSchema } from '@/common/decorators/response-schema.decorator'
 import { UserRepository } from '@/infra/database/repositories'
 import { NICKNAME_SCHEMA } from '@/shared/validation'
+import { USERNAME_SCHEMA } from '@/shared/validation/username'
 import { AuthGuard } from './auth.guard'
 import { AuthControllerService } from './auth-controller.service'
 import { SessionId, UserId } from './decorators'
@@ -173,13 +174,13 @@ export class AuthController {
     description: 'Request body containing registration information.',
     schema: z.object({
       nickname: NICKNAME_SCHEMA.describe('Desired nickname for the new account'),
-      username: z.string().min(4).max(24).describe('Desired username for the new account'),
+      username: USERNAME_SCHEMA.describe('Desired username for the new account'),
       password: z
         .string()
         .min(8)
         .max(128)
-        .regex(/[a-zA-Z]+/)
-        .regex(/[0-9]+/)
+        .regex(/[a-zA-Z]+/, 'Password must contain at least one letter')
+        .regex(/[0-9]+/, 'Password must contain at least one number')
         .describe('Password for the new account'),
     }),
   })
