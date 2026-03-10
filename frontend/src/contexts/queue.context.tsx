@@ -6,8 +6,10 @@ import {
   UpdateUserCountPayload,
 } from '@magic3t/api-types'
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react'
+import { BanAlertDialog } from '@/components/molecules/ban-alert-dialog'
 import { useGateway } from '@/hooks/use-gateway.ts'
 import { useListener } from '@/hooks/use-listener.ts'
+import { BanErrorMetadata, extractBanInfo } from '@/lib/ban-utils'
 import { apiClient } from '@/services/clients/api-client.ts'
 import { QueueMode } from '@/types/queue.ts'
 import { AuthState, useAuth } from './auth-context.tsx'
@@ -37,6 +39,8 @@ const QueueContext = createContext<QueueContextData>({} as QueueContextData)
 
 export function QueueProvider({ children }: QueueContextProps) {
   const [queueModes, setQueueModes] = useState<QueueModesType>({})
+  const [banInfo, setBanInfo] = useState<BanErrorMetadata | null>(null)
+  const [banDialogOpen, setBanDialogOpen] = useState(false)
   const [queueUserCount, setQueueUserCount] = useState<UpdateUserCountPayload>({
     casual: {
       inGame: Number.NaN,
@@ -95,9 +99,28 @@ export function QueueProvider({ children }: QueueContextProps) {
         [mode]: true,
       }))
 
-      await apiClient.queue.enqueue(mode)
+      try {
+        await apiClient.queue.enqueue(mode)
+      } catch (error) {
+        // Reset queue mode on error
+        setQueueModes((current) => ({
+          ...current,
+          [mode]: false,
+        }))
+
+        // Check if it's a ban error
+        const banData = await extractBanInfo(error)
+        if (banData) {
+          setBanInfo(banData)
+          setBanDialogOpen(true)
+          return
+        }
+
+        // Re-throw other errors
+        throw error
+      }
     },
-    [gateway, user, setQueueModes]
+    [user, setQueueModes]
   )
 
   const dequeue = useCallback(
@@ -108,12 +131,19 @@ export function QueueProvider({ children }: QueueContextProps) {
         [mode]: false,
       }))
     },
-    [gateway]
+    []
   )
 
   return (
     <QueueContext.Provider value={{ enqueue, dequeue, queueModes, queueUserCount }}>
       {children}
+      {banInfo && (
+        <BanAlertDialog
+          banInfo={banInfo}
+          open={banDialogOpen}
+          onOpenChange={setBanDialogOpen}
+        />
+      )}
     </QueueContext.Provider>
   )
 }

@@ -13,6 +13,24 @@ export type UserRowElo = {
   challenger: boolean
 }
 
+/** Stores ban information for a user */
+export type UserRowBan = {
+  /** Whether the ban is permanent or temporary */
+  type: 'permanent' | 'temporary'
+
+  /** The reason for the ban */
+  reason: string
+
+  /** The date when the ban was issued */
+  issued_at: Date
+
+  /** The date when the ban expires (only for temporary bans) */
+  expires_at?: Date
+
+  /** The user ID of the admin who issued the ban */
+  issued_by: string
+}
+
 export const enum UserRole {
   Player = 'player',
   Creator = 'creator',
@@ -41,6 +59,9 @@ export type UserRow = {
   role: UserRole
 
   elo: UserRowElo
+
+  /** Ban information, if the user is banned */
+  ban?: UserRowBan
 
   stats: {
     wins: number

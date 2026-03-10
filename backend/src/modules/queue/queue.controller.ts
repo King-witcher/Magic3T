@@ -3,13 +3,14 @@ import { Body, Controller, Delete, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { respondError } from '@/common'
 import { AuthGuard } from '@/modules/auth/auth.guard'
+import { BanGuard } from '@/modules/auth/ban.guard'
 import { UserId } from '@/modules/auth/user-id.decorator'
 import { EnqueueDto, QueueMode } from './dtos/enqueue-dto'
 import { QueueService } from './queue.service'
 
 @Controller('queue')
 @ApiBearerAuth()
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, BanGuard)
 export class QueueController {
   // private readonly logger = new Logger(QueueController.name, {
   //   timestamp: true,

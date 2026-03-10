@@ -1,7 +1,12 @@
 import { GetUserResult } from '@magic3t/api-types'
 import { UserRole } from '@magic3t/database-types'
+import { useState } from 'react'
 import { GiCrown, GiRobotGrab } from 'react-icons/gi'
+import { MdBlock } from 'react-icons/md'
+import { Button } from '@/components/ui/button'
 import { Tooltip } from '@/components/ui/tooltip'
+import { useAuth } from '@/contexts/auth-context'
+import { BanDialog } from './ban-dialog'
 import { AvatarDivision, AvatarImage, AvatarRoot, AvatarWing } from './profile-avatar'
 
 interface ProfileHeaderProps {
@@ -9,6 +14,12 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ user }: ProfileHeaderProps) {
+  const auth = useAuth()
+  const [banDialogOpen, setBanDialogOpen] = useState(false)
+
+  const isCreator = auth.user?.role === UserRole.Creator
+  const canBan = isCreator
+
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="flex flex-col items-center gap-6">
@@ -37,8 +48,33 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
               {user.nickname}
             </h1>
           </div>
+
+          {/* Admin Actions */}
+          {canBan && (
+            <div className="flex justify-center gap-2 mt-4">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setBanDialogOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <MdBlock className="size-4" />
+                Banir Usuário
+              </Button>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Ban Dialog */}
+      {canBan && (
+        <BanDialog
+          userId={user.id}
+          nickname={user.nickname}
+          open={banDialogOpen}
+          onOpenChange={setBanDialogOpen}
+        />
+      )}
     </div>
   )
 }

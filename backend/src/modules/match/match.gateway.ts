@@ -19,7 +19,7 @@ import { BaseGateway } from '@/common/websocket/base.gateway'
 import { WebsocketEmitterService } from '@/infra/websocket/websocket-emitter.service'
 import { UserId } from '@/modules/auth/user-id.decorator'
 import { CORS_ALLOWED_ORIGINS } from '@/shared/constants/cors'
-import { AuthGuard } from '../auth'
+import { AuthGuard, BanGuard } from '../auth'
 import { CurrentPerspective } from './decorators'
 import { Perspective } from './lib'
 import { MatchGuard } from './match.guard'
@@ -29,7 +29,7 @@ import { matchException } from './types/match-error'
 
 const MAX_MESSAGE_LENGTH = 500
 
-@UseGuards(AuthGuard, MatchGuard)
+@UseGuards(AuthGuard, BanGuard, MatchGuard)
 @WebSocketGateway({ cors: { origin: CORS_ALLOWED_ORIGINS, credentials: true }, namespace: 'match' })
 export class MatchGateway extends BaseGateway<GameClientEventsMap, GameServerEventsMap, 'match'> {
   constructor(

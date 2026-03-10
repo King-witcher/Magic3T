@@ -65,6 +65,19 @@ export class BaseApiClient {
     })
   }
 
+  protected async deleteWithBody<TPayload, TResonse>(
+    endpoint: string,
+    payload: TPayload,
+    authenticated = true
+  ): Promise<TResonse> {
+    return this.request<TPayload, TResonse>({
+      endpoint,
+      method: 'DELETE',
+      payload,
+      authenticated,
+    })
+  }
+
   private async request<TPayload, TResonse>({
     endpoint,
     payload,
@@ -80,7 +93,7 @@ export class BaseApiClient {
 
     // If there is a payload, serialize it as JSON and add it to the request body.
     if (payload) {
-      if (method === 'GET' || method === 'DELETE') {
+      if (method === 'GET') {
         throw new Error(`Payload is not supported for HTTP method '${method}'`)
       }
       headers.set('Content-Type', 'application/json')
