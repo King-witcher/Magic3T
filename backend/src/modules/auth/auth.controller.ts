@@ -191,7 +191,7 @@ export class AuthController {
       sessionId: z.string().describe('Session token'),
       sessionData: z.object({
         uuid: z.uuid().describe('Unique identifier for the user'),
-        nickname: z.string().describe("User's display name"),
+        nickname: NICKNAME_SCHEMA.describe("User's nickname"),
         summonerIcon: z.number().describe("User's summoner icon"),
         role: z.literal('player').describe("User's role in the system"),
       }),
