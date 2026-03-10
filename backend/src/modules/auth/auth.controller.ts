@@ -188,6 +188,7 @@ export class AuthController {
     }),
   })
   @ResponseSchema({
+    status: HttpStatus.CREATED,
     description: 'Successfully registered.',
     schema: z.object({
       sessionId: z.string().describe('Session token'),
@@ -198,7 +199,6 @@ export class AuthController {
         role: z.literal('player').describe("User's role in the system"),
       }),
     }),
-    status: HttpStatus.CREATED,
   })
   @ResponseSchema({
     status: HttpStatus.CONFLICT,
