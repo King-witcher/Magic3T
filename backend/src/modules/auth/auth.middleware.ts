@@ -8,7 +8,7 @@ export class AuthMiddleware implements NestMiddleware {
   constructor(private readonly authService: AuthService) {}
 
   async use(req: Request, _: Response, next: NextFunction) {
-    const sessionId = req.headers.authorization
+    const sessionId = req.headers.authorization?.replace(/^Bearer /, '')
     if (!sessionId) return next()
 
     const session = await this.authService.getSession(sessionId)

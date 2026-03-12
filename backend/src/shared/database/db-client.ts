@@ -8,8 +8,8 @@ import {
 import { DatabaseError } from './database-error'
 
 export interface IDbClient {
-  query<R extends QueryResultRow, I = any>(queryConfig: QueryConfig<I>): Promise<R[]>
-  query<R extends QueryResultRow, I = any>(
+  query<R extends QueryResultRow = any, I = any>(queryConfig: QueryConfig<I>): Promise<R[]>
+  query<R extends QueryResultRow = any, I = any>(
     queryTextOrConfig: string | QueryConfig<I>,
     values?: QueryConfigValues<I>
   ): Promise<R[]>
@@ -19,7 +19,7 @@ export interface IDbClient {
 export class DbClient implements IDbClient {
   constructor(private readonly client: PoolClient) {}
 
-  async query<R extends QueryResultRow, I = any>(
+  async query<R extends QueryResultRow = any, I = any>(
     queryTextOrConfig: string | QueryConfig<I>,
     values?: QueryConfigValues<I>
   ): Promise<R[]> {

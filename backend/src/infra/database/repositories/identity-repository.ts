@@ -16,7 +16,7 @@ export class IdentityRepository {
     return result ?? null
   }
 
-  async createFirebaseIdentity(row: LegacyUserIdentityRow, client?: IDbClient): Promise<void> {
+  async createLegacyIdentity(row: LegacyUserIdentityRow, client?: IDbClient): Promise<void> {
     client ??= this.databaseService
     await client.query(INSERT_INTO('legacy_user_identity', row))
   }

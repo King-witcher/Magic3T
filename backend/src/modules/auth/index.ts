@@ -1,6 +1,6 @@
 export * from './auth.guard'
 export * from './auth.module'
-export * from './auth-controller.service'
 export * from './authentic-request'
 export * from './authentic-socket'
 export * from './decorators'
+export * from './private-auth.service'

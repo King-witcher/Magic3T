@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { ClientSessionData, RegisterCommand } from '@magic3t/api-types'
-import { UserRow } from '@magic3t/database-types'
+import { UserRow, UserRowRole } from '@magic3t/database-types'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { HttpStatus, Inject, Injectable } from '@nestjs/common'
 import bcrypt from 'bcrypt'
@@ -14,12 +14,12 @@ import {
   UserRepository,
 } from '@/infra/database/repositories'
 import { FirebaseAuthService } from '@/infra/firebase'
-import { SessionData } from '@/shared/types/session-data'
+import { SessionData as ServerSessionData } from '@/shared/types/session-data'
 
 const ONE_WEEK = 1000 * 60 * 60 * 24 * 7
 
 @Injectable()
-export class AuthControllerService {
+export class PrivateAuthService {
   constructor(
     private firebaseAuthService: FirebaseAuthService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
@@ -37,20 +37,14 @@ export class AuthControllerService {
     return decoded
   }
 
-  async registerFirebaseUser(decodedToken: DecodedIdToken, nickname: string): Promise<UserRow> {
-    // This should never happen, as the token would be rejected in validateFirebaseToken
-    const email = decodedToken.email
-    if (!email) {
-      unexpected('Decoded Firebase token is missing email')
-    }
-
+  async registerLegacy(nickname: string, firebaseId: string, email: string): Promise<UserRow> {
     try {
       const user = await this.databaseService.transaction(async (client) => {
         const user = await this.userRepository.createWithNickname(nickname, client)
-        await this.identityRepository.createFirebaseIdentity(
+        await this.identityRepository.createLegacyIdentity(
           {
             email: email,
-            firebase_id: decodedToken.uid,
+            firebase_id: firebaseId,
             user_id: user.id,
           },
           client
@@ -61,17 +55,25 @@ export class AuthControllerService {
       return user
     } catch (error) {
       if (error instanceof DatabaseError && error.code === PgErrorCode.UniqueViolation) {
-        respondError('NicknameAlreadyTaken', HttpStatus.CONFLICT)
+        switch (error.cause.constraint) {
+          case 'user_identity_firebase_id_pkey':
+          case 'user_identity_email_key':
+            respondError('UserAlreadyRegistered', HttpStatus.CONFLICT)
+            break
+          case 'user_nickname_key':
+            respondError('NicknameAlreadyTaken', HttpStatus.CONFLICT)
+            break
+        }
       }
       throw error
     }
   }
 
-  async registerWithCredential({
-    nickname,
-    password,
-    username,
-  }: RegisterCommand): Promise<UserRow> {
+  async registerWithCredentials(
+    nickname: string,
+    username: string,
+    password: string
+  ): Promise<UserRow> {
     const passwordDigest = await this.digestPassword(password)
     const user = await this.databaseService.transaction(async (conn) => {
       const user = await this.userRepository.createWithNickname(nickname, conn).catch((error) => {
@@ -97,7 +99,16 @@ export class AuthControllerService {
   }
 
   /** Validates user credentials and return a user row */
-  async validateCredentials(username: string, password: string): Promise<UserRow> {
+  async validateCredentials(
+    username: string,
+    password: string
+  ): Promise<{
+    id: number
+    uuid: string
+    nickname: string
+    role: UserRowRole
+    profile_icon: number
+  }> {
     const credential = await this.credentialRepository.findByUsername(username)
     if (!credential) {
       // Prevent timing attacks by hashing anyway
@@ -110,33 +121,28 @@ export class AuthControllerService {
       respondError('InvalidCredentials', HttpStatus.UNAUTHORIZED)
     }
 
-    const user = await this.userRepository.getById(credential.user_id)
-    if (!user) {
-      unexpected(`User with ID ${credential.user_id} not found for valid credential`)
+    return {
+      id: credential.id,
+      uuid: credential.uuid,
+      nickname: credential.nickname,
+      role: credential.role,
+      profile_icon: credential.profile_icon,
     }
-
-    return user
   }
 
-  async createSession(sessionData: SessionData): Promise<string> {
+  async createSession(userId: number, userUUID: string, userRole: UserRowRole): Promise<string> {
+    const sessionData: ServerSessionData = {
+      id: userId,
+      uuid: userUUID,
+      role: userRole,
+    }
     const sessionToken = `MT3SID${randomUUID()}`
     this.cacheManager.set(`session:${sessionToken}`, sessionData, ONE_WEEK)
     return sessionToken
   }
 
-  async deleteSession(token: string): Promise<void> {
-    await this.cacheManager.del(`session:${token}`)
-  }
-
-  getClientSessionDataFromRow(
-    user: Pick<UserRow, 'profile_icon' | 'uuid' | 'role' | 'profile_nickname'>
-  ): ClientSessionData {
-    return {
-      summonerIcon: user.profile_icon,
-      uuid: user.uuid,
-      role: user.role,
-      nickname: user.profile_nickname,
-    }
+  async deleteSession(sessionId: string): Promise<void> {
+    await this.cacheManager.del(`session:${sessionId}`)
   }
 
   private async digestPassword(password: string): Promise<string> {

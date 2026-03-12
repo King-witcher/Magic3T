@@ -1,4 +1,4 @@
-import { UserCredentialRow } from '@magic3t/database-types'
+import { UserCredentialRow, UserRowRole } from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
 import { IDbClient, INSERT_INTO, sql } from '@/shared/database'
 import { DatabaseService } from '../database.service'
@@ -28,15 +28,28 @@ export class CredentialRepository {
    *
    * The search is case-insensitive and ignores leading/trailing whitespace.
    */
-  async findByUsername(username: string, client?: IDbClient): Promise<UserCredentialRow | null> {
+  async findByUsername(
+    username: string,
+    client?: IDbClient
+  ): Promise<{
+    id: number
+    uuid: string
+    nickname: string
+    role: UserRowRole
+    profile_icon: number
+    password_digest: string
+  } | null> {
     client ??= this.databaseService
 
     const slug = this.slugify(username)
-    const [result] = await client.query<UserCredentialRow>(sql`
-      SELECT *
-      FROM user_credential
-      WHERE username_slug = ${slug}
+    const [result] = await client.query(sql`
+      SELECT uc.password_digest, u.nickname, u.id, u.uuid, u.profile_icon, u.role
+      FROM user_credential uc
+      JOIN "user" u
+          ON u.id = uc.user_id
+      WHERE uc.username_slug = ${slug}
     `)
+
     return result ?? null
   }
 
