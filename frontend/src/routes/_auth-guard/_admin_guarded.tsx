@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { NotFoundTemplate } from '@/components/templates'
-import { useAuth } from '@/contexts/auth-context'
+import { useAuth } from '@/contexts/auth/auth-context'
 
 export const Route = createFileRoute('/_auth-guard/_admin_guarded')({
   component: () => {

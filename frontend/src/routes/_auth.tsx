@@ -1,7 +1,7 @@
 import { createFileRoute, Navigate, Outlet } from '@tanstack/react-router'
 import { Panel } from '@/components/atoms'
 import { LoadingSessionTemplate } from '@/components/templates'
-import { AuthState, useAuth } from '@/contexts/auth-context'
+import { AuthState, useAuth } from '@/contexts/auth/auth-context'
 
 export const Route = createFileRoute('/_auth')({
   component: RouteComponent,

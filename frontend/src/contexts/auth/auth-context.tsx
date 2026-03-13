@@ -1,4 +1,5 @@
-import { ClientSessionData } from '@magic3t/api-types'
+import { AuthErrorCode, ClientSessionData, RegisterCommand } from '@magic3t/api-types'
+import { captureException } from '@sentry/react'
 import {
   createContext,
   type ReactNode,
@@ -14,9 +15,10 @@ import { Console } from '@/lib/console'
 import { firebaseClient } from '@/lib/firebase-client'
 import { apiClient } from '@/services/clients/api-client'
 import { ClientError } from '@/services/clients/client-error'
+import { AuthError } from './auth-error'
 
 export enum AuthState {
-  /** The authentication session is being loaded */
+  /** Initial state. The authentication session is being loaded */
   LoadingSession = 'loading-session',
   /** The user is not signed in */
   NotSignedIn = 'not-signed-in',
@@ -34,7 +36,9 @@ type AuthContextData =
       uuid: null
       signedIn: false
       state: AuthState.NotSignedIn
-      signInWithGoogle: () => Promise<void>
+      login: (username: string, password: string) => Promise<void>
+      register: (command: RegisterCommand) => Promise<void>
+      loginWithGoogle: () => Promise<void>
     }
   | {
       session: null
@@ -47,7 +51,7 @@ type AuthContextData =
       uuid: null
       signedIn: false
       state: AuthState.SignedInUnregistered
-      registerWithGoogle: (nickname: string) => Promise<void>
+      registerFromFirebase: (nickname: string) => Promise<void>
     }
   | {
       session: ClientSessionData
@@ -88,6 +92,7 @@ export function AuthProvider({ children }: Props) {
           setSessionData(null)
           Console.log('Failed to validate session token.')
           console.error(e)
+          captureException(e)
         } finally {
           setLoadingInitSession(false)
         }
@@ -100,11 +105,13 @@ export function AuthProvider({ children }: Props) {
     loadSession()
   }, [])
 
-  async function signInFirebase() {
+  async function loginFirebase() {
     try {
+      // Sign in with Firebase to get a token
       await firebaseClient.signInWithGoogle()
       const token = await firebaseClient.token
       if (!token) throw new Error('Failed to obtain Firebase token after sign-in')
+
       const data = await apiClient.auth.signInFirebase({ token })
       if (data.status === 'registered') {
         // If user is registered, sign out from Firebase.
@@ -120,28 +127,81 @@ export function AuthProvider({ children }: Props) {
     } catch (error) {
       setSessionData(null)
       setSessionId(null)
-      await firebaseClient.signOut()
+      await firebaseClient.signOut().catch(() => {
+        throw error
+      })
       Console.log((error as Error).message)
-      console.error(error)
+      throw error
     }
   }
 
-  async function registerFirebase(nickname: string) {
+  async function registerFromFirebase(nickname: string) {
     try {
+      // Gets a token from Firebase service
       const token = await firebaseClient.token
       if (!token) throw new Error('Failed to obtain Firebase token for registration')
-      const response = await apiClient.auth.registerFirebase({
+
+      // Send the token to the server to complete the registration process and create a session.
+      const response = await apiClient.auth.registerFromFirebase({
         data: { nickname },
         token,
       })
+
+      // Update state
       setSessionData(response.sessionData)
       setSessionId(response.sessionId)
       setShouldRegister(false)
       firebaseClient.signOut()
     } catch (error) {
-      if (error instanceof ClientError && (await error.errorCode) === 'NicknameUnavailable') {
-        throw new Error('Nickname is already taken. Please choose another one.')
+      if (error instanceof ClientError) {
+        const code = await error.errorCode
+        switch (code) {
+          case AuthErrorCode.NicknameUnavailable:
+          case AuthErrorCode.UserAlreadyRegistered:
+            throw new AuthError(code)
+          default:
+            captureException(error)
+            throw error
+        }
       }
+      throw error
+    }
+  }
+
+  async function login(username: string, password: string) {
+    try {
+      const response = await apiClient.auth.login({ username, password })
+      setSessionData(response.sessionData)
+      setSessionId(response.sessionId)
+    } catch (error) {
+      if (error instanceof ClientError) {
+        const code = await error.errorCode
+        switch (code) {
+          case AuthErrorCode.InvalidCredentials:
+            throw new AuthError(code)
+        }
+      }
+      captureException(error)
+      throw error
+    }
+  }
+
+  async function register(command: RegisterCommand) {
+    try {
+      const response = await apiClient.auth.register(command)
+      setSessionData(response.sessionData)
+      setSessionId(response.sessionId)
+    } catch (error) {
+      if (error instanceof ClientError) {
+        const code = await error.errorCode
+        switch (code) {
+          case AuthErrorCode.NicknameUnavailable:
+          case AuthErrorCode.UsernameUnavailable:
+            throw new AuthError(code)
+        }
+      }
+      captureException(error)
+      throw error
     }
   }
 
@@ -149,6 +209,7 @@ export function AuthProvider({ children }: Props) {
     // This is purposely not awaited, since the user does not need to wait for the server to delete the session.
     apiClient.auth.logout().catch((e) => {
       Console.log('Failed to sign out from server')
+      captureException(e)
       console.error(e)
     })
     setSessionData(null)
@@ -209,7 +270,7 @@ export function AuthProvider({ children }: Props) {
         uuid: null,
         signedIn: false,
         state: AuthState.SignedInUnregistered,
-        registerWithGoogle: registerFirebase,
+        registerFromFirebase,
       }
     }
 
@@ -219,7 +280,9 @@ export function AuthProvider({ children }: Props) {
         uuid: null,
         signedIn: false,
         state: AuthState.NotSignedIn,
-        signInWithGoogle: signInFirebase,
+        login,
+        register,
+        loginWithGoogle: loginFirebase,
       }
     }
 

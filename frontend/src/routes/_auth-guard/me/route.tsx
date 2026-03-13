@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { ProfileTemplate } from '@/components/templates'
-import { useSession } from '@/contexts/auth-context'
+import { useSession } from '@/contexts/auth/auth-context'
 import { useClientQuery } from '@/hooks/use-client-query'
 import { apiClient } from '@/services/clients/api-client'
 

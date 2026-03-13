@@ -1,7 +1,7 @@
 import { EventNames, EventParams, EventsMap } from '@socket.io/component-emitter'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
-import { useAuth } from '@/contexts/auth-context'
+import { useAuth } from '@/contexts/auth/auth-context'
 import { Console, SystemCvars } from '@/lib/console'
 import { firebaseClient } from '@/lib/firebase-client'
 

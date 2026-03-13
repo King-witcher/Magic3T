@@ -10,5 +10,3 @@ export type RegisterResult = {
   sessionId: string
   sessionData: ClientSessionData
 }
-
-export type RegisterErrorCode = 'UsernameAlreadyExists' | 'NicknameAlreadyTaken'

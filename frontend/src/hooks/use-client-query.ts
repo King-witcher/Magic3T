@@ -1,7 +1,7 @@
 import { ApiNamespace } from '@magic3t/api-types'
 import { UseQueryOptions, UseQueryResult, useQuery, useQueryClient } from '@tanstack/react-query'
 import { use, useCallback } from 'react'
-import { AuthContext } from '@/contexts/auth-context'
+import { AuthContext } from '@/contexts/auth/auth-context'
 import { ApiUserClient, ClientError } from '@/services/clients'
 import { BaseApiClient } from '@/services/clients/base-api-client'
 

@@ -1,3 +1,4 @@
+export * from './auth-error-code'
 export * from './login'
 export * from './register'
 export * from './register-firebase'

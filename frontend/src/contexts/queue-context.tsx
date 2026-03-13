@@ -10,7 +10,7 @@ import { useGateway } from '@/hooks/use-gateway.ts'
 import { useListener } from '@/hooks/use-listener.ts'
 import { apiClient } from '@/services/clients/api-client.ts'
 import { QueueMode } from '@/types/queue.ts'
-import { AuthState, useAuth } from './auth-context.tsx'
+import { AuthState, useAuth } from './auth/auth-context.tsx'
 import { useGame } from './game-context.tsx'
 
 export type QueueModesType = {

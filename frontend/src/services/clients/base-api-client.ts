@@ -1,5 +1,5 @@
 import { ApiNamespace } from '@magic3t/api-types'
-import { AUTH_SESSION_STORAGE_KEY } from '@/contexts/auth-context'
+import { AUTH_SESSION_STORAGE_KEY } from '@/contexts/auth/auth-context'
 import { Console, SystemCvars } from '@/lib/console'
 import {
   BadRequestError,

@@ -11,5 +11,3 @@ export type RegisterFirebaseResponse = {
   sessionId: string
   sessionData: ClientSessionData
 }
-
-export type RegisterFirebaseErrorCode = 'NicknameUnavailable' | 'UserAlreadyRegistered'

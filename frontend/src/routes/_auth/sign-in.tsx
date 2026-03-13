@@ -1,17 +1,14 @@
 import { useMutation } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { FirebaseError } from 'firebase/app'
-import { AuthErrorCodes, sendPasswordResetEmail } from 'firebase/auth'
-import { useCallback, useState } from 'react'
+import { AuthErrorCodes } from 'firebase/auth'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { RiGoogleFill } from 'react-icons/ri'
 import { Button, Input, Spinner } from '@/components/atoms'
 import { Label } from '@/components/ui/label'
-import { AuthState, useAuth } from '@/contexts/auth-context'
+import { AuthState, useAuth } from '@/contexts/auth/auth-context'
+import { AuthError } from '@/contexts/auth/auth-error'
 import { Console } from '@/lib/console'
-import { firebaseClient } from '@/lib/firebase-client'
-import { auth } from '@/services/firebase'
-import { isValidEmail } from '@/utils/isValidEmail'
 
 export const Route = createFileRoute('/_auth/sign-in')({
   component: Page,
@@ -40,7 +37,6 @@ const ERROR_MAP: Partial<Record<FirebaseAuthErrorCode, string>> = {
 function Page() {
   const auth = useAuth()
   const [errorCode, setErrorCode] = useState<string | null>(null)
-  const [hideResetPassword, setHideResetPassword] = useState(false)
 
   const {
     register,
@@ -51,93 +47,64 @@ function Page() {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      email: '',
+      username: '',
       password: '',
     },
   })
 
-  const email = watch('email')
+  const username = watch('username')
 
-  const signInWithEmailMutation = useMutation({
-    mutationKey: ['sign-in-email'],
-    async mutationFn(data: { email: string; password: string }) {
-      return firebaseClient.signInWithEmail(data.email, data.password)
+  const loginMutation = useMutation({
+    mutationKey: ['login'],
+    async mutationFn(data: { username: string; password: string }) {
+      if (auth.state !== AuthState.NotSignedIn) return
+      await auth.login(data.username, data.password)
     },
     onMutate: () => {
       setErrorCode(null)
     },
     onError(e) {
-      console.error(e)
-      if (e instanceof FirebaseError) {
-        Console.log(`Failed to sign in with email: ${e.message}`)
-        setErrorCode(e.code)
+      if (e instanceof AuthError) {
+        Console.log(`Failed to login: ${e.errorCode}`)
+        setErrorCode(e.errorCode)
+      } else {
+        setErrorCode('UnknownError')
       }
     },
   })
 
-  const signInGoogleMutation = useMutation({
-    mutationKey: ['sign-in-google'],
+  const loginWithGoogleMutation = useMutation({
+    mutationKey: ['login-with-google'],
     async mutationFn() {
-      if (auth.state === AuthState.NotSignedIn) {
-        await auth.signInWithGoogle()
-      }
+      if (auth.state !== AuthState.NotSignedIn) return
+      await auth.loginWithGoogle()
     },
     onMutate: () => {
       setErrorCode(null)
     },
     onError(e) {
       console.error(e)
-      if (e instanceof FirebaseError) {
-        Console.log(`Failed to sign in with Google: ${e.message}`)
-        setErrorCode(e.code)
+      if (e instanceof AuthError) {
+        Console.log(`Failed to sign in with Google: ${e.errorCode}`)
+        setErrorCode(e.errorCode)
+      } else {
+        setErrorCode('UnknownError')
       }
     },
   })
 
-  // const recoverPasswordMutation = useMutation({
-  //   mutationKey: ['recover-password'],
-  //   async mutationFn(email: string) {
-  //     return sendPasswordResetEmail(auth, email)
-  //   },
-  //   onMutate: () => {
-  //     setErrorCode(null)
-  //   },
-  //   onError(e) {
-  //     console.error(e)
-  //     if (e instanceof FirebaseError) {
-  //       Console.log(`Failed to sign in with email: ${e.message}`)
-  //       setErrorCode(e.code)
-  //     }
-  //   },
-  // })
-
-  function signInEmail(data: { email: string; password: string }) {
-    signInWithEmailMutation.mutate(data)
+  function login(data: { username: string; password: string }) {
+    loginMutation.mutate(data)
   }
 
-  // const handleRecover = useCallback(async () => {
-  //   if (!isValidEmail(email)) {
-  //     setFormError('email', {})
-  //     setErrorCode('auth/invalid-email')
-  //     return
-  //   }
-
-  //   setErrorCode(null)
-  //   clearErrors()
-  //   setHideResetPassword(true)
-  //   setTimeout(() => setHideResetPassword(false), 5000)
-  //   await sendPasswordResetEmail(auth, email)
-  // }, [email, setFormError, clearErrors])
-
-  const isPending = signInWithEmailMutation.isPending || signInGoogleMutation.isPending || false
-  // recoverPasswordMutation.isPending
+  const isPending = loginMutation.isPending || loginWithGoogleMutation.isPending
 
   const errorMessage = errorCode
     ? (ERROR_MAP[errorCode as FirebaseAuthErrorCode] ?? errorCode)
     : null
 
   return (
-    <form className="space-y-5 sm:space-y-6" onSubmit={handleSubmit(signInEmail)}>
+    <form className="space-y-5 sm:space-y-6" onSubmit={handleSubmit(login)}>
       {/* Header */}
       <div className="text-center">
         <h2 className="font-serif font-bold text-4xl text-gold-4 uppercase tracking-wide">
@@ -155,18 +122,18 @@ function Page() {
         </p>
       </div>
 
-      {/* Email Input */}
+      {/* Username Input */}
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="username">Username</Label>
         <Input
-          id="email"
-          type="email"
-          placeholder="Enter your email"
+          id="username"
+          type="text"
+          placeholder="Enter your username"
           disabled={isPending}
-          error={!!errors.email}
-          {...register('email', { required: true })}
+          error={!!errors.username}
+          {...register('username', { required: true })}
         />
-        {errors.email && <p className="text-red-400 text-xs mt-1">Email is required</p>}
+        {errors.username && <p className="text-red-400 text-xs mt-1">Username is required</p>}
       </div>
 
       {/* Password Input */}
@@ -189,23 +156,6 @@ function Page() {
           <p className="text-red-400 text-sm text-center">{errorMessage}</p>
         </div>
       )}
-
-      {/* Forgot Password */}
-      <div className="text-right">
-        {hideResetPassword ? (
-          <p className="text-blue-2 text-sm">Recovery email sent</p>
-        ) : (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            // onClick={handleRecover}
-            className="normal-case! tracking-normal! p-0! h-auto"
-          >
-            Forgot password?
-          </Button>
-        )}
-      </div>
 
       {/* Sign In Button */}
       <Button type="submit" disabled={isPending} size="lg" className="w-full">
@@ -234,7 +184,7 @@ function Page() {
         type="button"
         variant="secondary"
         size="lg"
-        onClick={() => signInGoogleMutation.mutate()}
+        onClick={() => loginWithGoogleMutation.mutate()}
         className="w-full"
       >
         <RiGoogleFill size={24} />

@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { useSignedAuth } from '@/contexts/auth-context'
+import { useSignedAuth } from '@/contexts/auth/auth-context'
 import { useClientMutation } from '@/hooks/use-client-mutation'
 import { useClientQuery } from '@/hooks/use-client-query'
 import { apiClient } from '@/services/clients/api-client'

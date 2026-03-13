@@ -24,7 +24,7 @@ import { useObservable } from '@/hooks/use-observable'
 import { Console } from '@/lib/console'
 import { Timer } from '@/lib/timer'
 import { apiClient } from '@/services/clients/api-client'
-import { AuthState, useAuth } from './auth-context'
+import { AuthState, useAuth } from './auth/auth-context'
 
 type Message = { sender: 'you' | 'him'; content: string; timestamp: number }
 

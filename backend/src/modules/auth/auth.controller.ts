@@ -65,7 +65,7 @@ export class AuthController {
     }),
     status: HttpStatus.UNAUTHORIZED,
   })
-  async signInFirebase(@Body() body: SignInFirebaseCommand): Promise<SignInFirebaseResponse> {
+  async loginFirebase(@Body() body: SignInFirebaseCommand): Promise<SignInFirebaseResponse> {
     return this.service.signInFirebase(body.token)
   }
 
@@ -113,7 +113,9 @@ export class AuthController {
     }),
     status: HttpStatus.UNAUTHORIZED,
   })
-  async registerFirebase(@Body() body: RegisterFirebaseCommand): Promise<RegisterFirebaseResponse> {
+  async registerFromFirebase(
+    @Body() body: RegisterFirebaseCommand
+  ): Promise<RegisterFirebaseResponse> {
     return this.service.registerFirebase(body.token, body.data.nickname)
   }
 
@@ -201,7 +203,7 @@ export class AuthController {
     return this.service.login(body.username, body.password)
   }
 
-  @Get('validate-session')
+  @Get('session')
   @ApiOperation({
     summary: 'Get current authenticated profile',
     description: 'Returns the profile of the currently authenticated user.',

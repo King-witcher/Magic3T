@@ -3,7 +3,7 @@ import { UserDocumentRole } from '@magic3t/database-types'
 import { useState } from 'react'
 import { GiCrown, GiRobotGrab } from 'react-icons/gi'
 import { Tooltip } from '@/components/ui/tooltip'
-import { useSignedAuth } from '@/contexts/auth-context'
+import { useSignedAuth } from '@/contexts/auth/auth-context'
 import { EditAvatarOverlay } from './edit-avatar-overlay'
 import { EditIconModal } from './edit-icon-modal'
 import {

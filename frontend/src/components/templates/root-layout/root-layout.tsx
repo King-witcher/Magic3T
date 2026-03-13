@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { ConsoleTab, Navbar } from '@/components/organisms'
-import { useAuth } from '@/contexts/auth-context'
+import { useAuth } from '@/contexts/auth/auth-context'
 import { ModalLayout } from './modal-layout'
 
 const BACKGROUND_URL = `${import.meta.env.VITE_CDN_URL}/ui/background.png`

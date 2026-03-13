@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
-import { AuthProvider } from '@/contexts/auth-context'
+import { AuthProvider } from '@/contexts/auth/auth-context'
 import { GameProvider } from '@/contexts/game-context'
 import { LiveActivityProvider } from '@/contexts/live-activity.context'
 import { QueueProvider } from '@/contexts/queue-context'

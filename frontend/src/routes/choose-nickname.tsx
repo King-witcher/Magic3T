@@ -1,6 +1,6 @@
 import { createFileRoute, Navigate, redirect } from '@tanstack/react-router'
 import { ChooseNicknameTemplate } from '@/components/templates'
-import { AuthState, useAuth } from '@/contexts/auth-context'
+import { AuthState, useAuth } from '@/contexts/auth/auth-context'
 
 export const Route = createFileRoute('/choose-nickname')({
   component: RouteComponent,
@@ -21,7 +21,7 @@ function RouteComponent() {
 
   async function registerNickname(nickname: string) {
     if (auth.state !== AuthState.SignedInUnregistered) return
-    await auth.registerWithGoogle(nickname)
+    await auth.registerFromFirebase(nickname)
     redirect({ to: referrer ?? '/tutorial' })
   }
 

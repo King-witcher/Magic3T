@@ -1,7 +1,7 @@
 import { createFileRoute, Navigate, Outlet, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { LoadingSessionTemplate } from '@/components/templates'
-import { AuthState, useAuth } from '@/contexts/auth-context'
+import { AuthState, useAuth } from '@/contexts/auth/auth-context'
 
 export const Route = createFileRoute('/_auth-guard')({
   component: () => {
