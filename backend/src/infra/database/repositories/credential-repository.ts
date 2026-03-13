@@ -43,7 +43,13 @@ export class CredentialRepository {
 
     const slug = this.slugify(username)
     const [result] = await client.query(sql`
-      SELECT uc.password_digest, u.nickname, u.id, u.uuid, u.profile_icon, u.role
+      SELECT
+          uc.password_digest,
+          u.profile_nickname,
+          u.id,
+          u.uuid,
+          u.profile_icon,
+          u.role
       FROM user_credential uc
       JOIN "user" u
           ON u.id = uc.user_id

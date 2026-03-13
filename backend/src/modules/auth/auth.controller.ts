@@ -1,5 +1,4 @@
 import {
-  ClientSessionData,
   LoginCommand,
   LoginResult,
   RegisterCommand,
@@ -14,22 +13,17 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@n
 import { ApiOperation } from '@nestjs/swagger'
 import { Throttle } from '@nestjs/throttler'
 import z from 'zod'
-import { unexpected } from '@/common'
 import { BodySchema } from '@/common/decorators/body-schema.decorator'
 import { ResponseSchema } from '@/common/decorators/response-schema.decorator'
-import { UserRepository } from '@/infra/database/repositories'
 import { NICKNAME_SCHEMA } from '@/shared/validation'
 import { USERNAME_SCHEMA } from '@/shared/validation/username'
 import { AuthGuard } from './auth.guard'
+import { AuthService } from './auth.service'
 import { SessionId, UserId } from './decorators'
-import { PrivateAuthService } from './private-auth.service'
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private service: PrivateAuthService,
-    private userRepository: UserRepository
-  ) {}
+  constructor(private service: AuthService) {}
 
   /**
    * Signs in a user using a Firebase token.
@@ -72,31 +66,7 @@ export class AuthController {
     status: HttpStatus.UNAUTHORIZED,
   })
   async signInFirebase(@Body() body: SignInFirebaseCommand): Promise<SignInFirebaseResponse> {
-    const validateResult = await this.service.validateFirebaseToken(body.token)
-
-    const user = await this.userRepository.getByFirebaseId(validateResult.uid)
-    if (!user) {
-      return {
-        status: 'unregistered',
-        sessionId: null,
-        sessionData: null,
-      }
-    }
-
-    const sessionId = await this.service.createSession(user.id, user.uuid, user.role)
-
-    const clientSession: ClientSessionData = {
-      nickname: user.profile_nickname,
-      summonerIcon: user.profile_icon,
-      role: user.role,
-      uuid: user.uuid,
-    }
-
-    return {
-      status: 'registered',
-      sessionId,
-      sessionData: clientSession,
-    }
+    return this.service.signInFirebase(body.token)
   }
 
   @Post('firebase/register')
@@ -144,31 +114,7 @@ export class AuthController {
     status: HttpStatus.UNAUTHORIZED,
   })
   async registerFirebase(@Body() body: RegisterFirebaseCommand): Promise<RegisterFirebaseResponse> {
-    const validateResult = await this.service.validateFirebaseToken(body.token)
-    if (!validateResult.email) {
-      unexpected('Email should be present in the decoded Firebase token. This should not happen.')
-    }
-
-    const userRow = await this.service.registerLegacy(
-      body.data.nickname,
-      validateResult.uid,
-      validateResult.email
-    )
-
-    // After registration, sign in the user by reusing the sign-in logic
-    const sessionId = await this.service.createSession(userRow.id, userRow.uuid, userRow.role)
-
-    const clientSession: ClientSessionData = {
-      nickname: userRow.profile_nickname,
-      summonerIcon: userRow.profile_icon,
-      role: userRow.role,
-      uuid: userRow.uuid,
-    }
-
-    return {
-      sessionId,
-      sessionData: clientSession,
-    }
+    return this.service.registerFirebase(body.token, body.data.nickname)
   }
 
   @Post('register')
@@ -222,25 +168,7 @@ export class AuthController {
   })
   @Throttle({ medium: { limit: 10 }, long: { limit: 30 } })
   async register(@Body() body: RegisterCommand): Promise<RegisterResult> {
-    const user = await this.service.registerWithCredentials(
-      body.nickname,
-      body.username,
-      body.password
-    )
-
-    const sessionId = await this.service.createSession(user.id, user.uuid, user.role)
-
-    const clientSession: ClientSessionData = {
-      nickname: user.profile_nickname,
-      summonerIcon: user.profile_icon,
-      role: user.role,
-      uuid: user.uuid,
-    }
-
-    return {
-      sessionId,
-      sessionData: clientSession,
-    }
+    return this.service.register(body.nickname, body.username, body.password)
   }
 
   @Post('login')
@@ -270,20 +198,7 @@ export class AuthController {
   })
   @HttpCode(HttpStatus.OK)
   async login(@Body() body: LoginCommand): Promise<LoginResult> {
-    const user = await this.service.validateCredentials(body.username, body.password)
-
-    const clientSession: ClientSessionData = {
-      nickname: user.nickname,
-      summonerIcon: user.profile_icon,
-      role: user.role,
-      uuid: user.uuid,
-    }
-
-    const sessionId = await this.service.createSession(user.id, user.uuid, user.role)
-    return {
-      sessionId,
-      sessionData: clientSession,
-    }
+    return this.service.login(body.username, body.password)
   }
 
   @Get('validate-session')
@@ -303,15 +218,7 @@ export class AuthController {
   })
   @UseGuards(AuthGuard)
   async validateSession(@UserId() id: number): Promise<ValidateSessionResponse> {
-    const userRow = await this.userRepository.getById(id)
-    if (!userRow) unexpected('Session is valid but no user found. This should not happen.')
-
-    return {
-      uuid: userRow.uuid,
-      nickname: userRow.profile_nickname,
-      summonerIcon: userRow.profile_icon,
-      role: userRow.role,
-    }
+    return this.service.getSessionProfile(id)
   }
 
   @Post('logout')

@@ -1,11 +1,11 @@
 import { Injectable, Logger, NestMiddleware } from '@nestjs/common'
 import { NextFunction, Request, Response } from 'express'
-import { AuthService } from './auth.service'
+import { AuthSessionService } from './auth-session.service'
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
   logger = new Logger(AuthMiddleware.name)
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthSessionService) {}
 
   async use(req: Request, _: Response, next: NextFunction) {
     const sessionId = req.headers.authorization?.replace(/^Bearer /, '')

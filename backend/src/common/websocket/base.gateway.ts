@@ -7,7 +7,7 @@ import { UserRepository } from '@/infra/database/repositories/user-repository'
 import { WebsocketEmitterEvent } from '@/infra/websocket/types'
 import { WebsocketCountingService } from '@/infra/websocket/websocket-counting.service'
 import { SKIP_AUTH_KEY } from '@/modules/auth'
-import { AuthService } from '@/modules/auth/auth.service'
+import { AuthSessionService } from '@/modules/auth/auth-session.service'
 import { AuthenticSocket } from '@/modules/auth/authentic-socket'
 import { SessionData } from '@/shared/types/session-data'
 import { NamespacesMap, RoomName } from '@/shared/websocket/namespaces-map'
@@ -27,8 +27,8 @@ export class BaseGateway<
   private server?: Server<TClient, TServer> | Namespace<TClient, TServer>
   private ioNamespace?: Namespace<TClient, TServer>
 
-  @Inject(AuthService)
-  protected readonly authService: AuthService
+  @Inject(AuthSessionService)
+  protected readonly authService: AuthSessionService
   @Inject(UserRepository)
   protected readonly userRepository: UserRepository
   @Inject(WebsocketCountingService)

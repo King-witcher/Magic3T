@@ -1,11 +1,17 @@
 import { randomUUID } from 'node:crypto'
-import { ClientSessionData, RegisterCommand } from '@magic3t/api-types'
+import {
+  ClientSessionData,
+  LoginResult,
+  RegisterFirebaseResponse,
+  RegisterResult,
+  SignInFirebaseResponse,
+  ValidateSessionResponse,
+} from '@magic3t/api-types'
 import { UserRow, UserRowRole } from '@magic3t/database-types'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { HttpStatus, Inject, Injectable } from '@nestjs/common'
 import bcrypt from 'bcrypt'
 import { Cache } from 'cache-manager'
-import { DecodedIdToken } from 'firebase-admin/auth'
 import { respondError, unexpected } from '@/common'
 import { DatabaseError, DatabaseService, PgErrorCode } from '@/infra/database'
 import {
@@ -29,7 +35,82 @@ export class PrivateAuthService {
     private credentialRepository: CredentialRepository
   ) {}
 
-  async validateFirebaseToken(firebaseToken: string): Promise<DecodedIdToken> {
+  async signInFirebase(token: string): Promise<SignInFirebaseResponse> {
+    const decoded = await this.validateFirebaseToken(token)
+
+    const user = await this.userRepository.getByFirebaseId(decoded.uid)
+    if (!user) {
+      return { status: 'unregistered', sessionId: null, sessionData: null }
+    }
+
+    const sessionId = await this.createSession(user.id, user.uuid, user.role)
+    return {
+      status: 'registered',
+      sessionId,
+      sessionData: this.toClientSession(user),
+    }
+  }
+
+  async registerFirebase(token: string, nickname: string): Promise<RegisterFirebaseResponse> {
+    const decoded = await this.validateFirebaseToken(token)
+    if (!decoded.email) {
+      unexpected('Email should be present in the decoded Firebase token. This should not happen.')
+    }
+
+    const user = await this.registerLegacy(nickname, decoded.uid, decoded.email)
+    const sessionId = await this.createSession(user.id, user.uuid, user.role)
+
+    return { sessionId, sessionData: this.toClientSession(user) }
+  }
+
+  async register(nickname: string, username: string, password: string): Promise<RegisterResult> {
+    const user = await this.registerWithCredentials(nickname, username, password)
+    const sessionId = await this.createSession(user.id, user.uuid, user.role)
+
+    return { sessionId, sessionData: this.toClientSession(user) }
+  }
+
+  async login(username: string, password: string): Promise<LoginResult> {
+    const user = await this.validateCredentials(username, password)
+    const sessionId = await this.createSession(user.id, user.uuid, user.role)
+
+    return {
+      sessionId,
+      sessionData: {
+        nickname: user.nickname,
+        summonerIcon: user.profile_icon,
+        role: user.role,
+        uuid: user.uuid,
+      },
+    }
+  }
+
+  async getSessionProfile(userId: number): Promise<ValidateSessionResponse> {
+    const user = await this.userRepository.getById(userId)
+    if (!user) unexpected('Session is valid but no user found. This should not happen.')
+
+    return this.toClientSession(user)
+  }
+
+  async deleteSession(sessionId: string): Promise<void> {
+    await this.cacheManager.del(`session:${sessionId}`)
+  }
+
+  private toClientSession(user: {
+    uuid: string
+    profile_nickname: string
+    profile_icon: number
+    role: UserRowRole
+  }): ClientSessionData {
+    return {
+      uuid: user.uuid,
+      nickname: user.profile_nickname,
+      summonerIcon: user.profile_icon,
+      role: user.role,
+    }
+  }
+
+  private async validateFirebaseToken(firebaseToken: string) {
     const decoded = await this.firebaseAuthService.validateToken(firebaseToken)
     if (!decoded) {
       respondError('InvalidFirebaseToken', HttpStatus.UNAUTHORIZED)
@@ -37,7 +118,11 @@ export class PrivateAuthService {
     return decoded
   }
 
-  async registerLegacy(nickname: string, firebaseId: string, email: string): Promise<UserRow> {
+  private async registerLegacy(
+    nickname: string,
+    firebaseId: string,
+    email: string
+  ): Promise<UserRow> {
     try {
       const user = await this.databaseService.transaction(async (client) => {
         const user = await this.userRepository.createWithNickname(nickname, client)
@@ -69,7 +154,7 @@ export class PrivateAuthService {
     }
   }
 
-  async registerWithCredentials(
+  private async registerWithCredentials(
     nickname: string,
     username: string,
     password: string
@@ -98,8 +183,7 @@ export class PrivateAuthService {
     return user
   }
 
-  /** Validates user credentials and return a user row */
-  async validateCredentials(
+  private async validateCredentials(
     username: string,
     password: string
   ): Promise<{
@@ -130,7 +214,11 @@ export class PrivateAuthService {
     }
   }
 
-  async createSession(userId: number, userUUID: string, userRole: UserRowRole): Promise<string> {
+  private async createSession(
+    userId: number,
+    userUUID: string,
+    userRole: UserRowRole
+  ): Promise<string> {
     const sessionData: ServerSessionData = {
       id: userId,
       uuid: userUUID,
@@ -139,10 +227,6 @@ export class PrivateAuthService {
     const sessionToken = `MT3SID${randomUUID()}`
     this.cacheManager.set(`session:${sessionToken}`, sessionData, ONE_WEEK)
     return sessionToken
-  }
-
-  async deleteSession(sessionId: string): Promise<void> {
-    await this.cacheManager.del(`session:${sessionId}`)
   }
 
   private async digestPassword(password: string): Promise<string> {
