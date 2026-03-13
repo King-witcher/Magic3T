@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto'
+import { randomBytes } from 'node:crypto'
 import {
   ClientSessionData,
   LoginResult,
@@ -224,7 +224,7 @@ export class AuthService {
       uuid: userUUID,
       role: userRole,
     }
-    const sessionToken = `MT3SID${randomUUID()}`
+    const sessionToken = this.generateSessionId()
     this.cacheManager.set(`session:${sessionToken}`, sessionData, ONE_WEEK)
     return sessionToken
   }
@@ -232,5 +232,9 @@ export class AuthService {
   private async digestPassword(password: string): Promise<string> {
     const digest = await bcrypt.hash(password, 12)
     return digest
+  }
+
+  private generateSessionId(): string {
+    return randomBytes(32).toString('base64url')
   }
 }
