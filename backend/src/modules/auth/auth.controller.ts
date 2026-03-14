@@ -201,8 +201,8 @@ export class AuthController {
 
   @Get('session')
   @ApiOperation({
-    summary: 'Get current authenticated profile',
-    description: 'Returns the profile of the currently authenticated user.',
+    summary: 'Get session',
+    description: 'Returns the client session data of the currently authenticated user.',
   })
   @ResponseSchema({
     description: 'Successfully retrieved user profile.',
