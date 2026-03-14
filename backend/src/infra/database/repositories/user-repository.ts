@@ -141,11 +141,22 @@ export class UserRepository {
     return created
   }
 
+  /** Gets a user by their ID. */
   async getById(id: number): Promise<UserRow | null> {
     const [row] = await this.databaseService.query<UserRow>(sql`
       SELECT *
       FROM "user"
       WHERE id = ${id}
+    `)
+    return row ?? null
+  }
+
+  /** Gets a user by their UUID. */
+  async getByUUID(uuid: string): Promise<UserRow | null> {
+    const [row] = await this.databaseService.query<UserRow>(sql`
+      SELECT *
+      FROM "user"
+      WHERE uuid = ${uuid}
     `)
     return row ?? null
   }

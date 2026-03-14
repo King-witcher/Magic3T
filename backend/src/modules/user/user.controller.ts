@@ -20,15 +20,15 @@ export class UserController {
     private readonly userRepository: UserRepository
   ) {}
 
-  @Get('id/:id')
+  @Get('id/:uuid')
   @ApiOperation({
     summary: 'Get a user by id',
   })
   @ApiResponse({
     type: 'object',
   })
-  async getById(@Param('id') id: number): Promise<GetUserResult> {
-    const row = await this.userRepository.getById(id)
+  async getById(@Param('uuid') uuid: string): Promise<GetUserResult> {
+    const row = await this.userRepository.getByUUID(uuid)
     if (!row) respondError('user-not-found', 404, 'User not found')
     return this.userService.getUserByRow(row)
   }
