@@ -34,7 +34,7 @@ export class CredentialRepository {
   ): Promise<{
     id: number
     uuid: string
-    nickname: string
+    profile_nickname: string
     role: UserRowRole
     profile_icon: number
     password_digest: string

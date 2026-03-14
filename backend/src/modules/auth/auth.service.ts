@@ -78,7 +78,7 @@ export class AuthService {
     return {
       sessionId,
       sessionData: {
-        nickname: user.nickname,
+        nickname: user.profile_nickname,
         summonerIcon: user.profile_icon,
         role: user.role,
         uuid: user.uuid,
@@ -190,7 +190,7 @@ export class AuthService {
   ): Promise<{
     id: number
     uuid: string
-    nickname: string
+    profile_nickname: string
     role: UserRowRole
     profile_icon: number
   }> {
@@ -209,7 +209,7 @@ export class AuthService {
     return {
       id: credential.id,
       uuid: credential.uuid,
-      nickname: credential.nickname,
+      profile_nickname: credential.profile_nickname,
       role: credential.role,
       profile_icon: credential.profile_icon,
     }
