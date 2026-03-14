@@ -3,5 +3,5 @@ export const enum AuthErrorCode {
   UserAlreadyRegistered = 'UserAlreadyRegistered',
   UsernameUnavailable = 'UsernameUnavailable',
   InvalidCredentials = 'InvalidCredentials',
-  UnknownError = 'UnknownError',
+  Unknown = 'Unknown',
 }

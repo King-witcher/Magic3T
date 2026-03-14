@@ -1,0 +1,20 @@
+import { AuthContextErrorCode } from '@/contexts/auth'
+
+export const ERROR_MAP: Record<AuthContextErrorCode, string> = {
+  'Api::InvalidCredentials': 'Incorrect username or password.',
+  'Api::NicknameUnavailable': 'This nickname is already taken. Please choose another one.',
+  'Api::UsernameUnavailable': 'This username is already taken. Please choose another one.',
+  'Api::UserAlreadyRegistered': 'This account is already registered. Please sign in.',
+  'Api::Unknown': 'An unknown error occurred during authentication. Please try again later.',
+  'OAuth::PopupClosed':
+    'The authentication popup was closed before completing the sign-in process.',
+  'OAuth::PopupBlocked':
+    'The authentication popup was blocked by the browser. Please allow popups and try again.',
+  'OAuth::NetworkError':
+    'A network error occurred during authentication. Please check your connection and try again.',
+  'OAuth::AccountDisabled':
+    'This account has been disabled. Please contact support for assistance.',
+  'OAuth::InvalidCredential': 'The provided credentials are invalid. Please try again.',
+  'OAuth::Unknown': 'An unknown error occurred during authentication. Please try again later.',
+  Unknown: 'An unexpected error occurred. Please try again later.',
+}

@@ -1,4 +1,4 @@
-import { AuthErrorCode, ClientSessionData, RegisterCommand } from '@magic3t/api-types'
+import { ClientSessionData, RegisterCommand } from '@magic3t/api-types'
 import { captureException } from '@sentry/react'
 import {
   createContext,
@@ -14,8 +14,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { Console } from '@/lib/console'
 import { firebaseClient } from '@/lib/firebase-client'
 import { apiClient } from '@/services/clients/api-client'
-import { ClientError } from '@/services/clients/client-error'
-import { AuthError } from './auth-error'
+import { toAuthError } from './errors'
 
 export enum AuthState {
   /** Initial state. The authentication session is being loaded */
@@ -127,11 +126,11 @@ export function AuthProvider({ children }: Props) {
     } catch (error) {
       setSessionData(null)
       setSessionId(null)
-      await firebaseClient.signOut().catch(() => {
-        throw error
+      await firebaseClient.signOut().catch(async () => {
+        await toAuthError(error)
       })
       Console.log((error as Error).message)
-      throw error
+      await toAuthError(error)
     }
   }
 
@@ -153,18 +152,7 @@ export function AuthProvider({ children }: Props) {
       setShouldRegister(false)
       firebaseClient.signOut()
     } catch (error) {
-      if (error instanceof ClientError) {
-        const code = await error.errorCode
-        switch (code) {
-          case AuthErrorCode.NicknameUnavailable:
-          case AuthErrorCode.UserAlreadyRegistered:
-            throw new AuthError(code)
-          default:
-            captureException(error)
-            throw error
-        }
-      }
-      throw error
+      await toAuthError(error)
     }
   }
 
@@ -174,15 +162,7 @@ export function AuthProvider({ children }: Props) {
       setSessionData(response.sessionData)
       setSessionId(response.sessionId)
     } catch (error) {
-      if (error instanceof ClientError) {
-        const code = await error.errorCode
-        switch (code) {
-          case AuthErrorCode.InvalidCredentials:
-            throw new AuthError(code)
-        }
-      }
-      captureException(error)
-      throw error
+      await toAuthError(error)
     }
   }
 
@@ -192,16 +172,7 @@ export function AuthProvider({ children }: Props) {
       setSessionData(response.sessionData)
       setSessionId(response.sessionId)
     } catch (error) {
-      if (error instanceof ClientError) {
-        const code = await error.errorCode
-        switch (code) {
-          case AuthErrorCode.NicknameUnavailable:
-          case AuthErrorCode.UsernameUnavailable:
-            throw new AuthError(code)
-        }
-      }
-      captureException(error)
-      throw error
+      await toAuthError(error)
     }
   }
 
