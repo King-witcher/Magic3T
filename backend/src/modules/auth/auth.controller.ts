@@ -102,7 +102,7 @@ export class AuthController {
     description:
       'The token is valid, but either the nickname is already taken or the user is already registered.',
     schema: z.object({
-      errorCode: z.enum(['NicknameUnavailable', 'UserAlreadyRegistered']),
+      errorCode: z.enum([AuthErrorCode.NicknameUnavailable, AuthErrorCode.UserAlreadyRegistered]),
       metadata: z.any().describe('Some extra information'),
     }),
     status: HttpStatus.CONFLICT,
