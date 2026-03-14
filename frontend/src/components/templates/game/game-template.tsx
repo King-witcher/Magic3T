@@ -4,7 +4,7 @@ import { GiCrossedSwords } from 'react-icons/gi'
 import { Button, Panel } from '@/components/atoms'
 import { useGame } from '@/contexts/game-context'
 import { useDialogStore } from '@/contexts/modal-store'
-import { cn } from '@/lib/utils'
+import { cn, opposite } from '@/lib/utils'
 import { GameBoard } from '../../molecules/game-board'
 import { GameResultModal } from './components/game-result-modal'
 import { PlayerPanel } from './components/player-panel'
@@ -17,7 +17,7 @@ export function GameTemplate() {
 
   // Current player's team and opponent's team
   const myTeam = gameCtx.currentTeam || Team.Order
-  const enemyTeam = (1 - myTeam) as Team
+  const enemyTeam = opposite(myTeam)
   const myPlayer = gameCtx.teams[myTeam]
   const enemyPlayer = gameCtx.teams[enemyTeam]
 

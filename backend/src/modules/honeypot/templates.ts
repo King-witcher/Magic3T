@@ -9,13 +9,12 @@
 // ────────────────────── Helpers ──────────────────────
 
 const csrfToken = () =>
-  Array.from({ length: 40 }, () =>
-    'abcdef0123456789'[Math.floor(Math.random() * 16)]
-  ).join('')
+  Array.from({ length: 40 }, () => 'abcdef0123456789'[Math.floor(Math.random() * 16)]).join('')
 
 const sessionId = () =>
-  Array.from({ length: 26 }, () =>
-    'abcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random() * 36)]
+  Array.from(
+    { length: 26 },
+    () => 'abcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random() * 36)]
   ).join('')
 
 // ────────────────────── Admin Login ──────────────────────

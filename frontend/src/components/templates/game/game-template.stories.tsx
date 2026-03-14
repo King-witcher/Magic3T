@@ -1,5 +1,4 @@
 import { League, Team } from '@magic3t/common-types'
-import { UserRole } from '@magic3t/database-types'
 import {
   createMemoryHistory,
   createRootRoute,
@@ -7,7 +6,7 @@ import {
   RouterProvider,
 } from '@tanstack/react-router'
 import { GameContext, GameContextData } from '@/contexts/game-context'
-import { Timer } from '@/lib/Timer'
+import { Timer } from '@/lib/timer'
 import { GameTemplate } from './game-template'
 
 export default {
@@ -42,15 +41,15 @@ const MOCK_GAME_CONTEXT_DATA: GameContextData = {
     [Team.Order]: {
       timer: new Timer(45),
       profile: {
-        id: 'player-order-1',
+        uuid: 'player-order-1',
         nickname: 'OrderMaster',
         summonerIcon: 1,
-        role: UserRole.Player,
-        rating: {
-          league: League.Gold,
-          division: 2,
-          points: 75,
-          progress: 0.75,
+        role: 'player',
+        rank: {
+          division: 4,
+          league: League.Diamond,
+          points: 50,
+          rankedCount: 10,
         },
         stats: {
           wins: 45,
@@ -65,15 +64,15 @@ const MOCK_GAME_CONTEXT_DATA: GameContextData = {
     [Team.Chaos]: {
       timer: new Timer(30),
       profile: {
-        id: 'player-chaos-2',
+        uuid: 'player-chaos-2',
         nickname: 'ChaosPrincess',
         summonerIcon: 3,
-        role: UserRole.Player,
-        rating: {
-          league: League.Silver,
-          division: 1,
-          points: 60,
-          progress: 0.6,
+        role: 'player',
+        rank: {
+          division: 4,
+          league: League.Diamond,
+          points: 50,
+          rankedCount: 10,
         },
         stats: {
           wins: 32,

@@ -1,13 +1,21 @@
 import { Choice, Team } from '@magic3t/common-types'
-import { MatchRowEvent, MatchRowEventType, MatchRowTeam } from '@magic3t/database-types'
+import {
+  MatchDocumentEvent,
+  MatchDocumentEventType,
+  MatchDocumentTeam,
+} from '@magic3t/database-types'
 import { ApiProperty } from '@nestjs/swagger'
 
 export class MatchPayloadEvent {
   @ApiProperty({
-    description: `The event type. ${MatchRowEventType.Choice} = choice, ${MatchRowEventType.Forfeit} = surrender, ${MatchRowEventType.Timeout} = timeout`,
-    enum: [MatchRowEventType.Choice, MatchRowEventType.Forfeit, MatchRowEventType.Timeout],
+    description: `The event type. ${MatchDocumentEventType.Choice} = choice, ${MatchDocumentEventType.Forfeit} = surrender, ${MatchDocumentEventType.Timeout} = timeout`,
+    enum: [
+      MatchDocumentEventType.Choice,
+      MatchDocumentEventType.Forfeit,
+      MatchDocumentEventType.Timeout,
+    ],
   })
-  event: MatchRowEventType
+  event: MatchDocumentEventType
 
   @ApiProperty({
     description: 'The team that triggered the event.',
@@ -24,7 +32,7 @@ export class MatchPayloadEvent {
 
   @ApiProperty({
     nullable: true,
-    description: `The choice made, if event is ${MatchRowEventType.Choice}; otherwise, undefined`,
+    description: `The choice made, if event is ${MatchDocumentEventType.Choice}; otherwise, undefined`,
     example: 7,
   })
   choice?: Choice
@@ -41,14 +49,14 @@ export class MatchPayload {
   @ApiProperty({
     description: 'An object mapping teams into info about that team in the match',
   })
-  teams: Record<Team, MatchRowTeam>
+  teams: Record<Team, MatchDocumentTeam>
 
   @ApiProperty({
     description: 'The list of events that happened in the match',
     type: MatchPayloadEvent,
     isArray: true,
   })
-  events: MatchRowEvent[]
+  events: MatchDocumentEvent[]
 
   @ApiProperty({
     description: 'The match winner, if any; otherwise, null',

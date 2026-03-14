@@ -1,7 +1,7 @@
 import { ApiNamespace } from '@magic3t/api-types'
 import { UseQueryOptions, UseQueryResult, useQuery, useQueryClient } from '@tanstack/react-query'
 import { use, useCallback } from 'react'
-import { AuthContext } from '@/contexts/auth-context'
+import { AuthContext } from '@/contexts/auth/auth-context'
 import { ApiUserClient, ClientError } from '@/services/clients'
 import { BaseApiClient } from '@/services/clients/base-api-client'
 
@@ -74,10 +74,10 @@ export function useClientQuery<
   const queryKey =
     argsList.length === 2
       ? authenticated
-        ? [client.namespace, functionName, argsList[0], auth?.userId]
+        ? [client.namespace, functionName, argsList[0], auth?.uuid]
         : [client.namespace, functionName, argsList[0]]
       : authenticated
-        ? [client.namespace, functionName, auth?.userId]
+        ? [client.namespace, functionName, auth?.uuid]
         : [client.namespace, functionName]
 
   const query = useQuery({
@@ -126,7 +126,9 @@ export function useClientQuery<
 const userClient = new ApiUserClient()
 
 function _useTest() {
+  // biome-ignore lint/correctness/useHookAtTopLevel: This is just a test
   const _getRanking = useClientQuery(userClient, 'getRanking', {})
+  // biome-ignore lint/correctness/useHookAtTopLevel: This is just a test
   const _getById = useClientQuery(userClient, 'getById', '123', {})
 
   // Typescript should complain

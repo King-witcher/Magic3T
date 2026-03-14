@@ -1,12 +1,11 @@
-import type { RatingData } from '@magic3t/common-types'
-import type { UserRole } from '@magic3t/database-types'
+import type { ClientRank, UserRole } from '@magic3t/common-types'
 
 export type GetUserResult = {
-  id: string
+  uuid: string
   nickname: string
   summonerIcon: number
   role: UserRole
-  rating: RatingData
+  rank: ClientRank
   stats: {
     wins: number
     draws: number
@@ -15,10 +14,10 @@ export type GetUserResult = {
 }
 
 export type ListUsersResultData = {
-  id: string
+  uuid: string
   nickname: string
   summonerIcon: number
-  rating: RatingData
+  rank: ClientRank
   role: UserRole
 }
 

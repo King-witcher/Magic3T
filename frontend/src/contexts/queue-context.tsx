@@ -10,7 +10,7 @@ import { useGateway } from '@/hooks/use-gateway.ts'
 import { useListener } from '@/hooks/use-listener.ts'
 import { apiClient } from '@/services/clients/api-client.ts'
 import { QueueMode } from '@/types/queue.ts'
-import { AuthState, useAuth } from './auth-context.tsx'
+import { AuthState, useAuth } from './auth/auth-context.tsx'
 import { useGame } from './game-context.tsx'
 
 export type QueueModesType = {
@@ -48,7 +48,7 @@ export function QueueProvider({ children }: QueueContextProps) {
       queue: 0,
     },
   })
-  const { user, state: authState } = useAuth()
+  const { session, state: authState } = useAuth()
   const gameCtx = useGame()
 
   const gateway = useGateway<QueueServerEventsMap, QueueClientEventsMap>(
@@ -97,7 +97,7 @@ export function QueueProvider({ children }: QueueContextProps) {
 
       await apiClient.queue.enqueue(mode)
     },
-    [gateway, user, setQueueModes]
+    [gateway, session, setQueueModes]
   )
 
   const dequeue = useCallback(

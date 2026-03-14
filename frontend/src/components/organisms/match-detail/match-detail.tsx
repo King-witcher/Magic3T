@@ -1,27 +1,52 @@
 import { Match } from '@magic3t/api-types'
 import { Team } from '@magic3t/common-types'
-import { MatchRowEventType } from '@magic3t/database-types'
 import { Link } from '@tanstack/react-router'
 import { Check, ChevronDown, ChevronUp, Link2 } from 'lucide-react'
 import { useState } from 'react'
 import { GiCrown, GiSwordClash } from 'react-icons/gi'
+import { Spinner } from '@/components/atoms/spinner/spinner'
 import {
   AvatarImage,
   AvatarRoot,
   AvatarWing,
 } from '@/components/templates/profile/components/profile-avatar'
 import { Tooltip } from '@/components/ui/tooltip'
+import { useClientQuery } from '@/hooks/use-client-query'
 import { cn } from '@/lib/utils'
+import { apiClient } from '@/services/clients'
 import { leaguesMap } from '@/utils/ranks'
 
 const DIVISIONS = ['I', 'II', 'III', 'IV', 'V']
 
 interface MatchDetailProps {
-  match: Match.FindMatchResult
+  matchId: string
   className?: string
 }
 
-export function MatchDetail({ match, className }: MatchDetailProps) {
+export function MatchDetail({ matchId, className }: MatchDetailProps) {
+  const matchQuery = useClientQuery(apiClient.match, 'getById', matchId)
+  const [copied, setCopied] = useState(false)
+
+  if (matchQuery.isPending) {
+    return (
+      <div className={cn('flex items-center justify-center py-12', className)}>
+        <Spinner className="size-8" />
+        <span className="ml-3 text-grey-1">Loading match...</span>
+      </div>
+    )
+  }
+
+  if (matchQuery.isError) {
+    return (
+      <div className={cn('text-center py-8', className)}>
+        <p className="text-red-400">Failed to load match details</p>
+        <p className="text-grey-1 text-sm mt-1">{matchQuery.error.message}</p>
+      </div>
+    )
+  }
+
+  const match = matchQuery.data
+
   const matchDate = new Date(match.date)
 
   const formattedDate = matchDate.toLocaleDateString('en-US', {
@@ -46,10 +71,8 @@ export function MatchDetail({ match, className }: MatchDetailProps) {
         ? 'text-blue-400'
         : 'text-red-400'
 
-  const [copied, setCopied] = useState(false)
-
   function copyMatchLink() {
-    const url = `${window.location.origin}/matches/${match.id}`
+    const url = `${window.location.origin}/matches/${match.uuid}`
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
@@ -120,12 +143,12 @@ export function MatchDetail({ match, className }: MatchDetailProps) {
             </h3>
           </div>
           <div className="space-y-1.5">
-            {match.events.map((event, index) => (
+            {match.events.map((event) => (
               <EventRow
-                key={`${event.side}-${event.time}-${index}`}
+                key={`${event.event}-${event.team}-${event.time}`}
                 event={event}
-                orderName={match.order.name}
-                chaosName={match.chaos.name}
+                orderName={match.order.nickname}
+                chaosName={match.chaos.nickname}
               />
             ))}
           </div>
@@ -138,20 +161,20 @@ export function MatchDetail({ match, className }: MatchDetailProps) {
 /* ─── Sub-components ─── */
 
 interface PlayerCardProps {
-  player: Match.FindMatchResult['order']
+  player: Match.GetMatchResultTeam
   team: Team
   isWinner: boolean
 }
 
 function PlayerCard({ player, team, isWinner }: PlayerCardProps) {
-  const leagueInfo = leaguesMap[player.league]
+  const leagueInfo = leaguesMap[player.rank.league]
   const teamColor = team === Team.Order ? 'text-blue-400' : 'text-red-400'
   const teamLabel = team === Team.Order ? 'Order' : 'Chaos'
 
   return (
     <Link
       to="/users/$nickname"
-      params={{ nickname: player.name.replaceAll(' ', '') }}
+      params={{ nickname: player.nickname.replaceAll(' ', '') }}
       className="group flex flex-col items-center gap-2 min-w-0 flex-1 transition-all duration-200 hover:scale-105"
     >
       {/* Winner Crown */}
@@ -163,13 +186,13 @@ function PlayerCard({ player, team, isWinner }: PlayerCardProps) {
       <div className={cn('relative', isWinner && 'ring-2 ring-gold-4/50 rounded-full')}>
         <AvatarRoot className="size-16 sm:size-24">
           <AvatarImage icon={501} />
-          <AvatarWing league={player.league} type="plate" />
+          <AvatarWing league={player.rank.league} type="plate" />
         </AvatarRoot>
       </div>
 
       {/* Name */}
       <span className="font-serif font-bold text-gold-2 mt-2 truncate max-w-full text-sm sm:text-lg group-hover:text-gold-2 transition-colors">
-        {player.name}
+        {player.nickname}
       </span>
 
       {/* Team & League */}
@@ -184,7 +207,7 @@ function PlayerCard({ player, team, isWinner }: PlayerCardProps) {
             <img src={leagueInfo.icon} alt="" className="size-4" />
           </Tooltip>
           <span className="font-serif">
-            {leagueInfo.name} {player.division ? DIVISIONS[player.division - 1] : ''}
+            {leagueInfo.name} {player.rank.division ? DIVISIONS[player.rank.division - 1] : ''}
           </span>
         </div>
       </div>
@@ -193,13 +216,13 @@ function PlayerCard({ player, team, isWinner }: PlayerCardProps) {
 }
 
 interface EventRowProps {
-  event: Match.FindMatchResult['events'][number]
+  event: Match.GetMatchResultEvent
   orderName: string
   chaosName: string
 }
 
 function EventRow({ event, orderName, chaosName }: EventRowProps) {
-  const isOrder = event.side === Team.Order
+  const isOrder = event.team === Team.Order
   const playerName = isOrder ? orderName : chaosName
   const sideColor = isOrder ? 'text-blue-400' : 'text-red-400'
   const bgColor = isOrder ? 'bg-blue-900/20' : 'bg-red-900/20'
@@ -208,21 +231,17 @@ function EventRow({ event, orderName, chaosName }: EventRowProps) {
   let description: string
 
   switch (event.event) {
-    case MatchRowEventType.Choice:
+    case 'choice':
       icon = '🎯'
       description = `chose ${event.choice}`
       break
-    case MatchRowEventType.Forfeit:
+    case 'forfeit':
       icon = '🏳️'
       description = 'forfeited'
       break
-    case MatchRowEventType.Timeout:
+    case 'timeout':
       icon = '⏱️'
       description = 'timed out'
-      break
-    case MatchRowEventType.Message:
-      icon = '💬'
-      description = `"${event.message}"`
       break
     default:
       icon = '❓'
@@ -247,12 +266,12 @@ function EventRow({ event, orderName, chaosName }: EventRowProps) {
 }
 
 interface LpChangeCardProps {
-  player: Match.FindMatchResult['order']
+  player: Match.GetMatchResultTeam
   label: string
 }
 
 function LpChangeCard({ player, label }: LpChangeCardProps) {
-  const lpGain = player.lp_gain
+  const lpGain = player.lpGain ?? 0
   const lpColor = lpGain > 0 ? 'text-green-400' : lpGain < 0 ? 'text-red-400' : 'text-grey-1'
   const lpPrefix = lpGain > 0 ? <ChevronUp /> : <ChevronDown />
   const labelColor = label === 'Order' ? 'text-blue-400' : 'text-red-400'
@@ -263,7 +282,7 @@ function LpChangeCard({ player, label }: LpChangeCardProps) {
         {label}
       </span>
       <span className="font-serif text-gold-1 text-md font-bold truncate max-w-full">
-        {player.name}
+        {player.nickname}
       </span>
       {lpGain !== 0 ? (
         <span className={cn('font-bold text-lg flex items-center', lpColor)}>

@@ -1,4 +1,4 @@
-import { AuthenticRequest } from '@/modules/auth/auth-request'
+import { AuthenticRequest } from '@/modules/auth/authentic-request'
 import { Perspective } from '../lib'
 
 export type MatchRequest = AuthenticRequest & {

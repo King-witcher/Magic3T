@@ -1,9 +1,26 @@
 import { Module } from '@nestjs/common'
 import { DatabaseService } from './database.service'
-import { IconRepository } from './repositories/icon-repository'
+import {
+  CredentialRepository,
+  IconRepository,
+  IdentityRepository,
+  UserRepository,
+} from './repositories'
 
 @Module({
-  providers: [DatabaseService, IconRepository],
-  exports: [DatabaseService, IconRepository],
+  providers: [
+    DatabaseService,
+    IconRepository,
+    UserRepository,
+    IdentityRepository,
+    CredentialRepository,
+  ],
+  exports: [
+    DatabaseService,
+    IconRepository,
+    UserRepository,
+    IdentityRepository,
+    CredentialRepository,
+  ],
 })
 export class DatabaseModule {}

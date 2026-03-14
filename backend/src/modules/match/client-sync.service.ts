@@ -1,20 +1,15 @@
 import { MatchReportPayload, MatchServerEvents, StateReportPayload } from '@magic3t/api-types'
-import { Team } from '@magic3t/common-types'
 import { Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { WebsocketEmitterService } from '@/infra/websocket/websocket-emitter.service'
-import { RatingService } from '@/modules/rating'
-import { MatchFinishedEvent } from './events/match-finished-event'
+import { FinishedMatchContext } from './events/match-finished-event'
 
 /**
  * Service responsible for syncing match state and results to clients.
  */
 @Injectable()
 export class ClientSyncService {
-  constructor(
-    private readonly ratingService: RatingService,
-    private readonly websocketEmitterService: WebsocketEmitterService
-  ) {}
+  constructor(private readonly websocketEmitterService: WebsocketEmitterService) {}
 
   /**
    * Sends the current match state report to a player.
@@ -28,48 +23,53 @@ export class ClientSyncService {
    * Sends the final match summary to players after the match is finished.
    */
   @OnEvent('match.finished')
-  async sendMatchSummary(summary: MatchFinishedEvent) {
-    // Determine winner
-    const winner =
-      summary.order.matchScore === 1
-        ? Team.Order
-        : summary.chaos.matchScore === 1
-          ? Team.Chaos
-          : null
+  async sendMatchSummary(summary: FinishedMatchContext) {
+    const ratingConfig = summary.rankConverter?.config
 
-    // Get old and new ratings
-    const oldOrderRating = await this.ratingService.getRatingConverter(summary.order.row.data.elo)
-    const oldChaosRating = await this.ratingService.getRatingConverter(summary.chaos.row.data.elo)
-
-    // Get up to date ratings
-    const newOrderRating = await this.ratingService.getRatingConverter(summary.order.newRating)
-    const newChaosRating = await this.ratingService.getRatingConverter(summary.chaos.newRating)
+    const newOrderRank = summary.rankConverter.getRankFromElo(
+      summary.order.newRating.elo,
+      summary.order.row.rating_ranked_count,
+      summary.order.row.rating_apex_flag
+    )
+    const newChaosRank = summary.rankConverter.getRankFromElo(
+      summary.chaos.newRating.elo,
+      summary.chaos.row.rating_ranked_count,
+      summary.chaos.row.rating_apex_flag
+    )
 
     // Calculate LP gains
-    const orderLpGain = newOrderRating.getLpGapAgainst(oldOrderRating)
-    const chaosLpGain = newChaosRating.getLpGapAgainst(oldChaosRating)
+    const orderLpGain = ratingConfig
+      ? summary.ranked
+        ? summary.order.row.rating_ranked_count > ratingConfig.min_ranked_count
+          ? summary.rankConverter.getTotalLP(summary.order.newRating.elo) -
+            summary.rankConverter.getTotalLP(
+              summary.order.newRating.elo - summary.order.newRating.elo
+            )
+          : null
+        : null
+      : null
 
     // Create a match summary to be sent via socket
     const socketSummary: MatchReportPayload = {
-      matchId: '',
-      [Team.Order]: {
+      order: {
         lpGain: orderLpGain,
-        newRating: newOrderRating.ratingData,
         score: summary.order.matchScore,
+        newRank: newOrderRank,
       },
-      [Team.Chaos]: {
-        lpGain: chaosLpGain,
-        newRating: newChaosRating.ratingData,
+      chaos: {
+        lpGain: null, // Replace with actual LP gain calculation for chaos if needed
         score: summary.chaos.matchScore,
+        newRank: newChaosRank,
       },
-      winner,
+      matchId: 'undefined-match-id',
+      winner: summary.winner,
     }
 
     // Send the summary to both players, unless one of them is a bot
     for (const player of [summary.chaos, summary.order]) {
-      if (player.row.data.role === 'bot') continue
+      if (player.row.role === 'bot') continue
       this.websocketEmitterService.send(
-        player.id,
+        player.row.uuid,
         'match',
         MatchServerEvents.MatchReport,
         socketSummary

@@ -1,5 +1,5 @@
 import { Choice, Division, League, Team } from '@magic3t/common-types'
-import { MatchRowEventType } from '@magic3t/database-types'
+import { MatchDocumentEventType } from '@magic3t/database-types'
 import { ApiProperty } from '@nestjs/swagger'
 
 export class MatchRowTeamClass {
@@ -49,7 +49,7 @@ export class MatchRowEventClass {
     enum: [0, 1, 2, 3],
     example: 0,
   })
-  event: MatchRowEventType
+  event: MatchDocumentEventType
 
   @ApiProperty({
     description: 'Team side',

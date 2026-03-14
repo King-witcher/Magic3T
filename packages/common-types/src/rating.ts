@@ -11,11 +11,11 @@ export const enum League {
 export type Division = 1 | 2 | 3 | 4
 
 /**
- * Represents the rating data of a user from the client's perspective.
+ * Represents the rank of a user from the client's perspective.
  */
-export type RatingData = {
+export type ClientRank = {
   league: League
   division: Division | null
   points: number | null
-  progress: number
+  rankedCount: number
 }

@@ -1,8 +1,9 @@
 import { ApiNamespace } from '@magic3t/api-types'
-import { authClient } from '@/lib/auth-client'
+import { AUTH_SESSION_STORAGE_KEY } from '@/contexts/auth/auth-context'
 import { Console, SystemCvars } from '@/lib/console'
 import {
   BadRequestError,
+  ClientError,
   ForbiddenError,
   InternalServerError,
   NotFoundError,
@@ -88,7 +89,14 @@ export class BaseApiClient<Namespace extends ApiNamespace = ApiNamespace> {
     }
 
     // If authentication is required, add the Authorization header with the token.
-    if (authenticated) headers.set('Authorization', `Bearer ${await authClient.token}`)
+    if (authenticated) {
+      const token = localStorage.getItem(AUTH_SESSION_STORAGE_KEY)
+      if (!token) {
+        Console.log('Authenticated request made without a token')
+      } else {
+        headers.set('Authorization', token)
+      }
+    }
 
     const request = new Request(url, init)
     const response = await fetch(request)
@@ -107,7 +115,7 @@ export class BaseApiClient<Namespace extends ApiNamespace = ApiNamespace> {
         case 500:
           throw new InternalServerError(request, response)
         default:
-          throw new Error(`Unhandled error: ${response.status}`)
+          throw new ClientError(request, response, response.status)
       }
     }
 

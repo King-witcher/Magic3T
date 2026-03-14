@@ -1,4 +1,4 @@
-import type { Choice, RatingData, Team } from '@magic3t/common-types'
+import type { Choice, ClientRank, Team } from '@magic3t/common-types'
 
 export const enum MatchClientEvents {
   GetAssignments = 'get-assignments',
@@ -30,21 +30,21 @@ export type AssignmentsPayloadProfile = {
 }
 
 export type AssignmentsPayload = {
-  [Team.Order]: {
+  order: {
     profile: AssignmentsPayloadProfile
   }
-  [Team.Chaos]: {
+  chaos: {
     profile: AssignmentsPayloadProfile
   }
 }
 
 export type StateReportPayload = {
-  [Team.Order]: {
+  order: {
     timeLeft: number
     choices: Choice[]
     surrender: boolean
   }
-  [Team.Chaos]: {
+  chaos: {
     timeLeft: number
     choices: Choice[]
     surrender: boolean
@@ -57,15 +57,15 @@ export type StateReportPayload = {
 export type MatchReportPayload = {
   matchId: string
   winner: Team | null
-  [Team.Order]: {
+  order: {
     score: number
-    lpGain: number
-    newRating: RatingData
+    lpGain: number | null
+    newRank: ClientRank
   }
-  [Team.Chaos]: {
+  chaos: {
     score: number
-    lpGain: number
-    newRating: RatingData
+    lpGain: number | null
+    newRank: ClientRank
   }
 }
 

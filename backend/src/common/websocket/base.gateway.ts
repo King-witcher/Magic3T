@@ -3,13 +3,13 @@ import { OnEvent } from '@nestjs/event-emitter'
 import { OnGatewayConnection, OnGatewayInit, WebSocketServer } from '@nestjs/websockets'
 import { EventNames, EventParams, EventsMap } from '@socket.io/component-emitter'
 import { DefaultEventsMap, Namespace, Server, Socket } from 'socket.io'
-
-import { UserRepository } from '@/infra/firestore'
+import { UserRepository } from '@/infra/database/repositories/user-repository'
 import { WebsocketEmitterEvent } from '@/infra/websocket/types'
 import { WebsocketCountingService } from '@/infra/websocket/websocket-counting.service'
-import { AuthService } from '@/modules/auth/auth.service'
-import { AuthenticSocket } from '@/modules/auth/auth-socket'
-import { SKIP_AUTH_KEY } from '@/modules/auth/skip-auth.decorator'
+import { SKIP_AUTH_KEY } from '@/modules/auth'
+import { AuthSessionService } from '@/modules/auth/auth-session.service'
+import { AuthenticSocket } from '@/modules/auth/authentic-socket'
+import { SessionData } from '@/shared/types/session-data'
 import { NamespacesMap, RoomName } from '@/shared/websocket/namespaces-map'
 import { unexpected } from '../errors'
 import { ResponseErrorFilter, ThrottlingFilter, UnexpectedErrorFilter } from '../filters'
@@ -27,10 +27,10 @@ export class BaseGateway<
   private server?: Server<TClient, TServer> | Namespace<TClient, TServer>
   private ioNamespace?: Namespace<TClient, TServer>
 
-  @Inject(AuthService)
-  protected readonly authService: AuthService
+  @Inject(AuthSessionService)
+  protected readonly authService: AuthSessionService
   @Inject(UserRepository)
-  protected readonly usersRepository: UserRepository
+  protected readonly userRepository: UserRepository
   @Inject(WebsocketCountingService)
   protected readonly websocketCountingService: WebsocketCountingService
 
@@ -43,13 +43,24 @@ export class BaseGateway<
     this.websocketCountingService.setServer(this.namespace, this.ioNamespace)
   }
 
+  // Validate authentication on connection
+  async handleConnection(client: Socket) {
+    const skipAuth = Reflect.getMetadata(SKIP_AUTH_KEY, this.constructor)
+    if (skipAuth) return
+    const session = await this.requireAuth(client)
+
+    if (session) {
+      await this.joinRoom(client)
+    }
+  }
+
   /** Send an event to a specific user in a namespace. */
   send<TEvent extends EventNames<TServer>>(
-    userId: string,
+    uuid: string,
     event: TEvent,
     ...data: EventParams<TServer, TEvent>
   ) {
-    const room: RoomName<TNamespace> = `user:${userId}@${this.namespace}`
+    const room: RoomName<TNamespace> = `user:${uuid}@${this.namespace}`
     this.ioNamespace?.to(room).emit(event, ...data)
   }
 
@@ -61,43 +72,42 @@ export class BaseGateway<
     this.ioNamespace?.emit(event, ...data)
   }
 
-  // Validate authentication on connection
-  async handleConnection(client: Socket) {
-    const skipAuth = Reflect.getMetadata(SKIP_AUTH_KEY, this.constructor)
-    if (skipAuth) return
-
-    const token = client.handshake.auth.token
-    let userId: string | null = null
-    if (token && typeof token === 'string') {
-      userId = await this.authService.validateToken(token)
-    }
-
-    // If user is not authenticated, disconnect
-    if (!userId) {
-      client.send('error', {
-        errorCode: 'unauthorized',
-      })
-      client.disconnect()
-      return
-    }
-
-    // Attach user ID to the socket data
-    const authClient = client as AuthenticSocket
-    authClient.data.userId = userId
-
-    // Join user-specific room
-    const roomName = `user:${userId}@${this.namespace}`
-    client.join(roomName)
-  }
-
   @OnEvent('websocket.emit')
   handleWebsocketEmitEvent(event: WebsocketEmitterEvent) {
     if (event.namespace !== this.namespace) return
 
-    if (!event.userId) {
+    if (!event.uuid) {
       this.broadcast(event.event, ...event.data)
     } else {
-      this.send(event.userId, event.event, ...event.data)
+      this.send(event.uuid, event.event, ...event.data)
     }
+  }
+
+  private async requireAuth(client: Socket): Promise<SessionData | null> {
+    const token = client.handshake.auth.token
+    let session: SessionData | null = null
+    if (token && typeof token === 'string') {
+      session = await this.authService.getSession(token)
+    }
+
+    // If user is not authenticated, disconnect
+    if (!session) {
+      client.send('error', {
+        errorCode: 'unauthorized',
+      })
+      client.disconnect()
+      return null
+    }
+
+    // Attach user ID to the socket data
+    const authClient = client as AuthenticSocket
+    authClient.data.session = session
+    return session
+  }
+
+  private async joinRoom(client: AuthenticSocket) {
+    const session = client.data.session
+    const roomName = `user:${session.uuid}@${this.namespace}`
+    client.join(roomName)
   }
 }

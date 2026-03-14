@@ -9,8 +9,8 @@ export class ApiMatchClient extends BaseApiClient<'match'> {
   /**
    * Gets a match by its ID.
    */
-  async getById(matchId: string, signal?: AbortSignal): Promise<Match.FindMatchResult> {
-    return this.get<Match.FindMatchResult>(matchId, { signal })
+  async getById(matchId: string, signal?: AbortSignal): Promise<Match.GetMatchResult> {
+    return this.get<Match.GetMatchResult>(matchId, { signal })
   }
 
   /**

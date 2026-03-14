@@ -1,4 +1,4 @@
-import { close, transaction } from './utils/db'
+import { close, getConnection, sql, transaction } from './utils/db'
 import {
   createTableMigrationsIfNotExists,
   getMigrationSql,
@@ -35,25 +35,24 @@ async function main(): Promise<number> {
 
     console.info(`📃 Found ${pending.length} pending migration(s).`)
 
-    await transaction(async (client) => {
-      for (const migration of pending) {
+    for (const migration of pending) {
+      await transaction(async (conn) => {
         try {
           console.info(`📄 Applying migration: ${migration.migrationName}...`)
-          await client.query(migration.sql)
+          await conn.query(migration.sql)
+          await conn.query(
+            `
+            INSERT INTO _migration (name)
+            VALUES ($1)
+          `,
+            [migration.migrationName]
+          )
         } catch (error) {
           console.error(`❌ Failed to apply migration: ${migration.migrationName}`)
-          console.error('📄 Rolling back...')
           throw error
         }
-        await client.query(
-          `
-          INSERT INTO _migrations (name)
-          VALUES ($1)
-        `,
-          [migration.migrationName]
-        )
-      }
-    })
+      })
+    }
 
     console.info('✅ Migrations applied successfully.')
   } catch (error) {

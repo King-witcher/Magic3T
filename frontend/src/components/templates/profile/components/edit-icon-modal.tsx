@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { useSignedAuth } from '@/contexts/auth-context'
+import { useSignedAuth } from '@/contexts/auth/auth-context'
 import { useClientMutation } from '@/hooks/use-client-mutation'
 import { useClientQuery } from '@/hooks/use-client-query'
 import { apiClient } from '@/services/clients/api-client'
@@ -41,7 +41,7 @@ function EditIconModalInner({ currentIcon, onClose }: InnerProps) {
   const [selectedIcon, setSelectedIcon] = useState(currentIcon)
   const auth = useSignedAuth()
 
-  const userQuery = useClientQuery(apiClient.user, 'getById', auth.userId, { authenticated: false })
+  const userQuery = useClientQuery(apiClient.user, 'getById', auth.uuid, { authenticated: false })
   const iconsQuery = useClientQuery(apiClient.user, 'getMyIcons', {
     staleTime: 60 * 1000, // 1 minute
   })

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/websockets'
 import { Socket } from 'socket.io'
 import { BaseGateway } from '@/common/websocket/base.gateway'
-import { SkipAuth } from './modules/auth/skip-auth.decorator'
+import { SkipAuth } from './modules/auth/decorators/skip-auth.decorator'
 import { CORS_ALLOWED_ORIGINS } from './shared/constants/cors'
 
 @WebSocketGateway({ cors: { origin: CORS_ALLOWED_ORIGINS, credentials: true } })

@@ -43,9 +43,9 @@ export async function getMigrationSql(
 /** Creates the migrations table if it doesn't exist */
 export async function createTableMigrationsIfNotExists() {
   await sql`
-    CREATE TABLE IF NOT EXISTS _migrations
+    CREATE TABLE IF NOT EXISTS _migration
     (
-        id             SMALLINT GENERATED ALWAYS AS IDENTITY,
+        id             SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
         name           TEXT                     NOT NULL,
         applied_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
         rolled_back_at TIMESTAMP WITH TIME ZONE
@@ -58,7 +58,7 @@ export async function listAppliedMigrations() {
   console.info('📋 Fetching applied migrations from the database...')
   const rows = await sql<{ name: string }>`
     SELECT DISTINCT name
-    FROM _migrations
+    FROM _migration
     WHERE rolled_back_at IS NULL
   `
   return rows.map((row) => row.name)

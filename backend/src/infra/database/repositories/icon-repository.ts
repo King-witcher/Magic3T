@@ -2,6 +2,7 @@ import { IconRarity, IconRow } from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import z from 'zod'
+import { INSERT_INTO } from '@/shared/database/pg-chain'
 import { DatabaseService } from '../database.service'
 
 const RIOT_ICON_SCHEMA = z.object({
@@ -25,6 +26,37 @@ const RIOT_ICON_SCHEMA = z.object({
   ),
   disabledRegions: z.array(z.string()),
 })
+
+const _TENCENT_ICONS = [
+  'Alistar',
+  'Evelynn',
+  'Twisted Fate',
+  'Akali',
+  'Xin Zhao',
+  'Katarina',
+  'Garen',
+  'Lux',
+  'Shein',
+  'Ashe',
+  'Caitlyn',
+  'Ezreal',
+  'Gangplank',
+  'Kayle',
+  'LeBlanc',
+  'Master Yi',
+  'Miss Fortune',
+  'Morgana',
+  'Nasus',
+  'Olaf',
+  'Rammus',
+  'Renekton',
+  'Sona',
+  'Taric',
+  'Tryndamere',
+  'Twitch',
+  'Vayne',
+  'Vladimir',
+]
 
 const RARITIES = [
   'common',
@@ -71,7 +103,7 @@ export class IconRepository {
 
     this.logger.log(`Found ${newIcons.length} new icons. Adding to the database...`)
     const iconRows = newIcons.map((icon) => this.getIconRowFromRiotIcon(icon))
-    await this.batchInsertIcons(iconRows)
+    await this.bulkCreate(iconRows)
     this.logger.log('Icon repopulation process completed successfully.')
   }
 
@@ -90,28 +122,21 @@ export class IconRepository {
       id: icon.id,
       title: icon.title,
       description,
-      yearReleased: icon.yearReleased,
-      contentId: icon.contentId,
-      isLegacy: icon.isLegacy,
+      year_released: icon.yearReleased || null,
+      content_id: icon.contentId,
+      is_legacy: icon.isLegacy,
       rarity,
     }
   }
 
-  private async batchInsertIcons(iconRows: IconRow[]) {
+  private async bulkCreate(iconRows: IconRow[]) {
     await this.databaseService.transaction(async (client) => {
       for (const icon of iconRows) {
+        const chain = INSERT_INTO('icon', icon)
         await client.query({
-          name: 'insert-icon',
-          text: 'INSERT INTO icon (id, title, description, year_released, content_id, is_legacy, rarity) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-          values: [
-            icon.id,
-            icon.title,
-            icon.description,
-            icon.yearReleased,
-            icon.contentId,
-            icon.isLegacy,
-            icon.rarity,
-          ],
+          name: 'insert_icon',
+          text: chain.text,
+          values: chain.values,
         })
       }
     })

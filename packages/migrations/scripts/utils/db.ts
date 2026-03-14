@@ -6,11 +6,16 @@ const pool = new Pool({
   user: process.env.PG_USER,
   password: process.env.PG_PASSWORD,
   database: process.env.PG_DATABASE,
+  min: 1,
   ssl: process.env.PG_SSL === 'true' ? { rejectUnauthorized: false } : false,
 })
 
 export function query(text: string, params?: unknown[]) {
   return pool.query(text, params)
+}
+
+export function getConnection() {
+  return pool.connect()
 }
 
 export async function sql<T>(strings: TemplateStringsArray, ...values: unknown[]): Promise<T[]> {

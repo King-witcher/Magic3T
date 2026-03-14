@@ -1,1 +1,12 @@
 export type UUID = string
+export type CHAR = string
+export type VARCHAR = string
+export type TEXT = string
+export type SMALLINT = number
+export type INTEGER = number
+export type REAL = number
+export type FLOAT = number
+export type BOOLEAN = boolean
+export type TIMESTAMP = Date
+export type TIMESTAMPTZ = Date
+export type DATE = Date

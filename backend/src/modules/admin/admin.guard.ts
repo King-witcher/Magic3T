@@ -1,25 +1,24 @@
+import { UserRole } from '@magic3t/common-types'
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
+import { Request } from 'express'
 import { respondError } from '@/common'
-import { UserRepository } from '@/infra/firestore'
-import { AuthenticRequest } from '@/modules/auth/auth-request'
-import { AuthenticSocket } from '@/modules/auth/auth-socket'
+import { AuthenticSocket } from '@/modules/auth'
 
+const ALLOWED: UserRole[] = ['admin', 'superuser']
 @Injectable()
 export class AdminGuard implements CanActivate {
-  constructor(private readonly userRepository: UserRepository) {}
-
   async canActivate(context: ExecutionContext) {
-    let userId: string | undefined
+    let role: UserRole | undefined
 
     switch (context.getType()) {
       case 'http': {
-        const request = context.switchToHttp().getRequest<AuthenticRequest>()
-        userId = request.userId
+        const request = context.switchToHttp().getRequest<Request>()
+        role = request.session?.role
         break
       }
       case 'ws': {
         const socket = context.switchToWs().getClient<AuthenticSocket>()
-        userId = socket.data.userId
+        role = socket.data.session?.role
         break
       }
       default: {
@@ -27,10 +26,8 @@ export class AdminGuard implements CanActivate {
       }
     }
 
-    if (!userId) return false
-    const user = await this.userRepository.getById(userId)
-    if (!user) return false
-    if (user.data.role === 'creator') return true
-    return false
+    if (!role) return false
+
+    return ALLOWED.includes(role)
   }
 }

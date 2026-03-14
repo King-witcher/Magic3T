@@ -213,6 +213,37 @@
       }
     },
 
+    {
+      "label": "Clear Migrations",
+      "icon": {
+        "id": "database",
+        "color": "terminal.ansiRed",
+      },
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "migrate:clear"
+      ],
+      "problemMatcher": {
+        "owner": "migrations",
+        "pattern": {
+          "regexp": "^([^\\\\s].*)\\\\((\\\\d+,\\\\d+)\\\\):\\\\s*(.*)$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        }
+      },
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    },
+
     //////////////// CI Test
 
     // build backend
@@ -259,25 +290,6 @@
       }
     },
 
-    // npm audit
-    {
-      "label": "npm audit",
-      "icon": {
-        "id": "tools",
-        "color": "terminal.ansiWhite"
-      },
-      "type": "shell",
-      "command": "npm",
-      "args": [
-        "audit"
-      ],
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      }
-    },
-
     // npm run lint
     {
       "label": "biome lint",
@@ -303,8 +315,7 @@
       "dependsOn": [
         "build: backend",
         "build: frontend",
-        "biome lint",
-        "npm audit"
+        "biome lint"
       ],
       "group": {
         "isDefault": true,

@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common'
-import { Pool, PoolClient, QueryConfig, QueryConfigValues } from 'pg'
+import { DatabaseError as PgDatabaseError, Pool, QueryConfig, QueryConfigValues } from 'pg'
+import { DatabaseError } from '@/shared/database/database-error'
+import { DbClient, IDbClient } from '@/shared/database/db-client'
 
 @Injectable()
-export class DatabaseService {
+export class DatabaseService implements IDbClient {
   private readonly pool: Pool
 
   constructor() {
@@ -26,22 +28,36 @@ export class DatabaseService {
     queryTextOrConfig: string | QueryConfig<I>,
     values?: QueryConfigValues<I>
   ): Promise<T[]> {
-    const result = await this.pool.query(queryTextOrConfig, values)
-    return result.rows
+    try {
+      const result = await this.pool.query(queryTextOrConfig, values)
+      return result.rows
+    } catch (error) {
+      if (error instanceof PgDatabaseError) {
+        return Promise.reject(
+          new DatabaseError(
+            error,
+            typeof queryTextOrConfig === 'string' ? queryTextOrConfig : queryTextOrConfig.text
+          )
+        )
+      }
+      return Promise.reject(error)
+    }
   }
 
-  async transaction<T>(callback: (client: PoolClient) => Promise<T>): Promise<T> {
+  async transaction<T>(callback: (client: DbClient) => Promise<T>): Promise<T> {
     const client = await this.pool.connect()
+    const dbClient = new DbClient(client)
+
     try {
-      await client.query('BEGIN')
-      const result = await callback(client)
-      await client.query('COMMIT')
+      await dbClient.query('BEGIN')
+      const result = await callback(dbClient)
+      await dbClient.query('COMMIT')
       return result
     } catch (error) {
-      await client.query('ROLLBACK')
-      return Promise.reject(error)
+      await dbClient.query('ROLLBACK')
+      throw error
     } finally {
-      client.release()
+      dbClient.release()
     }
   }
 }

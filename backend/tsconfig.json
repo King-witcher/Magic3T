@@ -19,6 +19,7 @@
     "outDir": "./dist",
     "incremental": true,
     "skipLibCheck": true,
+    "strictPropertyInitialization": false,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
@@ -29,5 +30,5 @@
     },
     "types": ["vitest/globals"]
   },
-  "include": ["src/**/*.ts", "src/modules/rating/rating.service.ts"]
+  "include": ["src/**/*.ts"]
 }

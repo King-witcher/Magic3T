@@ -1,7 +1,9 @@
+import { SessionData } from './shared/types/session-data'
+
 declare global {
   namespace Express {
     export interface Request {
-      session: import('./app/session/session.types').SessionData | null
+      session?: SessionData
     }
   }
 
@@ -24,8 +26,7 @@ declare global {
       PORT: number
       QUEUE_STATUS_POLLING_RATE: number
       SENTRY_DSN: string
+      VALKEY_HOST: string
     }
   }
 }
-
-export {}

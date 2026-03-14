@@ -12,11 +12,10 @@ import {
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { clamp } from 'lodash'
 import { respondError } from '@/common'
-import { MatchRepository } from '@/infra/firestore'
 import { AuthGuard } from '@/modules/auth/auth.guard'
-import { UserId } from '@/modules/auth/user-id.decorator'
+import { UserId } from '@/modules/auth/decorators/user-id.decorator'
 import { CurrentPerspective } from './decorators'
-import { MatchBank, Perspective } from './lib'
+import { MatchStore, Perspective } from './lib'
 import { MatchGuard } from './match.guard'
 import { MatchService } from './match.service'
 import { ListMatchesResultClass } from './swagger/list-matches'
@@ -24,9 +23,9 @@ import { ListMatchesResultClass } from './swagger/list-matches'
 @Controller('match')
 export class MatchController {
   constructor(
-    private matchBank: MatchBank,
-    private matchService: MatchService,
-    private matchRepository: MatchRepository
+    private matchBank: MatchStore,
+    private matchService: MatchService
+    // private matchRepository: MatchReposit
   ) {
     // const names = [BotName.Bot0, BotName.Bot1, BotName.Bot2, BotName.Bot3]
     // function shuffle() {
@@ -102,18 +101,19 @@ export class MatchController {
     return true
   }
 
-  @Get(':matchId')
+  @Get(':uuid')
   @ApiOperation({
     summary: 'Get match by ID',
     description: 'Get a specific match by its ID',
   })
-  async getMatchById(@Param('matchId') matchId: string): Promise<Match.GetCurrentMatchResult> {
-    const row = await this.matchRepository.getById(matchId)
-    if (!row) respondError('match-not-found', 404, 'Match not found.')
-    return this.matchService.getMatchByRow(row)
+  async getMatchById(@Param('uuid') uuid: string): Promise<Match.GetMatchResult> {
+    // const row = await this.matchRepository.getById(matchId)
+    // if (!row) respondError('match-not-found', 404, 'Match not found.')
+    // return this.matchService.getMatchByRow(row)
+    respondError('not-implemented', 501, 'This endpoint is not implemented yet.')
   }
 
-  @Get('user/:userId')
+  @Get('user/:uuid')
   @ApiOperation({
     summary: 'Get recent matches',
     description: 'Get the most recent matches played by a user, sorted by date',
@@ -123,15 +123,12 @@ export class MatchController {
   })
   async getMatchesByUser(
     @Query('limit', ParseIntPipe) limit: number,
-    @Param('userId') userId: string
+    @Param('uuid') uuid: string
   ): Promise<Match.ListMatchesResult> {
     const clampedLimit = clamp(limit, 0, 50)
-    const rows = await this.matchRepository.getByUser(userId, clampedLimit)
-    const matches = await Promise.all(
-      rows.map((model) => this.matchService.getListedMatchByRow(model))
-    )
+
     return {
-      matches,
+      matches: [],
     }
   }
 }

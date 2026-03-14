@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { Timer } from '@/lib/Timer'
+import type { Timer } from '@/lib/timer'
 
 interface Props {
   timer: Timer

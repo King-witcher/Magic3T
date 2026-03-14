@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { Flag } from 'lucide-react'
 import { SmoothNumber, TimerValue } from '@/components/atoms'
 import { Tooltip } from '@/components/ui/tooltip'
-import type { Timer } from '@/lib/Timer'
+import type { Timer } from '@/lib/timer'
 import { cn } from '@/lib/utils'
 import { divisionMap, leaguesMap } from '@/utils/ranks'
 import { AvatarImage, AvatarRoot } from '../../profile/components/profile-avatar'
@@ -29,7 +29,7 @@ export function PlayerPanel({
   showSurrender,
   onSurrender,
 }: PlayerPanelProps) {
-  const tierInfo = profile ? leaguesMap[profile.rating.league] : null
+  const tierInfo = profile ? leaguesMap[profile.rank.league] : null
   const isBot = profile?.role === 'bot'
 
   return (
@@ -49,7 +49,7 @@ export function PlayerPanel({
         {/* Avatar */}
         <Link
           to="/users/id/$userId"
-          params={{ userId: profile?.id || '' }}
+          params={{ userId: profile?.uuid || '' }}
           className="shrink-0 transition-transform hover:scale-105 border-3 border-gold-7 rounded-full"
         >
           <AvatarRoot className="size-16">
@@ -75,11 +75,11 @@ export function PlayerPanel({
             <div className="flex items-center gap-2 text-sm">
               <img alt="rank" className="w-5 h-5" src={tierInfo.icon} />
               <span className="text-grey-1 capitalize">
-                {profile?.rating.league} {divisionMap[profile?.rating.division || 0]}
+                {profile?.rank.league} {divisionMap[profile?.rank.division ?? 0]}
               </span>
-              {profile?.rating.points !== null && (
+              {profile?.rank.points !== null && (
                 <span className="text-grey-1">
-                  • <SmoothNumber value={profile?.rating.points || 0} /> LP
+                  • <SmoothNumber value={profile?.rank.points || 0} /> LP
                 </span>
               )}
             </div>

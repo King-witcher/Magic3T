@@ -1,9 +1,8 @@
 import { Panel, Spinner } from '@/components/atoms'
-import { AuthState, useAuth } from '@/contexts/auth-context'
+import { AuthState, useAuth } from '@/contexts/auth/auth-context'
 
 const STATUS_MAP: Record<AuthState, string> = {
   [AuthState.LoadingSession]: 'Loading session',
-  [AuthState.LoadingUserData]: 'Loading user',
   [AuthState.NotSignedIn]: 'This message should never be seen. Please report a bug.',
   [AuthState.SignedInUnregistered]: 'This message should never be seen. Please report a bug.',
   [AuthState.SignedIn]: 'This message should never be seen. Please report a bug.',

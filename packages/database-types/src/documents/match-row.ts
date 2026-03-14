@@ -1,20 +1,20 @@
 import { Choice, League, Team } from '@magic3t/common-types'
 
-export const enum MatchRowGameMode {
+export const enum MatchDocumentGameMode {
   Casual = 0b00,
   Ranked = 0b10,
   PvP = 0b00,
   PvC = 0b01,
 }
 
-export const enum MatchRowEventType {
+export const enum MatchDocumentEventType {
   Choice = 0,
   Forfeit = 1,
   Timeout = 2,
   Message = 3,
 }
 
-export interface MatchRowTeam {
+export interface MatchDocumentTeam {
   uid: string
   name: string
   league: League
@@ -23,34 +23,34 @@ export interface MatchRowTeam {
   lp_gain: number
 }
 
-type BaseMatchRowEvent = {
-  event: MatchRowEventType
+type BaseMatchDocumentEvent = {
+  event: MatchDocumentEventType
   side: Team
   time: number
 }
 
-export type MatchRowEvent = BaseMatchRowEvent &
+export type MatchDocumentEvent = BaseMatchDocumentEvent &
   (
     | {
-        event: MatchRowEventType.Choice
+        event: MatchDocumentEventType.Choice
         choice: Choice
       }
     | {
-        event: MatchRowEventType.Message
+        event: MatchDocumentEventType.Message
         message: string
       }
     | {
-        event: MatchRowEventType.Timeout | MatchRowEventType.Forfeit
+        event: MatchDocumentEventType.Timeout | MatchDocumentEventType.Forfeit
       }
   )
 
 // TODO: improve this type later
 /** Represents a match registry in the History. */
-export type MatchRow = {
-  [Team.Order]: MatchRowTeam // TODO: put inside a teams object
-  [Team.Chaos]: MatchRowTeam
-  events: MatchRowEvent[]
+export type MatchDocument = {
+  [Team.Order]: MatchDocumentTeam // TODO: put inside a teams object
+  [Team.Chaos]: MatchDocumentTeam
+  events: MatchDocumentEvent[]
   winner: Team | null
-  game_mode: MatchRowGameMode
+  game_mode: MatchDocumentGameMode
   timestamp: Date
 }

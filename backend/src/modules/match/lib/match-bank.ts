@@ -12,7 +12,7 @@ export type CreatePerspectivesParams = {
 
 @Injectable()
 /// Maps all matches that are currently running on the server.
-export class MatchBank {
+export class MatchStore {
   private perspectives: Map<string, Perspective> = new Map() // Maps user ids to matchAdapters
   private opponents: Map<string, string> = new Map()
 
@@ -76,18 +76,18 @@ export class MatchBank {
   }
 
   /** Returns the opponent user id for a given user id. */
-  getOpponent(userId: string): string | null {
-    const opponentUid = this.opponents.get(userId)
+  getOpponent(userUuid: string): string | null {
+    const opponentUid = this.opponents.get(userUuid)
     return opponentUid ?? null
   }
 
-  getPerspective(userId: string): Perspective | null {
-    const perspective = this.perspectives.get(userId)
+  getPerspective(uuid: string): Perspective | null {
+    const perspective = this.perspectives.get(uuid)
     return perspective || null
   }
 
   /// Gets if a user is currently in a match.
-  containsUser(id: string): boolean {
-    return this.perspectives.has(id)
+  containsUser(uuid: string): boolean {
+    return this.perspectives.has(uuid)
   }
 }

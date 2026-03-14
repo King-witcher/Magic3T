@@ -1,5 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, Logger } from '@nestjs/common'
 import { SentryExceptionCaptured } from '@sentry/nestjs'
+import { DatabaseError } from '@/infra/database'
 import { UnexpectedError } from '../errors'
 
 @Catch()
@@ -11,10 +12,15 @@ export class UnexpectedErrorFilter implements ExceptionFilter {
     const context = argumentsHost.getType()
 
     if (error instanceof UnexpectedError) {
-      this.logger.error(`UnexpectedError caught: ${error}`)
+      this.logger.error(`UnexpectedError: ${error}`)
+    } else if (error instanceof DatabaseError) {
+      this.logger.error(
+        `${error.name} ${error.code}: ${error.message}${error.sql ? ` on ${error.sql}` : ''}\n${error.stack}`
+      )
     } else {
-      this.logger.error(`Unknown error caught: ${error}`)
+      this.logger.error(`Unknown error: ${error}`)
     }
+    console.error(error)
 
     switch (context) {
       case 'ws': {

@@ -1,6 +1,5 @@
 import { io } from 'socket.io-client'
 import { apiClient } from '@/services/clients/api-client'
-import { authClient } from '../auth-client'
 import { CVar, SystemCvars } from './cvars'
 
 export type ConsoleContext = Readonly<{
