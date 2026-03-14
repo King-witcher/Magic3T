@@ -13,7 +13,7 @@ export const Route = createFileRoute('/_auth-guard')({
     useEffect(() => {
       if (auth.state === AuthState.NotSignedIn || auth.state === AuthState.SignedInUnregistered)
         navigate({
-          to: '/sign-in',
+          to: '/log-in',
           search:
             path === '/'
               ? undefined
@@ -28,7 +28,7 @@ export const Route = createFileRoute('/_auth-guard')({
     }
 
     if (auth.state === AuthState.NotSignedIn || auth.state === AuthState.SignedInUnregistered) {
-      return <Navigate to="/sign-in" search={path === '/' ? undefined : { referrer: path }} />
+      return <Navigate to="/log-in" search={path === '/' ? undefined : { referrer: path }} />
     }
 
     return <Outlet />

@@ -1,4 +1,5 @@
 import {
+  AuthErrorCode,
   LoginCommand,
   LoginResult,
   RegisterCommand,
@@ -150,7 +151,7 @@ export class AuthController {
     status: HttpStatus.CONFLICT,
     description: 'The nickname or username is already taken.',
     schema: z.object({
-      errorCode: z.enum(['NicknameAlreadyTaken', 'UsernameAlreadyTaken']),
+      errorCode: z.enum([AuthErrorCode.NicknameUnavailable, AuthErrorCode.UsernameUnavailable]),
       metadata: z.any().optional(),
     }),
   })

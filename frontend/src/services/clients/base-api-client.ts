@@ -3,6 +3,7 @@ import { AUTH_SESSION_STORAGE_KEY } from '@/contexts/auth/auth-context'
 import { Console, SystemCvars } from '@/lib/console'
 import {
   BadRequestError,
+  ClientError,
   ForbiddenError,
   InternalServerError,
   NotFoundError,
@@ -114,7 +115,7 @@ export class BaseApiClient<Namespace extends ApiNamespace = ApiNamespace> {
         case 500:
           throw new InternalServerError(request, response)
         default:
-          throw new Error(`Unhandled error: ${response.status}`)
+          throw new ClientError(request, response, response.status)
       }
     }
 

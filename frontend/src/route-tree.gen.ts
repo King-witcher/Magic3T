@@ -20,8 +20,8 @@ import { Route as PlaygroundRouteRouteImport } from './routes/playground/route'
 import { Route as AuthGuardIndexRouteImport } from './routes/_auth-guard/index'
 import { Route as UsersNicknameRouteImport } from './routes/users/$nickname'
 import { Route as MatchesMatchRouteImport } from './routes/matches/$match'
-import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
+import { Route as AuthLogInRouteImport } from './routes/_auth/log-in'
 import { Route as AuthGuardStoreRouteImport } from './routes/_auth-guard/store'
 import { Route as AuthGuardAdmin_guardedRouteImport } from './routes/_auth-guard/_admin_guarded'
 import { Route as AuthGuardMeRouteRouteImport } from './routes/_auth-guard/me/route'
@@ -81,14 +81,14 @@ const MatchesMatchRoute = MatchesMatchRouteImport.update({
   path: '/matches/$match',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthSignInRoute = AuthSignInRouteImport.update({
-  id: '/sign-in',
-  path: '/sign-in',
-  getParentRoute: () => AuthRoute,
-} as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthLogInRoute = AuthLogInRouteImport.update({
+  id: '/log-in',
+  path: '/log-in',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthGuardStoreRoute = AuthGuardStoreRouteImport.update({
@@ -127,8 +127,8 @@ export interface FileRoutesByFullPath {
   '/leaderboard': typeof LeaderboardRoute
   '/me': typeof AuthGuardMeRouteRoute
   '/store': typeof AuthGuardStoreRoute
+  '/log-in': typeof AuthLogInRoute
   '/register': typeof AuthRegisterRoute
-  '/sign-in': typeof AuthSignInRoute
   '/matches/$match': typeof MatchesMatchRoute
   '/users/$nickname': typeof UsersNicknameRoute
   '/admin': typeof AuthGuardAdmin_guardedAdminRoute
@@ -144,8 +144,8 @@ export interface FileRoutesByTo {
   '/leaderboard': typeof LeaderboardRoute
   '/me': typeof AuthGuardMeRouteRoute
   '/store': typeof AuthGuardStoreRoute
+  '/log-in': typeof AuthLogInRoute
   '/register': typeof AuthRegisterRoute
-  '/sign-in': typeof AuthSignInRoute
   '/matches/$match': typeof MatchesMatchRoute
   '/users/$nickname': typeof UsersNicknameRoute
   '/admin': typeof AuthGuardAdmin_guardedAdminRoute
@@ -164,8 +164,8 @@ export interface FileRoutesById {
   '/_auth-guard/me': typeof AuthGuardMeRouteRoute
   '/_auth-guard/_admin_guarded': typeof AuthGuardAdmin_guardedRouteWithChildren
   '/_auth-guard/store': typeof AuthGuardStoreRoute
+  '/_auth/log-in': typeof AuthLogInRoute
   '/_auth/register': typeof AuthRegisterRoute
-  '/_auth/sign-in': typeof AuthSignInRoute
   '/matches/$match': typeof MatchesMatchRoute
   '/users/$nickname': typeof UsersNicknameRoute
   '/_auth-guard/': typeof AuthGuardIndexRoute
@@ -184,8 +184,8 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/me'
     | '/store'
+    | '/log-in'
     | '/register'
-    | '/sign-in'
     | '/matches/$match'
     | '/users/$nickname'
     | '/admin'
@@ -201,8 +201,8 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/me'
     | '/store'
+    | '/log-in'
     | '/register'
-    | '/sign-in'
     | '/matches/$match'
     | '/users/$nickname'
     | '/admin'
@@ -220,8 +220,8 @@ export interface FileRouteTypes {
     | '/_auth-guard/me'
     | '/_auth-guard/_admin_guarded'
     | '/_auth-guard/store'
+    | '/_auth/log-in'
     | '/_auth/register'
-    | '/_auth/sign-in'
     | '/matches/$match'
     | '/users/$nickname'
     | '/_auth-guard/'
@@ -322,18 +322,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MatchesMatchRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_auth/sign-in': {
-      id: '/_auth/sign-in'
-      path: '/sign-in'
-      fullPath: '/sign-in'
-      preLoaderRoute: typeof AuthSignInRouteImport
-      parentRoute: typeof AuthRoute
-    }
     '/_auth/register': {
       id: '/_auth/register'
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof AuthRegisterRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/log-in': {
+      id: '/_auth/log-in'
+      path: '/log-in'
+      fullPath: '/log-in'
+      preLoaderRoute: typeof AuthLogInRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth-guard/store': {
@@ -375,13 +375,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthRouteChildren {
+  AuthLogInRoute: typeof AuthLogInRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
-  AuthSignInRoute: typeof AuthSignInRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
+  AuthLogInRoute: AuthLogInRoute,
   AuthRegisterRoute: AuthRegisterRoute,
-  AuthSignInRoute: AuthSignInRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)

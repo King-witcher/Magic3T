@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto'
 import {
+  AuthErrorCode,
   ClientSessionData,
   LoginResult,
   RegisterFirebaseResponse,
@@ -166,7 +167,7 @@ export class AuthService {
           error instanceof DatabaseError &&
           error.cause.constraint === 'user_profile_nickname_slug_key'
         ) {
-          respondError('NicknameAlreadyTaken', HttpStatus.CONFLICT)
+          respondError(AuthErrorCode.NicknameUnavailable, HttpStatus.CONFLICT)
         }
         throw error
       })
@@ -174,7 +175,7 @@ export class AuthService {
         .create(username, passwordDigest, user.id, conn)
         .catch((error) => {
           if (error instanceof DatabaseError && error.cause.constraint === 'user_credential_pkey') {
-            respondError('UsernameAlreadyTaken', HttpStatus.CONFLICT)
+            respondError(AuthErrorCode.UsernameUnavailable, HttpStatus.CONFLICT)
           }
           throw error
         })

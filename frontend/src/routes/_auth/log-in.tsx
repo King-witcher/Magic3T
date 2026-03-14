@@ -11,14 +11,12 @@ import { AuthState, useAuth } from '@/contexts/auth/auth-context'
 import { ERROR_MAP } from './-error-map'
 import { USERNAME_SCHEMA } from './-validation'
 
-const password = z.string()
-
 const schema = z.object({
   username: USERNAME_SCHEMA,
-  password,
+  password: z.string().min(1, 'Password is required'),
 })
 
-export const Route = createFileRoute('/_auth/sign-in')({
+export const Route = createFileRoute('/_auth/log-in')({
   component: Page,
 })
 
@@ -57,7 +55,7 @@ function Page() {
     loginMutation.mutate(data)
   }
 
-  const isPending = loginMutation.isPending || loginWithGoogleMutation.isPending
+  const pending = loginMutation.isPending || loginWithGoogleMutation.isPending
 
   const credentialErrorCode = loginMutation.isError ? loginMutation.error.name : null
 
@@ -75,7 +73,9 @@ function Page() {
     <form className="space-y-5 sm:space-y-6" onSubmit={handleSubmit(login)}>
       {/* Header */}
       <div className="text-center">
-        <h2 className="font-serif font-bold text-4xl text-gold-4 uppercase tracking-wide">Login</h2>
+        <h2 className="font-serif font-bold text-4xl text-gold-4 uppercase tracking-wide">
+          Log in
+        </h2>
         <p className="text-grey-1 text-sm mt-2">
           Don&apos;t have an account?{' '}
           <Link
@@ -90,12 +90,12 @@ function Page() {
 
       {/* Username Input */}
       <div className="space-y-2">
-        <Label htmlFor="username">User name</Label>
+        <Label htmlFor="username">Username</Label>
         <Input
           id="username"
           type="text"
-          placeholder="Enter your user name"
-          disabled={isPending}
+          placeholder="Enter your username"
+          disabled={pending}
           error={!!errors.username}
           {...register('username', { required: true })}
         />
@@ -109,7 +109,7 @@ function Page() {
           id="password"
           type="password"
           placeholder="Enter your password"
-          disabled={isPending}
+          disabled={pending}
           error={!!errors.password}
           {...register('password', { required: true })}
         />
@@ -123,15 +123,15 @@ function Page() {
         </div>
       )}
 
-      {/* Sign In Button */}
-      <Button type="submit" disabled={isPending} size="lg" className="w-full">
+      {/* Login Button */}
+      <Button type="submit" disabled={pending} size="lg" className="w-full">
         {loginMutation.isPending ? (
           <>
             <Spinner className="size-5" />
-            <span>Signing in...</span>
+            <span>Logging in...</span>
           </>
         ) : (
-          'Sign In'
+          'Log in'
         )}
       </Button>
 
@@ -145,18 +145,18 @@ function Page() {
         </div>
       </div>
 
-      {/* Google Sign In */}
+      {/* Google Login */}
       <Button
         type="button"
         variant="secondary"
         size="lg"
         onClick={() => loginWithGoogleMutation.mutate()}
         className="w-full"
-        disabled={isPending}
+        disabled={pending}
       >
         {loginWithGoogleMutation.isPending && <Spinner className="size-5" />}
         <RiGoogleFill size={24} />
-        <span>{loginWithGoogleMutation.isPending ? 'Signing in...' : 'Sign in with Google'}</span>
+        <span>{loginWithGoogleMutation.isPending ? 'Logging in...' : 'Log in with Google'}</span>
       </Button>
 
       {/* Error Message */}

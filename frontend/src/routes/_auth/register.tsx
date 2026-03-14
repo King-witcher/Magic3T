@@ -1,106 +1,84 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { FirebaseError } from 'firebase/app'
-import { AuthErrorCodes } from 'firebase/auth'
-import { useCallback, useState } from 'react'
+import { HelpCircle } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { RiGoogleFill } from 'react-icons/ri'
+import { toast } from 'sonner'
+import z from 'zod'
 import { Button, Input, Spinner } from '@/components/atoms'
 import { Label } from '@/components/ui/label'
-import { Console } from '@/lib/console'
-import { firebaseClient } from '@/lib/firebase-client'
-
-interface FormData {
-  email: string
-  password: string
-  checkPassword: string
-}
+import { Tooltip } from '@/components/ui/tooltip'
+import { AuthError, AuthState, useAuth } from '@/contexts/auth'
+import { ERROR_MAP } from './-error-map'
+import { NICKNAME_SCHEMA, PASSWORD_SCHEMA, USERNAME_SCHEMA } from './-validation'
 
 export const Route = createFileRoute('/_auth/register')({
   component: RouteComponent,
 })
 
-type FirebaseAuthErrorCode = (typeof AuthErrorCodes)[keyof typeof AuthErrorCodes]
+const schema = z
+  .object({
+    username: USERNAME_SCHEMA,
+    nickname: NICKNAME_SCHEMA,
+    password: PASSWORD_SCHEMA,
+    check_password: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((data) => data.password === data.check_password, {
+    error: 'Passwords do not match',
+    path: ['check_password'],
+  })
 
-const ERROR_MAP: Partial<Record<FirebaseAuthErrorCode, string>> = {
-  'auth/invalid-email': 'Invalid email address.',
-  'auth/user-disabled': 'This user account has been disabled.',
-  'auth/user-not-found': 'No account found with this email.',
-  'auth/wrong-password': 'Incorrect password. Please try again.',
-  'auth/account-exists-with-different-credential':
-    'An account already exists with the same email address but different sign-in credentials.',
-  'auth/cancelled-popup-request': 'Sign-in popup was closed before completing the sign-in.',
-  'auth/weak-password': 'The password is too weak. Please choose a stronger password.',
-  'auth/email-already-in-use': 'The email address is already in use by another account.',
-  'auth/missing-password': 'Password is required.',
-  'auth/network-request-failed':
-    'Network error. Please check your internet connection and try again.',
-  'auth/popup-blocked':
-    'The sign-in popup was blocked by the browser. Please allow popups and try again.',
-  'auth/invalid-credential': 'The provided authentication credentials are invalid.',
-}
+type FormData = z.infer<typeof schema>
 
 function RouteComponent() {
-  const [errorCode, setErrorCode] = useState<string | null>(null)
+  const auth = useAuth()
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>()
+  } = useForm({
+    resolver: zodResolver(schema),
+  })
 
-  const registerWithEmailMutation = useMutation({
-    mutationKey: ['register-email'],
-    async mutationFn({ email, password }: { email: string; password: string }) {
-      return firebaseClient.registerWithEmail(email, password)
+  const registerMutation = useMutation({
+    mutationKey: ['register'],
+    async mutationFn({ username, nickname, password }: FormData) {
+      if (auth.state !== AuthState.NotSignedIn) return
+      await auth.register({ username, nickname, password })
     },
-    onMutate: () => {
-      setErrorCode(null)
-    },
-    onError(e) {
-      console.error(e)
-      if (e instanceof FirebaseError) {
-        Console.log(`Failed to sign in with email: ${e.message}`)
-        setErrorCode(e.code)
-      }
+    onSuccess() {
+      toast.success('Welcome to Magic3T!')
     },
   })
 
-  const signInGoogleMutation = useMutation({
-    mutationKey: ['sign-in-google'],
+  const loginWithGoogleMutation = useMutation<void, AuthError>({
+    mutationKey: ['login-with-google'],
     async mutationFn() {
-      return firebaseClient.signInWithGoogle()
-    },
-    onMutate: () => {
-      setErrorCode(null)
-    },
-    onError(e) {
-      console.error(e)
-      if (e instanceof FirebaseError) {
-        Console.log(`Failed to sign in with email: ${e.message}`)
-        setErrorCode(e.code)
-      }
+      if (auth.state !== AuthState.NotSignedIn) return
+      await auth.loginWithGoogle()
     },
   })
 
-  const handleRegister = useCallback(
-    async ({ email, password, checkPassword }: FormData) => {
-      if (password !== checkPassword) {
-        setErrorCode('Passwords do not match.')
-        return
-      }
-      registerWithEmailMutation.mutate({ email, password })
-    },
-    [registerWithEmailMutation]
-  )
+  function registrer(data: FormData) {
+    registerMutation.mutate(data)
+  }
 
-  const waiting = signInGoogleMutation.isPending || registerWithEmailMutation.isPending
-  const errorMessage = errorCode
-    ? (ERROR_MAP[errorCode as FirebaseAuthErrorCode] ?? errorCode)
+  const pending = loginWithGoogleMutation.isPending || registerMutation.isPending
+
+  const credentialsErrorCode = registerMutation.isError ? registerMutation.error.name : null
+  const credentialsErrorMessage = credentialsErrorCode
+    ? ERROR_MAP[credentialsErrorCode as keyof typeof ERROR_MAP]
+    : null
+
+  const oAuthErrorCode = loginWithGoogleMutation.isError ? loginWithGoogleMutation.error.name : null
+  const oAuthErrorMessage = oAuthErrorCode
+    ? ERROR_MAP[oAuthErrorCode as keyof typeof ERROR_MAP]
     : null
 
   return (
-    <form className="space-y-5 sm:space-y-6" onSubmit={handleSubmit(handleRegister)}>
+    <form className="space-y-5 sm:space-y-6" onSubmit={handleSubmit(registrer)}>
       {/* Header */}
       <div className="text-center">
         <h2 className="font-serif font-bold text-4xl text-gold-4 uppercase tracking-wide">
@@ -109,27 +87,51 @@ function RouteComponent() {
         <p className="text-grey-1 text-sm mt-2">
           Already have an account?{' '}
           <Link
-            to="/sign-in"
+            to="/log-in"
             className="text-gold-3 hover:text-gold-1 font-semibold transition-colors duration-200"
             search={(prev) => ({ referrer: prev.referrer })}
           >
-            Sign in
+            Log in
           </Link>
         </p>
       </div>
 
-      {/* Email Input */}
+      {/* Username Input */}
       <div className="space-y-2">
-        <Label>Email</Label>
+        <Label className="flex gap-1 items-center">
+          Username
+          <Tooltip text="This will only be used to log in.">
+            <HelpCircle className="size-4 text-gold-3" />
+          </Tooltip>
+        </Label>
         <Input
-          id="email"
-          type="email"
-          placeholder="Enter your email"
-          disabled={waiting}
-          error={!!errors.email}
-          {...register('email', { required: true })}
+          id="username"
+          type="text"
+          placeholder="Enter your username"
+          disabled={pending}
+          error={!!errors.username}
+          {...register('username', { required: true })}
         />
-        {errors.email && <p className="text-red-400 text-xs mt-1">Email is required</p>}
+        {errors.username && <p className="text-red-400 text-xs mt-1">{errors.username.message}</p>}
+      </div>
+
+      {/* Nickname Input */}
+      <div className="space-y-2">
+        <Label className="flex gap-1 items-center">
+          Nickname
+          <Tooltip text="This is the name that will be displayed to other users.">
+            <HelpCircle className="size-4 text-gold-3" />
+          </Tooltip>
+        </Label>
+        <Input
+          id="nickname"
+          type="text"
+          placeholder="Enter your nickname"
+          disabled={pending}
+          error={!!errors.nickname}
+          {...register('nickname', { required: true })}
+        />
+        {errors.nickname && <p className="text-red-400 text-xs mt-1">{errors.nickname.message}</p>}
       </div>
 
       {/* Password Input */}
@@ -139,39 +141,39 @@ function RouteComponent() {
           id="password"
           type="password"
           placeholder="Enter your password"
-          disabled={waiting}
+          disabled={pending}
           error={!!errors.password}
           {...register('password', { required: true })}
         />
-        {errors.password && <p className="text-red-400 text-xs mt-1">Password is required</p>}
+        {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password.message}</p>}
       </div>
 
       {/* Confirm Password Input */}
       <div className="space-y-2">
         <Label>Confirm Password</Label>
         <Input
-          id="checkPassword"
+          id="check_password"
           type="password"
           placeholder="Confirm your password"
-          disabled={waiting}
-          error={!!errors.checkPassword}
-          {...register('checkPassword', { required: true })}
+          disabled={pending}
+          error={!!errors.check_password}
+          {...register('check_password', { required: true })}
         />
-        {errors.checkPassword && (
-          <p className="text-red-400 text-xs mt-1">Please confirm your password</p>
+        {errors.check_password && (
+          <p className="text-red-400 text-xs mt-1">{errors.check_password.message}</p>
         )}
       </div>
 
       {/* Error Message */}
-      {errorCode && (
+      {credentialsErrorMessage && (
         <div className="bg-red-500/10 border border-red-500/30 rounded px-4 py-2">
-          <p className="text-red-400 text-sm text-center">{errorMessage}</p>
+          <p className="text-red-400 text-sm text-center">{credentialsErrorMessage}</p>
         </div>
       )}
 
       {/* Register Button */}
-      <Button type="submit" disabled={waiting} size="lg" className="w-full">
-        {waiting ? (
+      <Button type="submit" disabled={pending} size="lg" className="w-full">
+        {registerMutation.isPending ? (
           <>
             <Spinner className="size-5" />
             <span>Creating account...</span>
@@ -194,14 +196,23 @@ function RouteComponent() {
       {/* Google Sign In */}
       <Button
         type="button"
-        variant="secondary"
+        variant="primary"
         size="lg"
-        onClick={() => signInGoogleMutation.mutate()}
+        onClick={() => loginWithGoogleMutation.mutate()}
+        disabled={pending}
         className="w-full"
       >
+        {loginWithGoogleMutation.isPending && <Spinner className="size-5" />}
         <RiGoogleFill size={24} />
-        <span>Sign in with Google</span>
+        <span>{loginWithGoogleMutation.isPending ? 'Logging in...' : 'Log in with Google'}</span>
       </Button>
+
+      {/* Error Message */}
+      {oAuthErrorMessage && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded px-4 py-2">
+          <p className="text-red-400 text-sm text-center">{oAuthErrorMessage}</p>
+        </div>
+      )}
     </form>
   )
 }
