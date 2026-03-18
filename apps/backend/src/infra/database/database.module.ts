@@ -6,6 +6,7 @@ import {
   IdentityRepository,
   UserRepository,
 } from './repositories'
+import { MatchRepository } from './repositories/match-repository'
 
 @Module({
   providers: [
@@ -14,6 +15,7 @@ import {
     UserRepository,
     IdentityRepository,
     CredentialRepository,
+    MatchRepository,
   ],
   exports: [
     DatabaseService,
@@ -21,6 +23,7 @@ import {
     UserRepository,
     IdentityRepository,
     CredentialRepository,
+    MatchRepository,
   ],
 })
 export class DatabaseModule {}

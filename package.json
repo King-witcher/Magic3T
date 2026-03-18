@@ -5,20 +5,20 @@
 	"name": "magic3t",
 	"scripts": {
 		"lint": "biome check . --write",
-		"migrate": "npm run migrate --workspace=packages/migrations",
-		"migrate:clear": "npm run clear --workspace=packages/migrations",
-		"migrate:production": "npm run migrate:production --workspace=packages/migrations"
+		"migrate": "npm run migrate --workspace=apps/migrations",
+		"migrate:clear": "npm run clear --workspace=apps/migrations",
+		"migrate:production": "npm run migrate:production --workspace=apps/migrations"
 	},
 	"version": "1.0.0",
 	"overrides": {
 		"lodash": "4.17.23"
 	},
 	"workspaces": [
-		"backend",
-		"frontend",
+		"apps/backend",
+		"apps/frontend",
+		"apps/migrations",
 		"packages/api-types",
 		"packages/common-types",
-		"packages/database-types",
-		"packages/migrations"
+		"packages/database-types"
 	]
 }

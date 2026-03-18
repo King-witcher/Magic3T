@@ -9,12 +9,13 @@ import { UserRepository } from '@/infra/database/repositories/user-repository'
 @ApiBearerAuth()
 export class AdminController {
   constructor(
+    // private readonly matchRepository: MatchRepository,
     private readonly userRepository: UserRepository,
     private iconRepository: IconRepository
   ) {}
 
   @ApiOperation({
-    summary: 'Reset all user ratings to the initial values',
+    summary: 'Reset user ratings',
   })
   @Post('reset-ratings')
   async resetRatings() {
@@ -133,4 +134,13 @@ export class AdminController {
   async importUsers() {
     await this.userRepository.importFromFirebase()
   }
+
+  // @ApiOperation({
+  //   summary: 'Import matches from Firebase',
+  //   description: 'Imports match data from Firebase into the local database.',
+  // })
+  // @Post('import-matches')
+  // async importMatches() {
+  //   await this.matchRepository.importFromFirebase()
+  // }
 }

@@ -276,4 +276,29 @@ export class UserRepository {
     `)
     return rows
   }
+  /**
+   * Gets a map from Firebase ID, user ID or Firebase UID to an object containing the corresponding ids.
+   */
+  async getIdMap(): Promise<
+    Map<string | number, { firebase_id: string; uuid: string; id: number }>
+  > {
+    type Row = {
+      firebase_id: string
+      uuid: string
+      id: number
+    }
+    const rows = await this.databaseService.query<Row>(sql`
+      SELECT lui.firebase_id, u.uuid, u.id
+      FROM legacy_user_identity lui
+      JOIN "user" u ON lui.user_id = u.id
+    `)
+
+    return new Map<string | number, Row>(
+      rows.flatMap((row) => [
+        [row.firebase_id, row],
+        [row.uuid, row],
+        [row.id, row],
+      ])
+    )
+  }
 }

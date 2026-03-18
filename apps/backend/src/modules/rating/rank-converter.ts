@@ -42,6 +42,10 @@ export class RankConverter {
     return this.getRankFromTotalLP(totalLP, rankedCount, apexFlag)
   }
 
+  relativeLpToElo(lp: number): number {
+    return (lp / 400) * this.config.elo_per_league
+  }
+
   /** Gets the client rank based on total points. All apex tiers are considered as master. */
   getRankFromTotalLP(
     totalLP: number,

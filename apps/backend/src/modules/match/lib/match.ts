@@ -50,16 +50,16 @@ export class Match extends Observable<MatchClassEventsMap> {
   public turn: Team | null = null
   public winner: Team | null = null
   public finished = false
-  public readonly [Team.Order]: Player
-  public readonly [Team.Chaos]: Player
+  public readonly order: Player
+  public readonly chaos: Player
   public readonly timelimit: number
 
   constructor({ timelimit }: MatchClassParams) {
     super()
     this.timelimit = timelimit
 
-    this[Team.Order] = new Player(timelimit, () => this.handleTimeout(Team.Order))
-    this[Team.Chaos] = new Player(timelimit, () => this.handleTimeout(Team.Chaos))
+    this.order = new Player(timelimit, () => this.handleTimeout(Team.Order))
+    this.chaos = new Player(timelimit, () => this.handleTimeout(Team.Chaos))
   }
 
   public get time() {
@@ -67,12 +67,12 @@ export class Match extends Observable<MatchClassEventsMap> {
   }
 
   private get isDrawn() {
-    return this[Team.Order].count + this[Team.Chaos].count === 9
+    return this.order.count + this.chaos.count === 9
   }
 
   public get stateReport(): StateReportPayload {
-    const order = this[Team.Order]
-    const chaos = this[Team.Chaos]
+    const order = this.order
+    const chaos = this.chaos
 
     const report: StateReportPayload = {
       [Team.Order]: {
@@ -104,14 +104,14 @@ export class Match extends Observable<MatchClassEventsMap> {
   public start() {
     if (this.turn !== null || this.finished) throw new Error('panic: called start() twice')
 
-    this[Team.Order].timer.start()
+    this.order.timer.start()
     this.globalTime.start()
     this.turn = Team.Order
     this.emit(MatchClassEventType.Start)
   }
 
   private isAvailable(choice: Choice) {
-    return !this[Team.Chaos].choices.includes(choice) && !this[Team.Order].choices.includes(choice)
+    return !this.chaos.choices.includes(choice) && !this.order.choices.includes(choice)
   }
 
   /**

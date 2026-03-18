@@ -1,5 +1,5 @@
 import { Team } from '@magic3t/common-types'
-import { MatchRow } from '@magic3t/database-types'
+import { MatchDocument } from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
 import { FieldPath, Filter } from 'firebase-admin/firestore'
 import { FirebaseService } from '@/infra/firebase/firebase.service'
@@ -8,7 +8,7 @@ import { ListResult } from '../../types/query-types'
 import { BaseFirestoreRepository } from '../base-repository'
 
 @Injectable()
-export class MatchDocumentRepository extends BaseFirestoreRepository<MatchRow> {
+export class MatchDocumentRepository extends BaseFirestoreRepository<MatchDocument> {
   matchLogger = new Logger(MatchDocumentRepository.name, { timestamp: true })
 
   constructor(databaseService: FirestoreService, firebaseService: FirebaseService) {
@@ -20,7 +20,7 @@ export class MatchDocumentRepository extends BaseFirestoreRepository<MatchRow> {
    * @param id The user id
    * @param limit How many docs should be fetched
    */
-  async getByUser(id: string, limit: number): Promise<ListResult<MatchRow>> {
+  async getByUser(id: string, limit: number): Promise<ListResult<MatchDocument>> {
     this.matchLogger.verbose(`read ${limit} matches from user ${id}.`)
     const query = this.collection
       .where(
