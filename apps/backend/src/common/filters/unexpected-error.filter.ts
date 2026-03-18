@@ -1,7 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter, Logger } from '@nestjs/common'
 import { SentryExceptionCaptured } from '@sentry/nestjs'
-import { DatabaseError } from '@/infra/database'
 import { UnexpectedError } from '../errors'
+import { DatabaseError } from '@/shared/database/database-error'
 
 @Catch()
 export class UnexpectedErrorFilter implements ExceptionFilter {

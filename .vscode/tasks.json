@@ -30,7 +30,7 @@
       "type": "shell",
       "command": "npm run dev",
       "options": {
-        "cwd": "frontend",
+        "cwd": "apps/frontend",
         "env": {
           "VITE_API_URL": "${input:backend-url}"
         }
@@ -64,7 +64,7 @@
       "type": "shell",
       "command": "npm run stories",
       "options": {
-        "cwd": "frontend",
+        "cwd": "apps/frontend",
       },
       "isBackground": true,
       "icon": {
@@ -104,7 +104,7 @@
         "--watch",
         "--noEmit",
         "--project",
-        "backend/tsconfig.json"
+        "apps/backend/tsconfig.json"
       ],
       "group": "test",
       "isBackground": true,
@@ -132,7 +132,7 @@
         "--watch",
         "--noEmit",
         "--project",
-        "frontend/tsconfig.json"
+        "apps/frontend/tsconfig.json"
       ],
       "group": "test",
       "isBackground": true,
@@ -255,7 +255,7 @@
       },
       "type": "shell",
       "options": {
-        "cwd": "backend"
+        "cwd": "apps/backend"
       },
       "command": "npm",
       "args": [
@@ -277,7 +277,7 @@
       },
       "type": "shell",
       "options": {
-        "cwd": "frontend"
+        "cwd": "apps/frontend"
       },
       "command": "npm",
       "args": [

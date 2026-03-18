@@ -1,14 +1,14 @@
 {
   "configurations": [
     {
-      "command": "npm run dev --workspace=backend",
-      // "cwd": "${workspaceFolder}/backend",
+      "command": "npm run dev --workspace=apps/backend",
+      // "cwd": "${workspaceFolder}/apps/backend",
       "name": "Launch Backend",
       "request": "launch",
       "type": "node-terminal"
     },
     {
-      "cwd": "${workspaceFolder}/frontend",
+      "cwd": "${workspaceFolder}/apps/frontend",
       "name": "Launch Frontend",
       "preLaunchTask": "vite: dev",
       "request": "launch",
@@ -17,10 +17,10 @@
       ],
       "type": "msedge",
       "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}/frontend"
+      "webRoot": "${workspaceFolder}/apps/frontend"
     },
     {
-      "cwd": "${workspaceFolder}/frontend",
+      "cwd": "${workspaceFolder}/apps/frontend",
       "name": "Launch Stories",
       "preLaunchTask": "stories",
       "request": "launch",
@@ -29,7 +29,7 @@
       ],
       "type": "msedge",
       "url": "http://localhost:61000",
-      "webRoot": "${workspaceFolder}/frontend"
+      "webRoot": "${workspaceFolder}/apps/frontend"
     },
   ],
   "version": "0.2.0"

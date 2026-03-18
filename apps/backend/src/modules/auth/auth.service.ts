@@ -14,7 +14,7 @@ import { HttpStatus, Inject, Injectable } from '@nestjs/common'
 import bcrypt from 'bcrypt'
 import { Cache } from 'cache-manager'
 import { respondError, unexpected } from '@/common'
-import { DatabaseError, DatabaseService, PgErrorCode } from '@/infra/database'
+import { DatabaseService } from '@/infra/database'
 import {
   CredentialRepository,
   IdentityRepository,
@@ -22,6 +22,7 @@ import {
 } from '@/infra/database/repositories'
 import { FirebaseAuthService } from '@/infra/firebase'
 import { SessionData as ServerSessionData } from '@/shared/types/session-data'
+import { DatabaseError, PgErrorCode } from '@/shared/database'
 
 const ONE_WEEK = 1000 * 60 * 60 * 24 * 7
 

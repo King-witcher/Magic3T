@@ -43,16 +43,18 @@ export class UserRepository {
     ])
 
     // Filters users that don't have a corresponding identity
-    const mappedUsers = allUsers.filter((user) => identities.has(user.id))
+    const mappedUsers = allUsers.filter(
+      (user) => identities.has(user.id) || user.data.role === UserDocumentRole.Bot
+    )
 
     // Map user documents to user rows and hash join them with identities
-    const userRows = mappedUsers.map((user): [Partial<UserRow>, UserRecord] => {
+    const userRows = mappedUsers.map((user): [Partial<UserRow>, UserRecord | null] => {
       const summoner_icon =
         user.data.summoner_icon >= 59 && user.data.summoner_icon <= 78
           ? 29
           : user.data.summoner_icon
 
-      const identity = identities.get(user.id)!
+      const identity = identities.get(user.id)
 
       return [
         {
@@ -68,9 +70,9 @@ export class UserRepository {
           stats_draws: user.data.stats.draws,
           stats_defeats: user.data.stats.defeats,
           profile_nickname_date: user.data.identification.last_changed ?? new Date(),
-          created_at: new Date(identity.metadata.creationTime),
+          created_at: identity ? new Date(identity.metadata.creationTime) : new Date(),
         },
-        identity,
+        identity ?? null,
       ]
     })
 
@@ -86,17 +88,19 @@ export class UserRepository {
         })
 
         // Create it's legacy identity entry
-        this.logger.verbose(`Creating legacy identity for user ${user.profile_nickname}...`)
-        const identityChain = INSERT_INTO('legacy_user_identity', {
-          user_id: row.id,
-          firebase_id: identity.uid,
-          email: identity.email,
-        })
-        await client.query({
-          name: 'create_user_identity',
-          text: identityChain.text,
-          values: identityChain.values,
-        })
+        if (identity) {
+          this.logger.verbose(`Creating legacy identity for user ${user.profile_nickname}...`)
+          const identityChain = INSERT_INTO('legacy_user_identity', {
+            user_id: row.id,
+            firebase_id: identity.uid,
+            email: identity.email,
+          })
+          await client.query({
+            name: 'create_user_identity',
+            text: identityChain.text,
+            values: identityChain.values,
+          })
+        }
       }
     })
 

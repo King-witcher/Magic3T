@@ -1,18 +1,12 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.13/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.6/schema.json",
   "css": {
     "parser": {
       "tailwindDirectives": true
     }
   },
   "files": {
-    "includes": [
-      "frontend/**/*",
-      "backend/**/*",
-      "packages/**/*",
-      "!**/dist",
-      "!frontend/src/route-tree.gen.ts"
-    ]
+    "includes": ["apps/**/*", "packages/**/*", "!**/dist", "!apps/frontend/src/route-tree.gen.ts"]
   },
   "formatter": {
     "enabled": true,
