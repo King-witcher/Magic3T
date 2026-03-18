@@ -3,7 +3,7 @@ import { ComponentProps, useCallback, useMemo } from 'react'
 import { Panel } from '@/components/atoms'
 import { Console, SystemCvars } from '@/lib/console'
 import { cn } from '@/lib/utils'
-import { getTriple } from '@/utils/getTriple'
+import { getTriple } from '@/utils/find-triple'
 import { NumberCell } from './number-cell'
 
 interface GameBoardProps extends ComponentProps<'div'> {

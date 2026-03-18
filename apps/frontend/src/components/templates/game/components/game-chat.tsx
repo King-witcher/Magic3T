@@ -1,7 +1,7 @@
 import { Send } from 'lucide-react'
 import type { RefObject } from 'react'
 import { cn } from '@/lib/utils'
-import { formatMinutes } from '@/utils/timeFormat'
+import { formatMinutes } from '@/utils/time-format'
 import { useChatHandler } from '../hooks/useChatHandler'
 
 interface GameChatProps {

@@ -6,7 +6,7 @@ import { GiCrossedSwords, GiSwordsPower } from 'react-icons/gi'
 import { Button, Panel, PanelDivider } from '@/components/atoms'
 import { GameBoard } from '@/components/molecules'
 import { cn } from '@/lib/utils'
-import { getTriple } from '@/utils/getTriple'
+import { getTriple } from '@/utils/find-triple'
 
 export const Route = createFileRoute('/playground')({
   component: RouteComponent,

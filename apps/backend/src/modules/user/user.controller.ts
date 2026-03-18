@@ -118,7 +118,8 @@ export class UserController {
     }),
   })
   @ApiBearerAuth()
-  async changeIcon(@UserId() id: number, @Body() { iconId }: ChangeIconCommand): Promise<void> {
+  async changeIcon(@UserId() id: number, @Body() body: ChangeIconCommand): Promise<void> {
+    const { iconId } = body
     await this.userService.changeIcon(id, iconId)
   }
 }
