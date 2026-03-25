@@ -21,8 +21,8 @@ import {
   UserRepository,
 } from '@/infra/database/repositories'
 import { FirebaseAuthService } from '@/infra/firebase'
-import { SessionData as ServerSessionData } from '@/shared/types/session-data'
 import { DatabaseError, PgErrorCode } from '@/shared/database'
+import { SessionData as ServerSessionData } from '@/shared/types/session-data'
 
 const ONE_WEEK = 1000 * 60 * 60 * 24 * 7
 
@@ -45,7 +45,7 @@ export class AuthService {
       return { status: 'unregistered', sessionId: null, sessionData: null }
     }
 
-    const sessionId = await this.createSession(user.id, user.uuid, user.role)
+    const sessionId = await this.createSession(user.id, user.role)
     return {
       status: 'registered',
       sessionId,
@@ -60,21 +60,21 @@ export class AuthService {
     }
 
     const user = await this.registerLegacy(nickname, decoded.uid, decoded.email)
-    const sessionId = await this.createSession(user.id, user.uuid, user.role)
+    const sessionId = await this.createSession(user.id, user.role)
 
     return { sessionId, sessionData: this.toClientSession(user) }
   }
 
   async register(nickname: string, username: string, password: string): Promise<RegisterResult> {
     const user = await this.registerWithCredentials(nickname, username, password)
-    const sessionId = await this.createSession(user.id, user.uuid, user.role)
+    const sessionId = await this.createSession(user.id, user.role)
 
     return { sessionId, sessionData: this.toClientSession(user) }
   }
 
   async login(username: string, password: string): Promise<LoginResult> {
     const user = await this.validateCredentials(username, password)
-    const sessionId = await this.createSession(user.id, user.uuid, user.role)
+    const sessionId = await this.createSession(user.user_id, user.role)
 
     return {
       sessionId,
@@ -82,12 +82,12 @@ export class AuthService {
         nickname: user.profile_nickname,
         summonerIcon: user.profile_icon,
         role: user.role,
-        uuid: user.uuid,
+        userId: user.user_id,
       },
     }
   }
 
-  async getSessionProfile(userId: number): Promise<ValidateSessionResponse> {
+  async getSessionProfile(userId: string): Promise<ValidateSessionResponse> {
     const user = await this.userRepository.getById(userId)
     if (!user) unexpected('Session is valid but no user found. This should not happen.')
 
@@ -99,13 +99,13 @@ export class AuthService {
   }
 
   private toClientSession(user: {
-    uuid: string
+    id: string
     profile_nickname: string
     profile_icon: number
     role: UserRowRole
   }): ClientSessionData {
     return {
-      uuid: user.uuid,
+      userId: user.id,
       nickname: user.profile_nickname,
       summonerIcon: user.profile_icon,
       role: user.role,
@@ -173,7 +173,7 @@ export class AuthService {
         throw error
       })
       await this.credentialRepository
-        .create(username, passwordDigest, user.id, conn)
+        .create(username, passwordDigest, 'bcrypt', user.id, conn)
         .catch((error) => {
           if (error instanceof DatabaseError && error.cause.constraint === 'user_credential_pkey') {
             respondError(AuthErrorCode.UsernameUnavailable, HttpStatus.CONFLICT)
@@ -189,8 +189,7 @@ export class AuthService {
     username: string,
     password: string
   ): Promise<{
-    id: number
-    uuid: string
+    user_id: string
     profile_nickname: string
     role: UserRowRole
     profile_icon: number
@@ -208,22 +207,16 @@ export class AuthService {
     }
 
     return {
-      id: credential.id,
-      uuid: credential.uuid,
+      user_id: credential.user_id,
       profile_nickname: credential.profile_nickname,
       role: credential.role,
       profile_icon: credential.profile_icon,
     }
   }
 
-  private async createSession(
-    userId: number,
-    userUUID: string,
-    userRole: UserRowRole
-  ): Promise<string> {
+  private async createSession(userId: string, userRole: UserRowRole): Promise<string> {
     const sessionData: ServerSessionData = {
-      id: userId,
-      uuid: userUUID,
+      userId,
       role: userRole,
     }
     const sessionToken = this.generateSessionId()

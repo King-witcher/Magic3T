@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+import { BotsService } from './bots.service'
 import { ClientSyncService } from './client-sync.service'
 import { MatchStore } from './lib/match-bank'
 import { MatchController } from './match.controller'
@@ -7,7 +8,7 @@ import { MatchService } from './match.service'
 
 @Module({
   controllers: [MatchController],
-  providers: [MatchGateway, MatchStore, MatchService, ClientSyncService],
+  providers: [MatchGateway, MatchStore, MatchService, ClientSyncService, BotsService],
   exports: [MatchService],
 })
 export class MatchModule {}

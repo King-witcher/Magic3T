@@ -146,21 +146,11 @@ export class UserRepository {
   }
 
   /** Gets a user by their ID. */
-  async getById(id: number): Promise<UserRow | null> {
+  async getById(id: string): Promise<UserRow | null> {
     const [row] = await this.databaseService.query<UserRow>(sql`
       SELECT *
       FROM "user"
       WHERE id = ${id}
-    `)
-    return row ?? null
-  }
-
-  /** Gets a user by their UUID. */
-  async getByUUID(uuid: string): Promise<UserRow | null> {
-    const [row] = await this.databaseService.query<UserRow>(sql`
-      SELECT *
-      FROM "user"
-      WHERE uuid = ${uuid}
     `)
     return row ?? null
   }
@@ -185,7 +175,7 @@ export class UserRepository {
     return rows
   }
 
-  async updateNickname(id: number, newNickname: string) {
+  async updateNickname(id: string, newNickname: string) {
     const slug = this.slugify(newNickname)
     try {
       const rows = await this.databaseService.query(sql`
@@ -205,7 +195,7 @@ export class UserRepository {
     }
   }
 
-  async updateIcon(id: number, iconId: number) {
+  async updateIcon(id: string, iconId: number) {
     await this.databaseService.query(sql`
       UPDATE "user"
       SET profile_icon = ${iconId}
@@ -227,7 +217,7 @@ export class UserRepository {
   //   )
   // }
 
-  async setOrReplaceChallengers(newChallengerIds: number[]): Promise<void> {
+  async setOrReplaceChallengers(newChallengerIds: string[]): Promise<void> {
     const oldChallengers = await this.listChallengers()
     const oldChallengerIdsSet = new Set(oldChallengers.map((c) => c.id))
     const newChallengerIdsSet = new Set(newChallengerIds)
@@ -263,8 +253,8 @@ export class UserRepository {
     return rows
   }
 
-  async getUserIcons(id: number): Promise<IconRow[]> {
-    const [user] = await this.databaseService.query<{ id: number }>(sql`
+  async getUserIcons(id: string): Promise<IconRow[]> {
+    const [user] = await this.databaseService.query<{ id: string }>(sql`
       SELECT id
       FROM "user"
       WHERE id = ${id}
@@ -280,6 +270,7 @@ export class UserRepository {
     `)
     return rows
   }
+
   /**
    * Gets a map from Firebase ID, user ID or Firebase UID to an object containing the corresponding ids.
    */

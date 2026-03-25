@@ -13,7 +13,7 @@ export type CreatePerspectivesParams = {
 @Injectable()
 /// Maps all matches that are currently running on the server.
 export class MatchStore {
-  private perspectives: Map<string, Perspective> = new Map() // Maps user ids to matchAdapters
+  private perspectives: Map<string, Perspective> = new Map() // user.id --> Perspective
   private opponents: Map<string, string> = new Map()
 
   constructor(private databaseService: FirestoreService) {}

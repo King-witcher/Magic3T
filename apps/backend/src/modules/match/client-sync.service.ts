@@ -69,7 +69,7 @@ export class ClientSyncService {
     for (const player of [summary.chaos, summary.order]) {
       if (player.row.role === 'bot') continue
       this.websocketEmitterService.send(
-        player.row.uuid,
+        player.row.id,
         'match',
         MatchServerEvents.MatchReport,
         socketSummary

@@ -5,8 +5,7 @@ export type UserRowRole = 'bot' | 'player' | 'admin' | 'superuser'
 export type UserApexFlag = 'challenger' | 'grandmaster'
 
 export type UserRow = {
-  id: INTEGER
-  uuid: UUID
+  id: UUID
 
   role: UserRowRole
   credits: INTEGER

@@ -1,5 +1,5 @@
 import { QueueServerEvents } from '@magic3t/api-types'
-import { BotName } from '@magic3t/database-types'
+import { BotId } from '@magic3t/common-types'
 import { HttpStatus, Injectable, Logger } from '@nestjs/common'
 import { respondError } from '@/common'
 import { WebsocketEmitterService } from '@/infra/websocket/websocket-emitter.service'
@@ -100,9 +100,9 @@ export class QueueService {
   }
 
   /** Creates a match between a user and a specified bot. */
-  async createBotMatch(userId: string, botName: BotName) {
+  async createBotMatch(userId: string, botId: BotId) {
     // Create a match
-    const matchId = await this.matchService.createPlayerVsBot(userId, botName)
+    const matchId = await this.matchService.createPlayerVsBot(userId, botId)
 
     // Notify the user
     this.websocketEmitterService.send(userId, 'queue', QueueServerEvents.MatchFound, {

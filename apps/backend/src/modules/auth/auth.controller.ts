@@ -215,7 +215,7 @@ export class AuthController {
     status: HttpStatus.OK,
   })
   @UseGuards(AuthGuard)
-  async validateSession(@UserId() id: number): Promise<ValidateSessionResponse> {
+  async validateSession(@UserId() id: string): Promise<ValidateSessionResponse> {
     return this.service.getSessionProfile(id)
   }
 

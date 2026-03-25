@@ -107,7 +107,7 @@ export class BaseGateway<
 
   private async joinRoom(client: AuthenticSocket) {
     const session = client.data.session
-    const roomName = `user:${session.uuid}@${this.namespace}`
+    const roomName = `user:${session.userId}@${this.namespace}`
     client.join(roomName)
   }
 }

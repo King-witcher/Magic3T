@@ -1,10 +1,10 @@
-import { BotName } from '@magic3t/database-types'
-import { Body, Controller, Delete, Post, UseGuards } from '@nestjs/common'
+import { BotId } from '@magic3t/common-types'
+import { Controller, Delete, Param, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
-import { respondError } from '@/common'
-import { AuthGuard } from '@/modules/auth/auth.guard'
-import { UserId } from '@/modules/auth/decorators/user-id.decorator'
-import { EnqueueDto, QueueMode } from './dtos/enqueue-dto'
+import z from 'zod'
+import { ZodValidationPipe } from '@/common/pipes'
+import { AuthGuard } from '@/modules/auth'
+import { UserId } from '@/modules/auth/decorators'
 import { QueueService } from './queue.service'
 
 @Controller('queue')
@@ -20,23 +20,24 @@ export class QueueController {
   @ApiOperation({
     summary: 'Enqueue for a match',
   })
-  @Post()
-  async handleEnqueue(@UserId() userId: string, @Body() body: EnqueueDto) {
-    switch (body.queueMode) {
-      case QueueMode.Ranked:
-        return this.queueService.enqueue(userId, 'ranked')
-      // biome-ignore lint/suspicious/noFallthroughSwitchClause: returns never
-      case QueueMode.Casual:
-        respondError('not-implemented', 501, 'Casual mode is not implemented.')
-      case QueueMode.Bot0:
-        return await this.queueService.createBotMatch(userId, BotName.Bot0)
-      case QueueMode.Bot1:
-        return await this.queueService.createBotMatch(userId, BotName.Bot1)
-      case QueueMode.Bot2:
-        return await this.queueService.createBotMatch(userId, BotName.Bot2)
-      case QueueMode.Bot3:
-        return await this.queueService.createBotMatch(userId, BotName.Bot3)
-    }
+  @Post('/ranked/pvp')
+  async enqueue(@UserId() userId: string) {
+    return this.queueService.enqueue(userId, 'ranked')
+  }
+
+  @ApiOperation({
+    summary: 'Join a bot match',
+  })
+  @Post('/ranked/:botId')
+  async enqueueBot(
+    @UserId() userId: string,
+    @Param(
+      'botId',
+      new ZodValidationPipe(z.enum([BotId.Elite, BotId.Legend, BotId.Recruit, BotId.Soldier]))
+    )
+    botId: BotId
+  ) {
+    return this.queueService.createBotMatch(userId, botId)
   }
 
   @ApiOperation({

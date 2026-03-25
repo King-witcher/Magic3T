@@ -161,7 +161,7 @@
         "${input:migration-name}",
       ],
       "options": {
-        "cwd": "packages/migrations"
+        "cwd": "apps/migrations"
       },
       "problemMatcher": {
         "owner": "migrations",

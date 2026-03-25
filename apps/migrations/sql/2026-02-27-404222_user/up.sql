@@ -14,8 +14,7 @@ CREATE TYPE user_apex_flag AS ENUM (
 
 CREATE TABLE "user"
 (
-    id                    INTEGER GENERATED ALWAYS AS IDENTITY,
-    uuid                  uuid UNIQUE              NOT NULL DEFAULT gen_random_uuid(),
+    id                    uuid                              DEFAULT gen_random_uuid(),
 
     role                  user_role                NOT NULL DEFAULT 'player',
     credits               INTEGER                  NOT NULL DEFAULT 0 CHECK ( credits >= 0 ),
@@ -42,13 +41,10 @@ CREATE TABLE "user"
     FOREIGN KEY (profile_icon) REFERENCES icon (id) ON DELETE SET DEFAULT
 );
 
-COMMENT ON COLUMN "user".id IS 'User''s internal id';
-COMMENT ON COLUMN "user".uuid IS 'User''s external id';
 COMMENT ON COLUMN "user".rating_k_factor IS 'Dynamic K-Factor used in Elo rating calculation';
 COMMENT ON COLUMN "user".rating_ranked_count IS 'Number of games played in the initial rating series';
 COMMENT ON COLUMN "user".rating_apex_flag IS 'A flag indicating if the user has reached Challenger or Grandmaster rank';
 
-CREATE INDEX ON "user" (uuid);
 CREATE INDEX ON "user" (profile_nickname_slug);
 CREATE INDEX ON "user" (rating_score DESC);
 CREATE INDEX ON "user" (rating_apex_flag) WHERE rating_apex_flag IS NOT NULL;

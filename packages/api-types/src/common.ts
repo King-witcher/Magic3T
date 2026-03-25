@@ -8,7 +8,7 @@ export type ErrorResponse<T extends string = string> = {
 export type ApiNamespace = 'admin' | 'auth' | 'match' | 'queue' | 'user' | undefined
 
 export type ClientSessionData = {
-  uuid: string
+  userId: string
   nickname: string
   summonerIcon: number
   role: UserRole

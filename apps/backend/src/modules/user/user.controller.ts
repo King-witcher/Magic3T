@@ -24,7 +24,7 @@ export class UserController {
     schema: GET_USER_SCHEMA,
   })
   async getById(@Param('uuid') uuid: string): Promise<GetUserResult> {
-    return this.userService.getByUUID(uuid)
+    return this.userService.getById(uuid)
   }
 
   @Get('nickname/:nickname')
@@ -71,7 +71,7 @@ export class UserController {
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
-  async getMe(@UserId() id: number): Promise<GetUserResult> {
+  async getMe(@UserId() id: string): Promise<GetUserResult> {
     return this.userService.getProfile(id)
   }
 
@@ -89,7 +89,7 @@ export class UserController {
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   async changeNickname(
-    @UserId() userId: number,
+    @UserId() userId: string,
     @Body() { nickname }: ChangeNicknameCommand
   ): Promise<void> {
     await this.userService.changeNickname(userId, nickname)
@@ -105,7 +105,7 @@ export class UserController {
     schema: z.array(z.int()).describe('List of available icon IDs for the user'),
   })
   @ApiBearerAuth()
-  async getIcons(@UserId() id: number): Promise<number[]> {
+  async getIcons(@UserId() id: string): Promise<number[]> {
     return this.userService.getAvailableIcons(id)
   }
 
@@ -118,7 +118,7 @@ export class UserController {
     }),
   })
   @ApiBearerAuth()
-  async changeIcon(@UserId() id: number, @Body() body: ChangeIconCommand): Promise<void> {
+  async changeIcon(@UserId() id: string, @Body() body: ChangeIconCommand): Promise<void> {
     const { iconId } = body
     await this.userService.changeIcon(id, iconId)
   }

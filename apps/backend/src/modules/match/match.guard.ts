@@ -31,7 +31,7 @@ export class MatchGuard implements CanActivate {
   }
 
   private validateHttp(request: MatchRequest): boolean {
-    const uuid = request.session.uuid
+    const uuid = request.session.userId
     if (!uuid) return false
 
     const perspective = this.matchBank.getPerspective(uuid)
@@ -42,7 +42,7 @@ export class MatchGuard implements CanActivate {
   }
 
   private validateWs(socket: MatchSocket): boolean {
-    const uuid = socket.data.session.uuid
+    const uuid = socket.data.session.userId
     if (!uuid) unexpected('unauthenticated socket connection.')
 
     const perspective = this.matchBank.getPerspective(uuid)

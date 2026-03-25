@@ -6,7 +6,7 @@ CREATE TABLE user_identity
 (
     provider         user_identity_provider NOT NULL,
     provider_user_id TEXT                   NOT NULL,
-    user_id          INTEGER                NOT NULL,
+    user_id          uuid                   NOT NULL,
 
     PRIMARY KEY (provider, provider_user_id),
     UNIQUE (provider, user_id),

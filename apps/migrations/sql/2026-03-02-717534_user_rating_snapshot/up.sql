@@ -6,7 +6,7 @@ CREATE TABLE user_rating_snapshot
         START WITH -2147483648
         MINVALUE -2147483648
         ),
-    user_id   INTEGER                  NOT NULL REFERENCES "user" (id) ON DELETE CASCADE,
+    user_id   uuid                     NOT NULL REFERENCES "user" (id) ON DELETE CASCADE,
     score     REAL                     NOT NULL,
     apex_flag user_apex_flag,
     hidden    BOOLEAN                  NOT NULL,

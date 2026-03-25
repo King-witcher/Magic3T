@@ -2,7 +2,7 @@
 
 CREATE TABLE user_icon
 (
-    user_id    INTEGER                  NOT NULL,
+    user_id    uuid                     NOT NULL,
     icon_id    SMALLINT                 NOT NULL,
     granted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 

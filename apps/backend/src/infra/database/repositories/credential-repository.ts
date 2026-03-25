@@ -13,11 +13,18 @@ export class CredentialRepository {
    *
    * The `password_last_changed` field is automatically set to the current timestamp.
    */
-  async create(username: string, password_digest: string, userId: number, client?: IDbClient) {
+  async create(
+    username: string,
+    password_digest: string,
+    algorithm: 'bcrypt' | 'argon2',
+    userId: string,
+    client?: IDbClient
+  ) {
     client ??= this.databaseService
     const cred: Omit<UserCredentialRow, 'password_last_changed'> = {
       user_id: userId,
       username_slug: this.slugify(username),
+      algorithm,
       password_digest,
     }
     await client.query(INSERT_INTO('user_credential', cred))
@@ -32,8 +39,7 @@ export class CredentialRepository {
     username: string,
     client?: IDbClient
   ): Promise<{
-    id: number
-    uuid: string
+    user_id: string
     profile_nickname: string
     role: UserRowRole
     profile_icon: number
@@ -44,10 +50,9 @@ export class CredentialRepository {
     const slug = this.slugify(username)
     const [result] = await client.query(sql`
       SELECT
+          u.id as user_id,
           uc.password_digest,
           u.profile_nickname,
-          u.id,
-          u.uuid,
           u.profile_icon,
           u.role
       FROM user_credential uc

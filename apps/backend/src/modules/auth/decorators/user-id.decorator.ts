@@ -8,11 +8,11 @@ import { AuthenticSocket } from '../authentic-socket'
  *
  * Should be used in conjunction with authentication guards that populate the session data.
  */
-export const UserId = createParamDecorator((_, ctx: ExecutionContext): number | undefined => {
+export const UserId = createParamDecorator((_, ctx: ExecutionContext): string | undefined => {
   switch (ctx.getType()) {
     case 'http': {
       const request = ctx.switchToHttp().getRequest<AuthenticRequest>()
-      const id = request.session?.id
+      const id = request.session?.userId
       if (id === undefined) {
         unexpected(
           'InvalidSession',
@@ -24,7 +24,7 @@ export const UserId = createParamDecorator((_, ctx: ExecutionContext): number | 
 
     case 'ws': {
       const client = ctx.switchToWs().getClient<AuthenticSocket>()
-      const id = client.data.session?.id
+      const id = client.data.session?.userId
       if (id === undefined) {
         unexpected(
           'InvalidSession',

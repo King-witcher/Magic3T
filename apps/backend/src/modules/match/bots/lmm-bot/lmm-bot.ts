@@ -16,7 +16,7 @@ function getMatchChoices(state: StateReportPayload, _team: Team) {
   return result
 }
 
-export class LmmBot extends BaseBot {
+export class MinMaxBot extends BaseBot {
   constructor(
     perspective: Perspective,
     private depth: number

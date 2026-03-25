@@ -19,8 +19,8 @@ export class UserService {
     private userRepository: UserRepository
   ) {}
 
-  async getByUUID(uuid: string): Promise<GetUserResult> {
-    const row = await this.userRepository.getByUUID(uuid)
+  async getById(uuid: string): Promise<GetUserResult> {
+    const row = await this.userRepository.getById(uuid)
     if (!row) respondError('user-not-found', 404, 'User not found')
     return this.toGetUserResult(row)
   }
@@ -38,13 +38,13 @@ export class UserService {
     }
   }
 
-  async getProfile(userId: number): Promise<GetUserResult> {
+  async getProfile(userId: string): Promise<GetUserResult> {
     const user = await this.userRepository.getById(userId)
     if (!user) unexpected('UserNotFound', 'User not found for current session')
     return this.toGetUserResult(user)
   }
 
-  async changeNickname(userId: number, newNickname: string): Promise<void> {
+  async changeNickname(userId: string, newNickname: string): Promise<void> {
     const user = await this.userRepository.getById(userId)
     if (!user) respondError('UserNotFound', 404, 'User not found')
 
@@ -67,13 +67,13 @@ export class UserService {
     }
   }
 
-  async getAvailableIcons(userId: number): Promise<number[]> {
+  async getAvailableIcons(userId: string): Promise<number[]> {
     const icons = await this.userRepository.getUserIcons(userId)
     const assignedIcons = icons.map((icon) => icon.id)
     return [...assignedIcons, ...BASE_ICONS]
   }
 
-  async changeIcon(userId: number, iconId: number): Promise<void> {
+  async changeIcon(userId: string, iconId: number): Promise<void> {
     if (!BASE_ICONS.has(iconId)) {
       const userIcons = await this.userRepository.getUserIcons(userId)
       if (!userIcons.some((assignment) => assignment.id === iconId)) {
@@ -94,7 +94,7 @@ export class UserService {
     )
 
     return {
-      uuid: row.uuid,
+      id: row.id,
       role: row.role,
       nickname: row.profile_nickname,
       summonerIcon: row.profile_icon,
@@ -117,7 +117,7 @@ export class UserService {
     )
 
     return {
-      uuid: row.uuid,
+      id: row.id,
       role: row.role,
       nickname: row.profile_nickname,
       summonerIcon: row.profile_icon,

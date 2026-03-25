@@ -47,7 +47,8 @@
       },
       "correctness": {
         "noUnusedImports": "warn",
-        "useExhaustiveDependencies": "info"
+        "useExhaustiveDependencies": "info",
+        "noPrivateImports": "error"
       },
       "performance": {
         "noDelete": "off"

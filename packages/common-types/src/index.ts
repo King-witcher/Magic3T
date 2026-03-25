@@ -1,3 +1,4 @@
+export * from './bots'
 export * from './choice'
 export * from './rating'
 export * from './team'

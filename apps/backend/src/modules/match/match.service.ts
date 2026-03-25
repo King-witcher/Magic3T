@@ -1,7 +1,6 @@
 import { Match as MatchNamespace, MatchServerEvents } from '@magic3t/api-types'
-import { Team } from '@magic3t/common-types'
+import { BotId, Team } from '@magic3t/common-types'
 import {
-  BotName,
   MatchEventRow,
   MatchRow,
   SingleBotConfig,
@@ -15,7 +14,8 @@ import { UserRepository } from '@/infra/database/repositories/user-repository'
 import { ConfigRepository } from '@/infra/firestore'
 import { WebsocketEmitterService } from '@/infra/websocket/websocket-emitter.service'
 import { RankConverter, RatingState } from '@/modules/rating'
-import { BaseBot, LmmBot, RandomBot } from './bots'
+import { BaseBot, MinMaxBot, RandomBot } from './bots'
+import { BotsService } from './bots.service'
 import { FinishedMatchContext } from './events/match-finished-event'
 import { Match, MatchClassEventType, MatchClassSummary, MatchStore, Perspective } from './lib'
 import { matchException } from './types/match-error'
@@ -32,22 +32,23 @@ export class MatchService {
     private userRepository: UserRepository,
     private matchBank: MatchStore,
     private eventEmitter: EventEmitter2,
-    private websocketEmitterService: WebsocketEmitterService
+    private websocketEmitterService: WebsocketEmitterService,
+    private botsService: BotsService
   ) {}
 
   /**
    * Create a new Player vs Bot match, returning the match id.
    */
-  async createPlayerVsBot(userId: string, botId: BotName): Promise<string> {
+  async createPlayerVsBot(userId: string, botId: BotId): Promise<string> {
     // Get profiles
-    const userProfilePromise = this.getProfile(userId)
-    const botConfig = await this.configRepository.getBotConfig(botId)
-    if (!botConfig) matchException(MatchNamespace.MatchError.BotNotFound, 404)
+    const userProfilePromise = this.userRepository.getById(userId)
 
     const [userProfile, botProfile] = await Promise.all([
       userProfilePromise,
-      this.getProfile(botConfig.uid),
+      this.botsService.getUser(botId),
     ])
+
+    if (!userProfile) unexpected('User not found for player vs bot match creation', userId)
 
     // Coin flip sides
     const humanTeam = TEAMS[Math.round(Math.random())]
@@ -60,13 +61,13 @@ export class MatchService {
     })
     const { orderPerspective, chaosPerspective } = this.matchBank.createPerspectives({
       match,
-      orderId: orderProfile.uuid,
-      chaosId: chaosProfile.uuid,
+      orderId: orderProfile.id,
+      chaosId: chaosProfile.id,
     })
 
     // Get bot, passing perspective
-    const bot = this.getBot(
-      botConfig,
+    const bot = this.botsService.getBot(
+      botId,
       humanTeam === Team.Order ? chaosPerspective : orderPerspective
     )
 
@@ -82,51 +83,51 @@ export class MatchService {
   /**
    * Creates a bot vs bot match for testing and balancing purposes.
    */
-  async createBotVsBotMatch(name1: BotName, name2: BotName) {
-    // Get bot configs
-    const [config1, config2] = await Promise.all([
-      this.configRepository.getBotConfig(name1),
-      this.configRepository.getBotConfig(name2),
-    ])
-    if (!config1 || !config2) unexpected('Could not find bot config(s) for bot vs bot match.')
+  // async createBotVsBotMatch(name1: BotName, name2: BotName) {
+  //   // Get bot configs
+  //   const [config1, config2] = await Promise.all([
+  //     this.configRepository.getBotConfig(name1),
+  //     this.configRepository.getBotConfig(name2),
+  //   ])
+  //   if (!config1 || !config2) unexpected('Could not find bot config(s) for bot vs bot match.')
 
-    // Get bot profiles
-    const [profile1, profile2] = await Promise.all([
-      this.getProfile(config1.uid),
-      this.getProfile(config2.uid),
-    ])
+  //   // Get bot profiles
+  //   const [profile1, profile2] = await Promise.all([
+  //     this.getProfile(config1.id),
+  //     this.getProfile(config2.uid),
+  //   ])
 
-    // Coinflip profiles
-    const sideOfFirst = TEAMS[Math.round(Math.random())]
-    const [orderProfile, chaosProfile] =
-      sideOfFirst === Team.Order ? [profile1, profile2] : [profile2, profile1]
+  //   // Coinflip profiles
+  //   const sideOfFirst = TEAMS[Math.round(Math.random())]
+  //   const [orderProfile, chaosProfile] =
+  //     sideOfFirst === Team.Order ? [profile1, profile2] : [profile2, profile1]
 
-    // Create and register match
-    const { match } = this.matchBank.createAndRegisterMatch({
-      timelimit: 60 * 1000,
-    })
+  //   // Create and register match
+  //   const { match } = this.matchBank.createAndRegisterMatch({
+  //     timelimit: 60 * 1000,
+  //   })
 
-    // Create perspectives
-    const { orderPerspective, chaosPerspective } = await this.matchBank.createPerspectives({
-      match,
-      orderId: config1.uid,
-      chaosId: config2.uid,
-    })
+  //   // Create perspectives
+  //   const { orderPerspective, chaosPerspective } = await this.matchBank.createPerspectives({
+  //     match,
+  //     orderId: config1.uid,
+  //     chaosId: config2.uid,
+  //   })
 
-    // Get bots, passing perspectives
-    const order = this.getBot(config1, orderPerspective)
-    const chaos = this.getBot(config2, chaosPerspective)
+  //   // Get bots, passing perspectives
+  //   const order = this.getBot(config1, orderPerspective)
+  //   const chaos = this.getBot(config2, chaosPerspective)
 
-    // Sync
-    this.subscribeMatchEvents(match, orderProfile, chaosProfile, true, new Date())
+  //   // Sync
+  //   this.subscribeMatchEvents(match, orderProfile, chaosProfile, true, new Date())
 
-    // Start match and bots
-    match.start()
+  //   // Start match and bots
+  //   match.start()
 
-    order.start()
-    chaos.start()
-    return match
-  }
+  //   order.start()
+  //   chaos.start()
+  //   return match
+  // }
 
   /**
    * Create a new Player vs Player match.
@@ -151,8 +152,8 @@ export class MatchService {
     // Register perspectives for both players in match bank
     this.matchBank.createPerspectives({
       match,
-      orderId: orderProfile.uuid,
-      chaosId: chaosProfile.uuid,
+      orderId: orderProfile.id,
+      chaosId: chaosProfile.id,
     })
 
     // Sync
@@ -239,14 +240,14 @@ export class MatchService {
         nickname: match.order_nickname,
         rank: orderRank,
         score: match.order_match_score,
-        uuid: match.order_uuid,
+        uuid: match.order_id,
       },
       chaos: {
         lpGain: chaosGain,
         nickname: match.chaos_nickname,
         rank: chaosRank,
         score: match.chaos_match_score,
-        uuid: match.chaos_uuid,
+        uuid: match.chaos_id,
       },
     }
   }
@@ -295,14 +296,14 @@ export class MatchService {
         nickname: match.order_nickname,
         rank: orderRank,
         score: match.order_match_score,
-        uuid: match.order_uuid,
+        uuid: match.order_id,
       },
       chaos: {
         lpGain: chaosGain,
         nickname: match.chaos_nickname,
         rank: chaosRank,
         score: match.chaos_match_score,
-        uuid: match.chaos_uuid,
+        uuid: match.chaos_id,
       },
     }
   }
@@ -331,7 +332,7 @@ export class MatchService {
           // Validate that the player is not a bot
           if (player.role !== 'bot') {
             this.websocketEmitterService.send(
-              player.uuid,
+              player.id,
               'match',
               MatchServerEvents.StateReport,
               stateReport
@@ -401,14 +402,23 @@ export class MatchService {
     }
   }
 
-  private getBot(botConfig: SingleBotConfig, perspective: Perspective): BaseBot {
-    return botConfig.model === 'lmm'
-      ? new LmmBot(perspective, botConfig.depth)
-      : new RandomBot(perspective)
+  private getBot(botId: BotId, perspective: Perspective): BaseBot {
+    switch (botId) {
+      case BotId.Recruit:
+        return new RandomBot(perspective)
+      case BotId.Soldier:
+        return new MinMaxBot(perspective, 2)
+      case BotId.Legend:
+        return new MinMaxBot(perspective, 4)
+      case BotId.Elite:
+        return new MinMaxBot(perspective, 7)
+      default:
+        unexpected('Tried to get bot with invalid bot id', botId)
+    }
   }
 
   private async getProfile(userId: string): Promise<UserRow> {
-    const profile = await this.userRepository.getByFirebaseId(userId)
+    const profile = await this.userRepository.getById(userId)
     if (!profile)
       unexpected('match service should never try to get a profile that does not exist', userId)
     return profile

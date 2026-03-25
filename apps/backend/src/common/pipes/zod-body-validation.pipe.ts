@@ -1,11 +1,12 @@
-import { PipeTransform } from '@nestjs/common'
+import { ArgumentMetadata, PipeTransform } from '@nestjs/common'
 import z from 'zod'
 import { respondError } from '../errors'
 
-export class ZodValidationPipe implements PipeTransform {
+export class ZodBodyValidationPipe implements PipeTransform {
   constructor(private schema: z.ZodType) {}
 
-  transform(value: unknown) {
+  transform(value: unknown, metadata: ArgumentMetadata) {
+    if (metadata.type !== 'body') return value
     try {
       const parsedValue = this.schema.parse(value)
       return parsedValue
