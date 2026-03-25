@@ -10,6 +10,7 @@ export const Route = createFileRoute('/_auth-guard/me')({
   component: () => {
     const auth = useSignedAuth()
 
+    console.log(auth)
     const userQuery = useClientQuery(apiClient.user, 'getById', auth.uuid)
 
     const matchesQuery = useClientQuery(apiClient.match, 'listUserMatches', {

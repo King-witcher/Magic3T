@@ -259,7 +259,7 @@ export function AuthProvider({ children }: Props) {
 
     return {
       session: sessionData,
-      uuid: sessionData.uuid,
+      uuid: sessionData.userId,
       signedIn: true,
       state: AuthState.SignedIn,
       logout: logout,
