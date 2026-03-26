@@ -26,71 +26,6 @@
   ],
 	"tasks": [
     {
-      "label": "vite: dev",
-      "type": "shell",
-      "command": "npm run dev",
-      "options": {
-        "cwd": "apps/frontend",
-        "env": {
-          "VITE_API_URL": "${input:backend-url}"
-        }
-      },
-      "isBackground": true,
-      "icon": {
-        "id": "run",
-        "color": "terminal.ansiGreen",
-      },
-      "problemMatcher": [{
-        "owner": "vite",
-        "pattern": {
-          "regexp": ".",
-          "file": 1,
-          "location": 2,
-          "message": 3
-        },
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".",
-          "endsPattern": "."
-        }
-      }],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
-      },
-    },
-    {
-      "label": "stories",
-      "type": "shell",
-      "command": "npm run stories",
-      "options": {
-        "cwd": "apps/frontend",
-      },
-      "isBackground": true,
-      "icon": {
-        "id": "run",
-        "color": "terminal.ansiGreen",
-      },
-      "problemMatcher": [{
-        "owner": "vite",
-        "pattern": {
-          "regexp": ".",
-          "file": 1,
-          "location": 2,
-          "message": 3
-        },
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".",
-          "endsPattern": "."
-        }
-      }],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
-      },
-    },
-    {
       "label": "typecheck: backend",
       "detail": "Starts a background tsc --watch that reports all type errors in the VSCode Problems panel.",
       "icon": {
@@ -116,7 +51,7 @@
         "panel": "shared",
         "showReuseMessage": true,
         "clear": false
-      },
+      }
     },
     {
       "label": "typecheck: frontend",
@@ -144,21 +79,21 @@
         "panel": "shared",
         "showReuseMessage": true,
         "clear": false
-      },
+      }
     },
-
     {
       "label": "Create Migration",
+      "detail": "Creates a new migration",
       "icon": {
         "id": "database",
-        "color": "terminal.ansiYellow",
+        "color": "terminal.ansiYellow"
       },
       "type": "shell",
       "command": "npm",
       "args": [
         "run",
         "new",
-        "${input:migration-name}",
+        "${input:migration-name}"
       ],
       "options": {
         "cwd": "apps/migrations"
@@ -181,12 +116,12 @@
         "clear": false
       }
     },
-
     {
       "label": "Run Migrations",
+      "detail": "Runs all pending migrations",
       "icon": {
         "id": "database",
-        "color": "terminal.ansiBlue",
+        "color": "terminal.ansiBlue"
       },
       "type": "shell",
       "command": "npm",
@@ -212,12 +147,12 @@
         "clear": false
       }
     },
-
     {
       "label": "Clear Migrations",
+      "detail": "Reverts all migrations in the database",
       "icon": {
         "id": "database",
-        "color": "terminal.ansiRed",
+        "color": "terminal.ansiRed"
       },
       "type": "shell",
       "command": "npm",
@@ -243,12 +178,129 @@
         "clear": false
       }
     },
-
-    //////////////// CI Test
-
-    // build backend
+    {
+      "label": "infra: up",
+      "type": "docker-compose",
+      "hide": true,
+      "dockerCompose": {
+        "up": {
+          "detached": true,
+          "build": false
+        },
+        "files": [
+          "${workspaceFolder}/compose.yaml"
+        ]
+      },
+      "icon": {
+        "id": "server",
+        "color": "terminal.ansiGreen"
+      }
+    },
+    {
+      "label": "infra: down",
+      "type": "docker-compose",
+      "hide": true,
+      "dockerCompose": {
+        "down": {
+          "build": false
+        },
+        "files": [
+          "${workspaceFolder}/compose.yaml"
+        ]
+      },
+      "icon": {
+        "id": "server",
+        "color": "terminal.ansiRed"
+      }
+    },
+    {
+      "label": "vite: dev",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "apps/frontend",
+        "env": {
+          "VITE_API_URL": "${input:backend-url}"
+        }
+      },
+      "isBackground": true,
+      "icon": {
+        "id": "run",
+        "color": "terminal.ansiGreen"
+      },
+      "problemMatcher": [
+        {
+          "owner": "vite",
+          "pattern": {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".",
+            "endsPattern": "."
+          }
+        }
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "hide": true
+    },
+    {
+      "label": "vite: stop",
+      "type": "shell",
+      "command": "npx kill-port 3000",
+      "hide": true,
+      "icon": {
+        "id": "stop",
+        "color": "terminal.ansiRed"
+      },
+      "presentation": {
+        "reveal": "never",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "stories",
+      "type": "shell",
+      "command": "npm run stories",
+      "hide": true,
+      "options": {
+        "cwd": "apps/frontend"
+      },
+      "isBackground": true,
+      "icon": {
+        "id": "run",
+        "color": "terminal.ansiGreen"
+      },
+      "problemMatcher": [
+        {
+          "owner": "vite",
+          "pattern": {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".",
+            "endsPattern": "."
+          }
+        }
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
     {
       "label": "build: backend",
+      "hide": true,
       "icon": {
         "id": "tools",
         "color": "terminal.ansiWhite"
@@ -259,7 +311,8 @@
       },
       "command": "npm",
       "args": [
-        "run", "build"
+        "run",
+        "build"
       ],
       "group": "build",
       "presentation": {
@@ -267,10 +320,9 @@
         "panel": "shared"
       }
     },
-
-    // build frontend
     {
       "label": "build: frontend",
+      "hide": true,
       "icon": {
         "id": "tools",
         "color": "terminal.ansiWhite"
@@ -281,7 +333,8 @@
       },
       "command": "npm",
       "args": [
-        "run", "build"
+        "run",
+        "build"
       ],
       "group": "build",
       "presentation": {
@@ -289,10 +342,9 @@
         "panel": "shared"
       }
     },
-
-    // npm run lint
     {
       "label": "biome lint",
+      "hide": true,
       "icon": {
         "id": "tools",
         "color": "terminal.ansiWhite"
@@ -300,7 +352,8 @@
       "type": "shell",
       "command": "npm",
       "args": [
-        "run", "lint"
+        "run",
+        "lint"
       ],
       "group": "build",
       "presentation": {
@@ -308,10 +361,9 @@
         "panel": "shared"
       }
     },
-
-    // Build everything
     {
       "label": "build",
+      "hide": true,
       "dependsOn": [
         "build: backend",
         "build: frontend",
@@ -323,5 +375,5 @@
       },
       "dependsOrder": "parallel"
     }
-	]
+  ]
 }

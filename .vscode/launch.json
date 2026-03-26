@@ -2,26 +2,34 @@
   "configurations": [
     {
       "command": "npm run dev --workspace=apps/backend",
-      // "cwd": "${workspaceFolder}/apps/backend",
-      "name": "Launch Backend",
+      "name": "Backend",
       "request": "launch",
-      "type": "node-terminal"
+      "type": "node-terminal",
+      "preLaunchTask": "infra: up",
+      "postDebugTask": "infra: down",
+      "presentation": {
+        "hidden": true
+      },
     },
     {
       "cwd": "${workspaceFolder}/apps/frontend",
-      "name": "Launch Frontend",
+      "name": "Frontend",
       "preLaunchTask": "vite: dev",
+      "postDebugTask": "vite: stop",
       "request": "launch",
       "skipFiles": [
         "${workspaceFolder}/node_modules/**/*.js"
       ],
       "type": "msedge",
       "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}/apps/frontend"
+      "webRoot": "${workspaceFolder}/apps/frontend",
+      "presentation": {
+        "hidden": true
+      }
     },
     {
       "cwd": "${workspaceFolder}/apps/frontend",
-      "name": "Launch Stories",
+      "name": "Stories",
       "preLaunchTask": "stories",
       "request": "launch",
       "skipFiles": [
@@ -29,8 +37,14 @@
       ],
       "type": "msedge",
       "url": "http://localhost:61000",
-      "webRoot": "${workspaceFolder}/apps/frontend"
+      "webRoot": "${workspaceFolder}/apps/frontend",
     },
+  ],
+  "compounds": [
+    {
+      "name": "Magic3T",
+      "configurations": ["Backend", "Frontend"],
+    }
   ],
   "version": "0.2.0"
 }
