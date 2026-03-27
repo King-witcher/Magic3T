@@ -9,7 +9,14 @@ import { PersistanceService } from './persistance.service'
 
 @Module({
   controllers: [MatchController],
-  providers: [MatchGateway, MatchStore, MatchService, ClientSyncService, BotsService, PersistanceService],
+  providers: [
+    MatchGateway,
+    MatchStore,
+    MatchService,
+    ClientSyncService,
+    BotsService,
+    PersistanceService,
+  ],
   exports: [MatchService],
 })
 export class MatchModule {}
