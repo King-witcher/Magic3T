@@ -1,9 +1,4 @@
-import {
-  MatchEventRow,
-  MatchRow,
-  UserApexFlag,
-  UserRatingSnapshotRow,
-} from '@magic3t/database-types'
+import { MatchEventRow, MatchRow, UserRatingSnapshotRow } from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
 import { IDbClient, INSERT_INTO } from '@/shared/database'
 import { sql } from '@/shared/database/sql'
@@ -14,24 +9,13 @@ export type PersistMatchInput = {
   events: Omit<MatchEventRow, 'match_id'>[]
 }
 
-export type ListableMatch = MatchRow & {
-  orderRating: UserRatingSnapshotRow | null
-  chaosRating: UserRatingSnapshotRow | null
+export type MatchRowWithRatings = MatchRow & {
+  order_rating: Omit<UserRatingSnapshotRow, 'id' | 'user_id'> | null
+  chaos_rating: Omit<UserRatingSnapshotRow, 'id' | 'user_id'> | null
 }
 
-type MatchWithRatingsFlat = MatchRow & {
-  order_rating_id: number | null
-  order_rating_user_id: string | null
-  order_rating_score: number | null
-  order_rating_apex_flag: UserApexFlag | null
-  order_rating_hidden: boolean | null
-  order_rating_date: Date | null
-  chaos_rating_id: number | null
-  chaos_rating_user_id: string | null
-  chaos_rating_score: number | null
-  chaos_rating_apex_flag: UserApexFlag | null
-  chaos_rating_hidden: boolean | null
-  chaos_rating_date: Date | null
+export type FullyJoinedMatchRow = MatchRowWithRatings & {
+  events: Omit<MatchEventRow, 'match_id' | 'sequence'>[]
 }
 
 @Injectable()
@@ -53,72 +37,48 @@ export class MatchRepository {
     }
   }
 
-  async getByUserUuid(uuid: string, limit: number): Promise<ListableMatch[]> {
-    const rows = await this.databaseService.query<MatchWithRatingsFlat>(sql`
-      SELECT
-        m.*,
-        ors.id             AS order_rating_id,
-        ors.user_id        AS order_rating_user_id,
-        ors.score          AS order_rating_score,
-        ors.apex_flag      AS order_rating_apex_flag,
-        ors.hidden         AS order_rating_hidden,
-        ors.date           AS order_rating_date,
-        crs.id             AS chaos_rating_id,
-        crs.user_id        AS chaos_rating_user_id,
-        crs.score          AS chaos_rating_score,
-        crs.apex_flag      AS chaos_rating_apex_flag,
-        crs.hidden         AS chaos_rating_hidden,
-        crs.date           AS chaos_rating_date
+  async getByUserUuid(uuid: string, limit: number): Promise<MatchRowWithRatings[]> {
+    const rows = await this.databaseService.query<MatchRowWithRatings>(sql`
+      SELECT m.*,
+            -- TODO: Remove unnecessary fields from the rating snapshots
+            ROW_TO_JSON(ors.*) AS order_rating,
+            ROW_TO_JSON(crs.*) AS chaos_rating
+
       FROM match m
-      LEFT JOIN user_rating_snapshot ors ON ors.id = m.order_old_rating
-      LEFT JOIN user_rating_snapshot crs ON crs.id = m.chaos_old_rating
-      WHERE m.order_id = ${uuid} OR m.chaos_id = ${uuid}
-      ORDER BY m.id DESC
-      LIMIT ${limit}
+              LEFT JOIN user_rating_snapshot ors
+                        ON ors.id = m.order_old_rating
+              LEFT JOIN user_rating_snapshot crs
+                        ON crs.id = m.chaos_old_rating
+      WHERE m.order_id = ${uuid}
+        OR m.chaos_id = ${uuid}
+      GROUP BY m.id, ors.id, crs.id
+      LIMIT ${limit};
     `)
 
-    return rows.map((row): ListableMatch => {
-      const {
-        order_rating_id,
-        order_rating_user_id,
-        order_rating_score,
-        order_rating_apex_flag,
-        order_rating_hidden,
-        order_rating_date,
-        chaos_rating_id,
-        chaos_rating_user_id,
-        chaos_rating_score,
-        chaos_rating_apex_flag,
-        chaos_rating_hidden,
-        chaos_rating_date,
-        ...matchRow
-      } = row
+    return rows
+  }
 
-      const orderRating: UserRatingSnapshotRow | null =
-        order_rating_id !== null
-          ? {
-              id: order_rating_id,
-              user_id: order_rating_user_id!,
-              score: order_rating_score!,
-              apex_flag: order_rating_apex_flag,
-              hidden: order_rating_hidden!,
-              date: order_rating_date!,
-            }
-          : null
+  async getByUuid(uuid: string): Promise<FullyJoinedMatchRow | null> {
+    const rows = await this.databaseService.query<FullyJoinedMatchRow>(sql`
+      SELECT m.*,
+            -- TODO: Remove unnecessary fields from the rating snapshots
+            ROW_TO_JSON(ors.*)          AS order_rating,
+            ROW_TO_JSON(crs.*)          AS chaos_rating,
+            JSON_AGG(ROW_TO_JSON(me.*)) AS events
 
-      const chaosRating: UserRatingSnapshotRow | null =
-        chaos_rating_id !== null
-          ? {
-              id: chaos_rating_id,
-              user_id: chaos_rating_user_id!,
-              score: chaos_rating_score!,
-              apex_flag: chaos_rating_apex_flag,
-              hidden: chaos_rating_hidden!,
-              date: chaos_rating_date!,
-            }
-          : null
+      FROM match m
+              LEFT JOIN user_rating_snapshot ors
+                        ON ors.id = m.order_old_rating
+              LEFT JOIN user_rating_snapshot crs
+                        ON crs.id = m.chaos_old_rating
+              LEFT JOIN match_event me
+                        ON me.match_id = m.id
+      WHERE m.uuid = ${uuid}
+      GROUP BY m.id, ors.id, crs.id;
+    `)
 
-      return { ...matchRow, orderRating, chaosRating }
-    })
+    if (rows.length === 0) return null
+
+    return rows[0]
   }
 }

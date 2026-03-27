@@ -2,15 +2,16 @@ import { Match as MatchNamespace, MatchServerEvents } from '@magic3t/api-types'
 import { BotId, League, Team } from '@magic3t/common-types'
 import {
   MatchEventRow,
-  MatchRow,
-  SingleBotConfig,
-  UserRatingSnapshotRow,
   UserRow,
 } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { unexpected } from '@/common'
-import { MatchRepository } from '@/infra/database/repositories/match-repository'
+import {
+  FullyJoinedMatchRow,
+  MatchRepository,
+  MatchRowWithRatings,
+} from '@/infra/database/repositories/match-repository'
 import { UserRepository } from '@/infra/database/repositories/user-repository'
 import { ConfigRepository } from '@/infra/firestore'
 import { WebsocketEmitterService } from '@/infra/websocket/websocket-emitter.service'
@@ -196,11 +197,7 @@ export class MatchService {
   }
 
   async getMatchByRow(
-    match: MatchRow & {
-      events: MatchEventRow[]
-      orderRating: UserRatingSnapshotRow
-      chaosRating: UserRatingSnapshotRow
-    },
+    match: FullyJoinedMatchRow,
     rankConverter?: RankConverter
   ): Promise<MatchNamespace.GetMatchResult> {
     const converter = await (async () => {
@@ -209,22 +206,33 @@ export class MatchService {
       return new RankConverter(ratingConfig)
     })()
 
-    const orderRank = converter.getRankFromElo(
-      match.orderRating.score,
-      match.orderRating.hidden ? 0 : null,
-      match.orderRating.apex_flag
-    )
+    const provisionalRank: MatchNamespace.GetMatchResultTeam['rank'] = {
+      league: League.Provisional,
+      division: null,
+      points: null,
+      rankedCount: 0,
+    }
+
+    const orderRank = match.order_rating
+      ? converter.getRankFromElo(
+          match.order_rating.score,
+          match.order_rating.hidden ? 0 : null,
+          match.order_rating.apex_flag
+        )
+      : provisionalRank
 
     const orderGain =
       match.order_delta !== null
         ? converter.getTotalLP(match.order_delta) - converter.getTotalLP(0)
         : null
 
-    const chaosRank = converter.getRankFromElo(
-      match.chaosRating.score,
-      match.chaosRating.hidden ? 0 : null,
-      match.chaosRating.apex_flag
-    )
+    const chaosRank = match.chaos_rating
+      ? converter.getRankFromElo(
+          match.chaos_rating.score,
+          match.chaos_rating.hidden ? 0 : null,
+          match.chaos_rating.apex_flag
+        )
+      : provisionalRank
 
     const chaosGain =
       match.chaos_delta !== null
@@ -254,10 +262,7 @@ export class MatchService {
   }
 
   async getListedMatchByRow(
-    match: MatchRow & {
-      orderRating: UserRatingSnapshotRow | null
-      chaosRating: UserRatingSnapshotRow | null
-    },
+    match: MatchRowWithRatings,
     rankConverter?: RankConverter
   ): Promise<MatchNamespace.ListMatchesResultItem> {
     const converter = await (async () => {
@@ -273,11 +278,11 @@ export class MatchService {
       rankedCount: 0,
     }
 
-    const orderRank = match.orderRating
+    const orderRank = match.order_rating
       ? converter.getRankFromElo(
-          match.orderRating.score,
-          match.orderRating.hidden ? 0 : null,
-          match.orderRating.apex_flag
+          match.order_rating.score,
+          match.order_rating.hidden ? 0 : null,
+          match.order_rating.apex_flag
         )
       : provisionalRank
 
@@ -286,11 +291,11 @@ export class MatchService {
         ? converter.getTotalLP(match.order_delta) - converter.getTotalLP(0)
         : null
 
-    const chaosRank = match.chaosRating
+    const chaosRank = match.chaos_rating
       ? converter.getRankFromElo(
-          match.chaosRating.score,
-          match.chaosRating.hidden ? 0 : null,
-          match.chaosRating.apex_flag
+          match.chaos_rating.score,
+          match.chaos_rating.hidden ? 0 : null,
+          match.chaos_rating.apex_flag
         )
       : provisionalRank
 
@@ -318,6 +323,18 @@ export class MatchService {
         uuid: match.chaos_id,
       },
     }
+  }
+
+  async getMatchByUuid(uuid: string): Promise<MatchNamespace.GetMatchResult> {
+    const [row, ratingConfig] = await Promise.all([
+      this.matchRepository.getByUuid(uuid),
+      this.configRepository.getRatingConfig(),
+    ])
+
+    if (!row) throw Object.assign(new Error('Match not found'), { code: 'match-not-found' })
+
+    const rankConverter = new RankConverter(ratingConfig)
+    return this.getMatchByRow(row, rankConverter)
   }
 
   async listMatchesByUserUuid(

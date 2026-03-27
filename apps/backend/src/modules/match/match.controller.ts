@@ -11,7 +11,8 @@ import {
 } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { clamp } from 'lodash'
-import { respondError } from '@/common'
+import z from 'zod'
+import { respondError, ZodValidationPipe } from '@/common'
 import { AuthGuard } from '@/modules/auth/auth.guard'
 import { UserId } from '@/modules/auth/decorators/user-id.decorator'
 import { CurrentPerspective } from './decorators'
@@ -106,11 +107,12 @@ export class MatchController {
     summary: 'Get match by ID',
     description: 'Get a specific match by its ID',
   })
-  async getMatchById(@Param('uuid') uuid: string): Promise<Match.GetMatchResult> {
-    // const row = await this.matchRepository.getById(matchId)
-    // if (!row) respondError('match-not-found', 404, 'Match not found.')
-    // return this.matchService.getMatchByRow(row)
-    respondError('not-implemented', 501, 'This endpoint is not implemented yet.')
+  async getMatchById(
+    @Param('uuid', new ZodValidationPipe(z.uuid())) uuid: string
+  ): Promise<Match.GetMatchResult> {
+    const result = await this.matchService.getMatchByUuid(uuid)
+    if (!result) respondError('match-not-found', 404, 'Match not found.')
+    return result
   }
 
   @Get('user/:uuid')
@@ -123,7 +125,7 @@ export class MatchController {
   })
   async getMatchesByUser(
     @Query('limit', ParseIntPipe) limit: number,
-    @Param('uuid') uuid: string
+    @Param('uuid', new ZodValidationPipe(z.uuid())) uuid: string
   ): Promise<Match.ListMatchesResult> {
     const clampedLimit = clamp(limit, 0, 50)
 
