@@ -253,10 +253,10 @@
     {
       "label": "vite: stop",
       "type": "shell",
-      "command": "npx kill-port 3000",
+      "command": "npx kill-port 3000 -y",
       "hide": true,
       "icon": {
-        "id": "stop",
+        "id": "run",
         "color": "terminal.ansiRed"
       },
       "presentation": {

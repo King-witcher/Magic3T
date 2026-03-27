@@ -127,8 +127,6 @@ export class MatchController {
   ): Promise<Match.ListMatchesResult> {
     const clampedLimit = clamp(limit, 0, 50)
 
-    return {
-      matches: [],
-    }
+    return this.matchService.listMatchesByUserUuid(uuid, clampedLimit)
   }
 }

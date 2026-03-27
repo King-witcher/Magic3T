@@ -1,5 +1,5 @@
 import { Match as MatchNamespace, MatchServerEvents } from '@magic3t/api-types'
-import { BotId, Team } from '@magic3t/common-types'
+import { BotId, League, Team } from '@magic3t/common-types'
 import {
   MatchEventRow,
   MatchRow,
@@ -10,6 +10,7 @@ import {
 import { Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { unexpected } from '@/common'
+import { MatchRepository } from '@/infra/database/repositories/match-repository'
 import { UserRepository } from '@/infra/database/repositories/user-repository'
 import { ConfigRepository } from '@/infra/firestore'
 import { WebsocketEmitterService } from '@/infra/websocket/websocket-emitter.service'
@@ -29,6 +30,7 @@ export class MatchService {
   constructor(
     private configRepository: ConfigRepository,
     private userRepository: UserRepository,
+    private matchRepository: MatchRepository,
     private matchBank: MatchStore,
     private eventEmitter: EventEmitter2,
     private websocketEmitterService: WebsocketEmitterService,
@@ -253,8 +255,8 @@ export class MatchService {
 
   async getListedMatchByRow(
     match: MatchRow & {
-      orderRating: UserRatingSnapshotRow
-      chaosRating: UserRatingSnapshotRow
+      orderRating: UserRatingSnapshotRow | null
+      chaosRating: UserRatingSnapshotRow | null
     },
     rankConverter?: RankConverter
   ): Promise<MatchNamespace.ListMatchesResultItem> {
@@ -264,22 +266,33 @@ export class MatchService {
       return new RankConverter(ratingConfig)
     })()
 
-    const orderRank = converter.getRankFromElo(
-      match.orderRating.score,
-      match.orderRating.hidden ? 0 : null,
-      match.orderRating.apex_flag
-    )
+    const provisionalRank: MatchNamespace.GetMatchResultTeam['rank'] = {
+      league: League.Provisional,
+      division: null,
+      points: null,
+      rankedCount: 0,
+    }
+
+    const orderRank = match.orderRating
+      ? converter.getRankFromElo(
+          match.orderRating.score,
+          match.orderRating.hidden ? 0 : null,
+          match.orderRating.apex_flag
+        )
+      : provisionalRank
 
     const orderGain =
       match.order_delta !== null
         ? converter.getTotalLP(match.order_delta) - converter.getTotalLP(0)
         : null
 
-    const chaosRank = converter.getRankFromElo(
-      match.chaosRating.score,
-      match.chaosRating.hidden ? 0 : null,
-      match.chaosRating.apex_flag
-    )
+    const chaosRank = match.chaosRating
+      ? converter.getRankFromElo(
+          match.chaosRating.score,
+          match.chaosRating.hidden ? 0 : null,
+          match.chaosRating.apex_flag
+        )
+      : provisionalRank
 
     const chaosGain =
       match.chaos_delta !== null
@@ -305,6 +318,23 @@ export class MatchService {
         uuid: match.chaos_id,
       },
     }
+  }
+
+  async listMatchesByUserUuid(
+    uuid: string,
+    limit: number
+  ): Promise<MatchNamespace.ListMatchesResult> {
+    const [rows, ratingConfig] = await Promise.all([
+      this.matchRepository.getByUserUuid(uuid, limit),
+      this.configRepository.getRatingConfig(),
+    ])
+
+    const rankConverter = new RankConverter(ratingConfig)
+    const matches = await Promise.all(
+      rows.map((row) => this.getListedMatchByRow(row, rankConverter))
+    )
+
+    return { matches }
   }
 
   /**
