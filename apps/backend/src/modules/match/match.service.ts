@@ -18,7 +18,6 @@ import { BaseBot, MinMaxBot, RandomBot } from './bots'
 import { BotsService } from './bots.service'
 import { FinishedMatchContext } from './events/match-finished-event'
 import { Match, MatchClassEventType, MatchClassSummary, MatchStore, Perspective } from './lib'
-import { matchException } from './types/match-error'
 
 export type MatchCreationError = 'user-not-found' | 'bot-not-found'
 const HUMAN_VS_BOT_TIMELIMIT = 180 * 1000 // 3 minutes per player

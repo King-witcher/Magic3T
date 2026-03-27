@@ -18,7 +18,7 @@ export class QueueGateway extends BaseGateway<QueueClientEventsMap, QueueServerE
   @Cron('*/1 * * * * *')
   sendQueueStatus() {
     const queueCount = this.queueService.getUserCount()
-    this.broadcast(QueueServerEvents.UserCount, {
+    this.broadcast(QueueServerEvents.LiveGameStats, {
       casual: {
         inGame: 0,
         queue: queueCount.casual,

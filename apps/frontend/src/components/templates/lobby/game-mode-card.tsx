@@ -1,14 +1,14 @@
+import { BotId } from '@magic3t/common-types'
 import { ReactNode } from 'react'
 import { Button, Spinner } from '@/components/atoms'
 import { useQueue } from '@/contexts/queue-context'
 import { ServerStatus, useServiceStatus } from '@/contexts/service-status.context'
 import { cn } from '@/lib/utils'
-import { QueueMode } from '@/types/queue'
 
 export type Difficulty = 'easy' | 'medium' | 'hard' | 'unbeatable'
 
 interface GameModeCardProps {
-  mode: QueueMode
+  mode: BotId | 'pvp'
   title: string
   description: string
   icon: ReactNode
@@ -40,16 +40,18 @@ export function GameModeCard({
   playersInQueue,
   variant = 'bot',
 }: GameModeCardProps) {
-  const { enqueue, dequeue, queueModes } = useQueue()
+  const { enqueue, joinBot, leaveQueue, queueModes } = useQueue()
   const { serverStatus } = useServiceStatus()
   const isDisabled = serverStatus !== ServerStatus.On
-  const isInQueue = !!queueModes[mode]
+  const isInQueue = !!queueModes.ranked?.[mode]
 
   const handleClick = () => {
     if (isInQueue) {
-      dequeue(mode)
+      leaveQueue()
+    } else if (mode === 'pvp') {
+      enqueue()
     } else {
-      enqueue(mode)
+      joinBot(mode)
     }
   }
 

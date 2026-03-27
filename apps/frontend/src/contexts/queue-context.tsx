@@ -1,43 +1,54 @@
 import {
+  LiveGameStatsPayload,
   QueueClientEvents,
   QueueClientEventsMap,
   QueueServerEvents,
   QueueServerEventsMap,
-  UpdateUserCountPayload,
 } from '@magic3t/api-types'
+import { BotId } from '@magic3t/common-types'
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { useClientMutation } from '@/hooks/use-client-mutation'
 import { useGateway } from '@/hooks/use-gateway.ts'
 import { useListener } from '@/hooks/use-listener.ts'
 import { apiClient } from '@/services/clients/api-client.ts'
-import { QueueMode } from '@/types/queue.ts'
 import { AuthState, useAuth } from './auth/auth-context.tsx'
 import { useGame } from './game-context.tsx'
 
 export type QueueModesType = {
-  'bot-0'?: boolean
-  'bot-1'?: boolean
-  'bot-2'?: boolean
-  'bot-3'?: boolean
-  casual?: boolean
-  ranked?: boolean
+  ranked: {
+    [botId in BotId | 'pvp']: boolean
+  }
+}
+
+const emptyQueueModes: QueueModesType = {
+  ranked: {
+    pvp: false,
+    [BotId.Recruit]: false,
+    [BotId.Soldier]: false,
+    [BotId.Elite]: false,
+    [BotId.Legend]: false,
+  },
 }
 
 interface QueueContextData {
-  enqueue(mode: QueueMode): void
-  dequeue(mode: QueueMode): void
+  enqueue(): void
+  joinBot(bot: BotId): void
+  leaveQueue(): Promise<void>
   queueModes: QueueModesType
-  queueUserCount: UpdateUserCountPayload
+  queueUserCount: LiveGameStatsPayload
 }
 
 interface QueueContextProps {
   children: ReactNode
 }
 
-const QueueContext = createContext<QueueContextData>({} as QueueContextData)
+const QueueContext = createContext<QueueContextData | null>(null)
 
 export function QueueProvider({ children }: QueueContextProps) {
-  const [queueModes, setQueueModes] = useState<QueueModesType>({})
-  const [queueUserCount, setQueueUserCount] = useState<UpdateUserCountPayload>({
+  const [queueModes, setQueueModes] = useState<QueueModesType>(emptyQueueModes)
+
+  const [queueUserCount, setQueueUserCount] = useState<LiveGameStatsPayload>({
     casual: {
       inGame: Number.NaN,
       queue: 0,
@@ -48,7 +59,7 @@ export function QueueProvider({ children }: QueueContextProps) {
       queue: 0,
     },
   })
-  const { session, state: authState } = useAuth()
+  const { state: authState } = useAuth()
   const gameCtx = useGame()
 
   const gateway = useGateway<QueueServerEventsMap, QueueClientEventsMap>(
@@ -57,20 +68,22 @@ export function QueueProvider({ children }: QueueContextProps) {
   )
 
   useListener(gateway, QueueServerEvents.MatchFound, (data) => {
-    setQueueModes({})
+    setQueueModes(emptyQueueModes)
     gameCtx.connect(data.matchId)
   })
 
-  useListener(gateway, QueueServerEvents.UserCount, (data) => {
+  useListener(gateway, QueueServerEvents.LiveGameStats, (data) => {
     setQueueUserCount(data)
   })
 
   useListener(gateway, QueueServerEvents.QueueModes, (data) => {
-    setQueueModes(data)
+    if (!data.ranked) {
+      setQueueModes(emptyQueueModes)
+    }
   })
 
   useListener(gateway, 'disconnect', () => {
-    setQueueModes({})
+    setQueueModes(emptyQueueModes)
     setQueueUserCount({
       casual: {
         queue: 0,
@@ -88,34 +101,59 @@ export function QueueProvider({ children }: QueueContextProps) {
     gateway.emit(QueueClientEvents.Interact)
   }, [gateway])
 
-  const enqueue = useCallback(
-    async (mode: QueueMode) => {
+  const enqueueMutation = useClientMutation(apiClient.queue, 'enqueue', {
+    onMutate: () => {
       setQueueModes((current) => ({
         ...current,
-        [mode]: true,
+        ranked: { ...current.ranked, pvp: true },
       }))
-
-      await apiClient.queue.enqueue(mode)
     },
-    [gateway, session, setQueueModes]
-  )
-
-  const dequeue = useCallback(
-    async (mode: QueueMode) => {
-      await apiClient.queue.dequeue()
+    onError: () => {
       setQueueModes((current) => ({
         ...current,
-        [mode]: false,
+        ranked: { ...current.ranked, pvp: false },
+      }))
+      toast.error('Failed to join queue. Please try again.')
+    },
+  })
+
+  const joinBotMutation = useClientMutation(apiClient.queue, 'joinBot', {
+    onMutate: (bot) => {
+      setQueueModes((current) => ({
+        ...current,
+        ranked: { ...current.ranked, [bot]: true },
       }))
     },
-    [gateway]
-  )
+    onError: (_error, bot) => {
+      setQueueModes((current) => ({
+        ...current,
+        ranked: { ...current.ranked, [bot]: false },
+      }))
+      toast.error('Failed to start bot match. Please try again.')
+    },
+  })
+
+  const enqueue = useCallback(() => enqueueMutation.mutate(), [enqueueMutation])
+  const joinBot = useCallback((bot: BotId) => joinBotMutation.mutate(bot), [joinBotMutation])
+
+  const dequeue = useCallback(async () => {
+    await apiClient.queue.dequeue()
+    setQueueModes(emptyQueueModes)
+  }, [setQueueModes])
 
   return (
-    <QueueContext.Provider value={{ enqueue, dequeue, queueModes, queueUserCount }}>
+    <QueueContext.Provider
+      value={{ enqueue, joinBot, leaveQueue: dequeue, queueModes, queueUserCount }}
+    >
       {children}
     </QueueContext.Provider>
   )
 }
 
-export const useQueue = () => useContext(QueueContext)
+export const useQueue = () => {
+  const context = useContext(QueueContext)
+  if (!context) {
+    throw new Error('useQueue must be used within a QueueProvider')
+  }
+  return context
+}

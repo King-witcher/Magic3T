@@ -18,7 +18,7 @@ export class QueueController {
   constructor(private readonly queueService: QueueService) {}
 
   @ApiOperation({
-    summary: 'Enqueue for a match',
+    summary: 'Join queue for a ranked match',
   })
   @Post('/ranked/pvp')
   async enqueue(@UserId() userId: string) {
@@ -26,7 +26,7 @@ export class QueueController {
   }
 
   @ApiOperation({
-    summary: 'Join a bot match',
+    summary: 'Join queue for a bot match',
   })
   @Post('/ranked/:botId')
   async enqueueBot(
@@ -37,15 +37,14 @@ export class QueueController {
     )
     botId: BotId
   ) {
-    return this.queueService.createBotMatch(userId, botId)
+    return this.queueService.joinVsBot(userId, botId)
   }
 
   @ApiOperation({
-    summary: 'Leave the queue',
-    description: 'Stop searching for matches.',
+    summary: 'Leave the queue for all modes',
   })
   @Delete('/')
-  handleDequeueCasual(@UserId() userId: string) {
+  handleDequeue(@UserId() userId: string) {
     this.queueService.dequeue(userId, 'casual')
     this.queueService.dequeue(userId, 'ranked')
   }

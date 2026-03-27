@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
 import { useAuth } from '@/contexts/auth/auth-context'
 import { Console, SystemCvars } from '@/lib/console'
-import { firebaseClient } from '@/lib/firebase-client'
 
 export type Gateway<ServerEvents extends EventsMap, ClientEvents extends EventsMap> = {
   readonly name: string
@@ -25,28 +24,23 @@ export function useGateway<ServerEvents extends EventsMap, ClientEvents extends 
       return
     }
 
-    let cancel = false
     let socket: Socket | null = null
     Console.log(`Connecting to gateway ${gateway}...`)
-    firebaseClient.token.then((token) => {
-      if (cancel) return
-      socket = io(`${apiurl}/${gateway}`, {
-        auth: {
-          token,
-        },
-        transports: ['websocket'],
-      })
-      Console.log(`Connected to gateway '${gateway}'`)
+    const token = auth.sessionId
 
-      setSocket(socket)
+    socket = io(`${apiurl}/${gateway}`, {
+      auth: {
+        token,
+      },
+      transports: ['websocket'],
     })
+    setSocket(socket)
 
     return () => {
-      cancel = true
       socket?.disconnect()
       setSocket(null)
     }
-  }, [gateway, enabled, auth.uuid, apiurl])
+  }, [gateway, enabled, auth.sessionId, apiurl])
 
   useEffect(
     function logSocketConnection() {

@@ -56,9 +56,6 @@ export class QueueService {
   enqueue(userId: string, mode: 'casual' | 'ranked') {
     this.enqueueInternal(userId, mode)
     const userQueueModes = this.getQueueModes(userId)
-    this.websocketEmitterService.send(userId, 'queue', QueueServerEvents.QueueAccepted, {
-      mode,
-    })
     this.websocketEmitterService.send(userId, 'queue', QueueServerEvents.QueueModes, userQueueModes)
   }
 
@@ -100,7 +97,7 @@ export class QueueService {
   }
 
   /** Creates a match between a user and a specified bot. */
-  async createBotMatch(userId: string, botId: BotId) {
+  async joinVsBot(userId: string, botId: BotId) {
     // Create a match
     const matchId = await this.matchService.createPlayerVsBot(userId, botId)
 

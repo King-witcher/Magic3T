@@ -1,1 +1,0 @@
-{"version":3,"file":"bots.js","sourceRoot":"","sources":["bots.ts"],"names":[],"mappings":"","sourcesContent":["export const enum BotId {\n  Recruit = 'recruit',\n  Soldier = 'soldier',\n  Elite = 'elite',\n  Legend = 'legend',\n}\n"]}

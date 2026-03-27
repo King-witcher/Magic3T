@@ -31,32 +31,36 @@ export const AUTH_SESSION_STORAGE_KEY = 'auth-session'
 
 type AuthContextData =
   | {
+      state: AuthState.NotSignedIn
       session: null
+      sessionId: null
       uuid: null
       signedIn: false
-      state: AuthState.NotSignedIn
       login: (username: string, password: string) => Promise<void>
       register: (command: RegisterCommand) => Promise<void>
       loginWithGoogle: () => Promise<void>
     }
   | {
+      state: AuthState.LoadingSession
       session: null
+      sessionId: null
       uuid: null
       signedIn: false
-      state: AuthState.LoadingSession
     }
   | {
+      state: AuthState.SignedInUnregistered
       session: null
+      sessionId: null
       uuid: null
       signedIn: false
-      state: AuthState.SignedInUnregistered
       registerFromFirebase: (nickname: string) => Promise<void>
     }
   | {
+      state: AuthState.SignedIn
       session: ClientSessionData
+      sessionId: string
       uuid: string
       signedIn: true
-      state: AuthState.SignedIn
       logout: () => void
     }
 
@@ -229,6 +233,7 @@ export function AuthProvider({ children }: Props) {
     if (loadingInitSession) {
       return {
         session: null,
+        sessionId: null,
         uuid: null,
         signedIn: false,
         state: AuthState.LoadingSession,
@@ -238,6 +243,7 @@ export function AuthProvider({ children }: Props) {
     if (shouldRegister) {
       return {
         session: null,
+        sessionId: null,
         uuid: null,
         signedIn: false,
         state: AuthState.SignedInUnregistered,
@@ -248,6 +254,7 @@ export function AuthProvider({ children }: Props) {
     if (!sessionData) {
       return {
         session: null,
+        sessionId: null,
         uuid: null,
         signedIn: false,
         state: AuthState.NotSignedIn,
@@ -259,12 +266,13 @@ export function AuthProvider({ children }: Props) {
 
     return {
       session: sessionData,
+      sessionId: sessionId ?? 'not specified',
       uuid: sessionData.userId,
       signedIn: true,
       state: AuthState.SignedIn,
       logout: logout,
     }
-  }, [loadingInitSession, sessionData, shouldRegister])
+  }, [loadingInitSession, sessionData, shouldRegister, sessionId])
 
   return <AuthContext value={contextData}>{children}</AuthContext>
 }
