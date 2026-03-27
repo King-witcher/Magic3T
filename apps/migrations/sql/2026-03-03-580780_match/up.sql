@@ -8,7 +8,7 @@ CREATE TABLE match
     order_id          uuid                     NULL,
     order_nickname    VARCHAR(255)             NOT NULL,
     order_match_score FLOAT                    NOT NULL CHECK (order_match_score >= 0.0 AND order_match_score <= 1.0),
-    order_rating_id   INTEGER                  NULL,
+    order_old_rating   INTEGER                  NULL,
     order_delta       SMALLINT                 NULL,
     order_time_spent  SMALLINT                 NOT NULL,
 
@@ -25,7 +25,7 @@ CREATE TABLE match
 
     FOREIGN KEY (order_id) REFERENCES "user" (id) ON DELETE SET NULL,
     FOREIGN KEY (chaos_id) REFERENCES "user" (id) ON DELETE SET NULL,
-    FOREIGN KEY (order_rating_id) REFERENCES "user_rating_snapshot" (id) ON DELETE SET NULL,
+    FOREIGN KEY (order_old_rating) REFERENCES "user_rating_snapshot" (id) ON DELETE SET NULL,
     FOREIGN KEY (chaos_old_rating) REFERENCES "user_rating_snapshot" (id) ON DELETE SET NULL
 );
 

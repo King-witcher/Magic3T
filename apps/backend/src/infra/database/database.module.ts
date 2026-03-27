@@ -7,6 +7,7 @@ import {
   UserRepository,
 } from './repositories'
 import { MatchRepository } from './repositories/match-repository'
+import { UserRatingSnapshotRepository } from './repositories/user-rating-snapshot-repository'
 
 @Module({
   providers: [
@@ -16,6 +17,7 @@ import { MatchRepository } from './repositories/match-repository'
     IdentityRepository,
     CredentialRepository,
     MatchRepository,
+    UserRatingSnapshotRepository,
   ],
   exports: [
     DatabaseService,
@@ -24,6 +26,7 @@ import { MatchRepository } from './repositories/match-repository'
     IdentityRepository,
     CredentialRepository,
     MatchRepository,
+    UserRatingSnapshotRepository,
   ],
 })
 export class DatabaseModule {}

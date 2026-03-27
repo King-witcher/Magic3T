@@ -9,14 +9,14 @@ export type MatchRow = {
   order_id: UUID | null
   order_nickname: VARCHAR
   order_match_score: FLOAT
-  order_rating_id: INTEGER | null
+  order_old_rating: INTEGER | null
   order_delta: SMALLINT | null
   order_time_spent: SMALLINT
 
   chaos_id: UUID | null
   chaos_nickname: VARCHAR
   chaos_match_score: FLOAT
-  chaos_rating_id: INTEGER | null
+  chaos_old_rating: INTEGER | null
   chaos_delta: SMALLINT | null
   chaos_time_spent: SMALLINT
 
