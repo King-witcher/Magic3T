@@ -203,6 +203,60 @@ export class UserRepository {
     `)
   }
 
+  /** Updates a user's rating fields after a ranked match. */
+  async updateRating(
+    id: string,
+    rating: Pick<
+      UserRow,
+      'rating_score' | 'rating_k_factor' | 'rating_ranked_count' | 'rating_apex_flag'
+    >,
+    conn?: IDbClient
+  ): Promise<void> {
+    conn ??= this.databaseService
+    await conn.query(sql`
+      UPDATE "user"
+      SET rating_score = ${rating.rating_score},
+          rating_k_factor = ${rating.rating_k_factor},
+          rating_ranked_count = ${rating.rating_ranked_count},
+          rating_apex_flag = ${rating.rating_apex_flag},
+          rating_date = CURRENT_DATE
+      WHERE id = ${id}
+    `)
+  }
+
+  /** Increments the win, draw or loss counter for a user after a match. */
+  async addMatchResult(
+    id: string,
+    result: 'win' | 'draw' | 'loss',
+    conn?: IDbClient
+  ): Promise<void> {
+    conn ??= this.databaseService
+
+    switch (result) {
+      case 'win':
+        await conn.query(sql`
+          UPDATE "user"
+          SET stats_victories = stats_victories + 1
+          WHERE id = ${id}
+        `)
+        break
+      case 'draw':
+        await conn.query(sql`
+          UPDATE "user"
+          SET stats_draws = stats_draws + 1
+          WHERE id = ${id}
+        `)
+        break
+      case 'loss':
+        await conn.query(sql`
+          UPDATE "user"
+          SET stats_defeats = stats_defeats + 1
+          WHERE id = ${id}
+        `)
+        break
+    }
+  }
+
   /** Gets all bot users. */
   // async getBots(): Promise<UserRow[]> {
   //   // FIXME: set ids

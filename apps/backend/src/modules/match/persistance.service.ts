@@ -2,6 +2,7 @@ import { MatchDocumentEventType } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { DatabaseService } from '@/infra/database/database.service'
+import { UserRepository } from '@/infra/database/repositories'
 import { MatchRepository } from '@/infra/database/repositories/match-repository'
 import { UserRatingSnapshotRepository } from '@/infra/database/repositories/user-rating-snapshot-repository'
 import { FinishedMatchContext } from './events/match-finished-event'
@@ -11,7 +12,8 @@ export class PersistanceService {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly matchRepository: MatchRepository,
-    private readonly snapshotRepository: UserRatingSnapshotRepository
+    private readonly snapshotRepository: UserRatingSnapshotRepository,
+    private readonly userRepository: UserRepository
   ) {}
 
   @OnEvent('match.finished')
@@ -108,6 +110,43 @@ export class PersistanceService {
         },
         client
       )
+
+      // Update stats for both players
+      const orderResult =
+        summary.winner === null ? 'draw' : summary.winner === 'order' ? 'win' : 'loss'
+      const chaosResult =
+        summary.winner === null ? 'draw' : summary.winner === 'chaos' ? 'win' : 'loss'
+
+      await Promise.all([
+        this.userRepository.addMatchResult(summary.order.row.id, orderResult, client),
+        this.userRepository.addMatchResult(summary.chaos.row.id, chaosResult, client),
+      ])
+
+      // Update rating for both players if ranked
+      if (summary.ranked) {
+        await Promise.all([
+          this.userRepository.updateRating(
+            summary.order.row.id,
+            {
+              rating_score: summary.order.newRating.elo,
+              rating_k_factor: summary.order.newRating.kFactor,
+              rating_ranked_count: summary.order.newRating.rankedCount,
+              rating_apex_flag: summary.order.newRating.apexFlag,
+            },
+            client
+          ),
+          this.userRepository.updateRating(
+            summary.chaos.row.id,
+            {
+              rating_score: summary.chaos.newRating.elo,
+              rating_k_factor: summary.chaos.newRating.kFactor,
+              rating_ranked_count: summary.chaos.newRating.rankedCount,
+              rating_apex_flag: summary.chaos.newRating.apexFlag,
+            },
+            client
+          ),
+        ])
+      }
     })
   }
 }
