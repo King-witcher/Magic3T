@@ -2,16 +2,15 @@ import { ClientRank, Division, League } from '@magic3t/common-types'
 import { RatingConfigDocument, UserApexFlag } from '@magic3t/database-types'
 import { clamp } from 'lodash'
 
-const BASE_APEX_POINTS = 400 * 4
-const MIN_CHALLENGER_POINTS = BASE_APEX_POINTS + 100
+const LP_PER_LEAGUE = 400
+const LP_PER_DIVISION = 100
+const DIVISIONS_PER_LEAGUE = 4
 
-const LEAGUE_INDEXES = [
-  League.Bronze, // 0
-  League.Silver, // 1
-  League.Gold, // 2
-  League.Diamond, //3
-  League.Master, //4
-]
+const LEAGUES_BY_INDEX = [League.Bronze, League.Silver, League.Gold, League.Diamond, League.Master]
+
+const MASTER_LEAGUE_INDEX = LEAGUES_BY_INDEX.indexOf(League.Master)
+const BASE_APEX_POINTS = LP_PER_LEAGUE * MASTER_LEAGUE_INDEX
+const MIN_CHALLENGER_POINTS = BASE_APEX_POINTS + LP_PER_DIVISION
 
 export type RatingState = {
   elo: number
@@ -29,8 +28,8 @@ export class RankConverter {
     const eloAboveInitial = eloScore - initial_elo
     const leaguesAboveInitial = eloAboveInitial / elo_per_league
     const leaguesAboveLowest = leaguesAboveInitial + initial_league_index
-    const lPAboveLowest = 400 * leaguesAboveLowest
-    return Math.floor(lPAboveLowest)
+    const lpAboveLowest = LP_PER_LEAGUE * leaguesAboveLowest
+    return Math.floor(lpAboveLowest)
   }
 
   getRankFromElo(
@@ -43,10 +42,10 @@ export class RankConverter {
   }
 
   relativeLpToElo(lp: number): number {
-    return (lp / 400) * this.config.elo_per_league
+    return (lp / LP_PER_LEAGUE) * this.config.elo_per_league
   }
 
-  /** Gets the client rank based on total points. All apex tiers are considered as master. */
+  /** Gets the client rank based on total league points, accounting for provisional status and apex tiers (Challenger/Grandmaster). */
   getRankFromTotalLP(
     totalLP: number,
     rankedCount: number | null,
@@ -62,8 +61,8 @@ export class RankConverter {
       }
     }
 
-    const leagueIndex = clamp(Math.floor(totalLP / 400), 0, 4)
-    const league = LEAGUE_INDEXES[leagueIndex]
+    const leagueIndex = clamp(Math.floor(totalLP / LP_PER_LEAGUE), 0, MASTER_LEAGUE_INDEX)
+    const league = LEAGUES_BY_INDEX[leagueIndex]
 
     // If the user is in master league, we need to check their apex flag
     if (league === League.Master) {
@@ -75,9 +74,10 @@ export class RankConverter {
       }
     }
 
-    const pointsSinceDivision4 = totalLP % 400
-    const division = (4 - Math.floor(pointsSinceDivision4 / 100)) as Division
-    const points = pointsSinceDivision4 % 100
+    const lpWithinLeague = totalLP % LP_PER_LEAGUE
+    const division = (DIVISIONS_PER_LEAGUE -
+      Math.floor(lpWithinLeague / LP_PER_DIVISION)) as Division
+    const points = lpWithinLeague % LP_PER_DIVISION
 
     return {
       league,
@@ -87,14 +87,13 @@ export class RankConverter {
     }
   }
 
-  isChallengerEllegible(eloScore: number): boolean {
+  isChallengerEligible(eloScore: number): boolean {
     const totalPoints = this.getTotalLP(eloScore)
     return totalPoints >= MIN_CHALLENGER_POINTS
   }
 
   expectedScore(eloA: number, eloB: number): number {
-    const expectedScoreA = 1 / (1 + 10 ** ((eloB - eloA) / 400))
-    return expectedScoreA
+    return 1 / (1 + 10 ** ((eloB - eloA) / 400))
   }
 
   updateRatings([a, b]: [RatingState, RatingState], scoreOfA: number): [RatingState, RatingState] {
@@ -103,8 +102,9 @@ export class RankConverter {
     const expectedScoreA = this.expectedScore(a.elo, b.elo)
     const expectedScoreB = 1 - expectedScoreA
 
+    const scoreOfB = 1 - scoreOfA
     const newEloA = a.elo + a.kFactor * (scoreOfA - expectedScoreA)
-    const newEloB = b.elo + b.kFactor * (1 - scoreOfA - expectedScoreB)
+    const newEloB = b.elo + b.kFactor * (scoreOfB - expectedScoreB)
 
     // TODO: rename to min k factor and k factor decay
     const newKFactorA = a.kFactor * (1 - k_deflation_factor) + least_k_factor * k_deflation_factor
@@ -117,10 +117,10 @@ export class RankConverter {
         rankedCount: a.rankedCount + 1,
         apexFlag:
           a.apexFlag === 'challenger'
-            ? this.isChallengerEllegible(newEloA)
+            ? this.isChallengerEligible(newEloA)
               ? 'challenger'
               : null
-            : a.apexFlag,
+            : a.apexFlag, // grandmaster is persistent — no eligibility check is applied
       },
       {
         elo: newEloB,
@@ -128,10 +128,10 @@ export class RankConverter {
         rankedCount: b.rankedCount + 1,
         apexFlag:
           b.apexFlag === 'challenger'
-            ? this.isChallengerEllegible(newEloB)
+            ? this.isChallengerEligible(newEloB)
               ? 'challenger'
               : null
-            : b.apexFlag,
+            : b.apexFlag, // grandmaster is persistent — no eligibility check is applied
       },
     ]
   }
