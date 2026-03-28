@@ -19,7 +19,7 @@ function RouteComponent() {
     'listUserMatches',
     {
       limit: 20,
-      userId: userQuery.data?.uuid ?? '',
+      userId: userQuery.data?.id ?? '',
     },
     {
       staleTime: Number.POSITIVE_INFINITY,

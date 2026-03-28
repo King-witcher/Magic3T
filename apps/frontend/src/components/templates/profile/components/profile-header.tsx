@@ -3,7 +3,7 @@ import { UserDocumentRole } from '@magic3t/database-types'
 import { useState } from 'react'
 import { GiCrown, GiRobotGrab } from 'react-icons/gi'
 import { Tooltip } from '@/components/ui/tooltip'
-import { useSignedAuth } from '@/contexts/auth/auth-context'
+import { useAuth } from '@/contexts/auth/auth-context'
 import { EditAvatarOverlay } from './edit-avatar-overlay'
 import { EditIconModal } from './edit-icon-modal'
 import {
@@ -19,8 +19,8 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ user }: ProfileHeaderProps) {
-  const session = useSignedAuth()
-  const isOwnProfile = session.uuid === user.uuid
+  const session = useAuth()
+  const isOwnProfile = session.uuid === user.id
   const [editIconOpen, setEditIconOpen] = useState(false)
 
   return (
