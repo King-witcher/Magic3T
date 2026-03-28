@@ -153,18 +153,18 @@ export function GameProvider({ children }: Props) {
     MatchServerEvents.MatchReport,
     (report) => {
       if (!auth.signedIn) return
-      orderQuery.setData((oldData: GetUserResult | undefined) => {
-        return {
+      if (orderQuery.data) {
+        orderQuery.setData((oldData) => ({
           ...oldData!,
-          rating: report[Team.Order].newRank,
-        }
-      })
-      chaosQuery.setData((oldData: GetUserResult | undefined) => {
-        return {
+          rank: report[Team.Order].newRank,
+        }))
+      }
+      if (chaosQuery.data) {
+        chaosQuery.setData((oldData) => ({
           ...oldData!,
-          rating: report[Team.Chaos].newRank,
-        }
-      })
+          rank: report[Team.Chaos].newRank,
+        }))
+      }
       setFinalReport(report)
       emitFinishMatch(report)
       // auth.refetchUser()

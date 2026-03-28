@@ -32,7 +32,10 @@ export abstract class BaseBot {
       if (state.turn !== this.perspective.team) continue
 
       const choice = await this.think(state, this.perspective.team)
-      this.perspective.pick(choice)
+
+      try {
+        this.perspective.pick(choice)
+      } catch {}
     }
   }
 

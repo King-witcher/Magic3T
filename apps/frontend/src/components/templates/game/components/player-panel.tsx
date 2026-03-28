@@ -29,7 +29,7 @@ export function PlayerPanel({
   showSurrender,
   onSurrender,
 }: PlayerPanelProps) {
-  const tierInfo = profile ? leaguesMap[profile.rank.league] : null
+  const tierInfo = profile?.rank ? leaguesMap[profile.rank.league] : null
   const isBot = profile?.role === 'bot'
 
   return (
@@ -49,7 +49,7 @@ export function PlayerPanel({
         {/* Avatar */}
         <Link
           to="/users/id/$userId"
-          params={{ userId: profile?.uuid || '' }}
+          params={{ userId: profile?.id || '' }}
           className="shrink-0 transition-transform hover:scale-105 border-3 border-gold-7 rounded-full"
         >
           <AvatarRoot className="size-16">
