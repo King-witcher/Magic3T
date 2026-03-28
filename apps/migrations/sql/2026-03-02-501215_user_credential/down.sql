@@ -2,3 +2,4 @@
 
 -- Write your SQL rollback here
 DROP TABLE user_credential;
+DROP TYPE password_algorithm;
