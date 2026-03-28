@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noExplicitAny: I don't know a better way to do that */
 import {
   DatabaseError as PgDatabaseError,
   PoolClient,
@@ -8,23 +9,25 @@ import {
 import { DatabaseError } from './database-error'
 
 export interface IDbClient {
-  query<R extends QueryResultRow = any, I = any>(queryConfig: QueryConfig<I>): Promise<R[]>
-  query<R extends QueryResultRow = any, I = any>(
-    queryTextOrConfig: string | QueryConfig<I>,
-    values?: QueryConfigValues<I>
-  ): Promise<R[]>
+  query<TRow extends QueryResultRow = any, TParams = any>(
+    queryConfig: QueryConfig<TParams>
+  ): Promise<TRow[]>
+  query<TRow extends QueryResultRow = any, TParams = any>(
+    queryTextOrConfig: string | QueryConfig<TParams>,
+    values?: QueryConfigValues<TParams>
+  ): Promise<TRow[]>
 }
 
 /** Encapsulates a PoolClient and provides a better error type. */
 export class DbClient implements IDbClient {
   constructor(private readonly client: PoolClient) {}
 
-  async query<R extends QueryResultRow = any, I = any>(
-    queryTextOrConfig: string | QueryConfig<I>,
-    values?: QueryConfigValues<I>
-  ): Promise<R[]> {
+  async query<TRow extends QueryResultRow, TParams = unknown>(
+    queryTextOrConfig: string | QueryConfig<TParams>,
+    values?: QueryConfigValues<TParams>
+  ): Promise<TRow[]> {
     try {
-      const result = await this.client.query<R, I>(queryTextOrConfig, values)
+      const result = await this.client.query<TRow, TParams>(queryTextOrConfig, values)
       return result.rows
     } catch (error) {
       if (error instanceof PgDatabaseError) {

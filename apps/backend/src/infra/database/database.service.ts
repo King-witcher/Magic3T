@@ -44,7 +44,7 @@ export class DatabaseService implements IDbClient {
     }
   }
 
-  async transaction<T>(callback: (client: DbClient) => Promise<T>): Promise<T> {
+  async transaction<T>(callback: (client: IDbClient) => Promise<T>): Promise<T> {
     const client = await this.pool.connect()
     const dbClient = new DbClient(client)
 

@@ -1,9 +1,6 @@
 import { Match as MatchNamespace, MatchServerEvents } from '@magic3t/api-types'
 import { BotId, League, Team } from '@magic3t/common-types'
-import {
-  MatchEventRow,
-  UserRow,
-} from '@magic3t/database-types'
+import { MatchEventRow, UserRow } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { unexpected } from '@/common'

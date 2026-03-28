@@ -73,6 +73,7 @@ export function useClientMutation<
 // Type tests - This will be tree shaked
 const userClient = new ApiUserClient()
 function _useTest() {
+  // biome-ignore lint/correctness/useHookAtTopLevel: This is a type test, not an actual hook usage
   const updateIcon = useClientMutation(userClient, 'updateIcon', {})
   updateIcon.mutate(0)
 }
