@@ -15,7 +15,7 @@ import { WebsocketEmitterService } from '@/infra/websocket/websocket-emitter.ser
 import { RankConverter, RatingState } from '@/modules/rating'
 import { BaseBot, MinMaxBot, RandomBot } from './bots'
 import { BotsService } from './bots.service'
-import { FinishedMatchContext } from './events/match-finished-event'
+import { FinishedMatchContext as FinishedMatchSummary } from './events/match-finished-event'
 import { Match, MatchClassEventType, MatchClassSummary, MatchStore, Perspective } from './lib'
 
 export type MatchCreationError = 'user-not-found' | 'bot-not-found'
@@ -390,51 +390,89 @@ export class MatchService {
       const orderScore = computeOrderScore(summary)
       const chaosScore = 1 - orderScore
 
-      const [newOrderRating, newChaosRating, rankConverter] = await (async () => {
-        const orderRatingState: RatingState = {
-          elo: order.rating_score,
-          kFactor: order.rating_k_factor,
-          rankedCount: order.rating_ranked_count,
-          apexFlag: order.rating_apex_flag,
-        }
-        const chaosRatingState: RatingState = {
-          elo: chaos.rating_score,
-          kFactor: chaos.rating_k_factor,
-          rankedCount: chaos.rating_ranked_count,
-          apexFlag: chaos.rating_apex_flag,
-        }
-        if (!ranked) return [orderRatingState, chaosRatingState, null]
+      const orderRatingState: RatingState = {
+        elo: order.rating_score,
+        kFactor: order.rating_k_factor,
+        rankedCount: order.rating_ranked_count,
+        apexFlag: order.rating_apex_flag,
+      }
+      const chaosRatingState: RatingState = {
+        elo: chaos.rating_score,
+        kFactor: chaos.rating_k_factor,
+        rankedCount: chaos.rating_ranked_count,
+        apexFlag: chaos.rating_apex_flag,
+      }
 
+      let newOrderRating = orderRatingState
+      let newChaosRating = chaosRatingState
+      let rankConverter: RankConverter | null = null
+
+      if (ranked) {
         const ratingConfig = await this.configRepository.getRatingConfig()
-        const rankConverter = new RankConverter(ratingConfig)
-        return [
-          ...rankConverter.updateRatings([orderRatingState, chaosRatingState], orderScore),
-          rankConverter,
-        ]
-      })()
+        rankConverter = new RankConverter(ratingConfig)
+        ;[newOrderRating, newChaosRating] = rankConverter.updateRatings(
+          [orderRatingState, chaosRatingState],
+          orderScore
+        )
+      }
 
-      // Create a finished event
-      const finishEvent: FinishedMatchContext = {
+      const computePlayerRanking = (
+        oldRow: { rating_score: number; rating_ranked_count: number },
+        newRating: RatingState
+      ) => {
+        if (!rankConverter) {
+          return {
+            newRank: {
+              league: League.Provisional,
+              division: null,
+              points: null,
+              rankedCount: 0,
+            } as const,
+            lpGain: null,
+          }
+        }
+
+        const newRank = rankConverter.getRankFromElo(
+          newRating.elo,
+          newRating.rankedCount,
+          newRating.apexFlag
+        )
+
+        const hasLpGain =
+          ranked && oldRow.rating_ranked_count >= rankConverter.config.min_ranked_count
+        const lpGain = hasLpGain
+          ? rankConverter.getTotalLP(newRating.elo) - rankConverter.getTotalLP(oldRow.rating_score)
+          : null
+
+        return { newRank, lpGain }
+      }
+
+      const orderRanking = computePlayerRanking(order, newOrderRating)
+      const chaosRanking = computePlayerRanking(chaos, newChaosRating)
+
+      const finishEvent: FinishedMatchSummary = {
         order: {
           row: order,
           matchScore: orderScore,
           timeSpent: summary.order.timeSpent,
           newRating: newOrderRating,
+          newRank: orderRanking.newRank,
+          lpGain: orderRanking.lpGain,
         },
         chaos: {
           row: chaos,
           matchScore: chaosScore,
           timeSpent: summary.chaos.timeSpent,
           newRating: newChaosRating,
+          newRank: chaosRanking.newRank,
+          lpGain: chaosRanking.lpGain,
         },
         events: match.events,
         ranked,
-        rankConverter: rankConverter!,
         startedAt,
         winner: match.winner,
       }
 
-      // Emit the finished event for other services to persist results, send events, etc.
       this.eventEmitter.emit('match.finished', finishEvent)
     })
 

@@ -24,50 +24,21 @@ export class ClientSyncService {
    */
   @OnEvent('match.finished')
   async sendMatchSummary(summary: FinishedMatchContext) {
-    const ratingConfig = summary.rankConverter.config
-
-    const newOrderRank = summary.rankConverter.getRankFromElo(
-      summary.order.newRating.elo,
-      summary.order.newRating.rankedCount,
-      summary.order.newRating.apexFlag
-    )
-    const newChaosRank = summary.rankConverter.getRankFromElo(
-      summary.chaos.newRating.elo,
-      summary.chaos.newRating.rankedCount,
-      summary.chaos.newRating.apexFlag
-    )
-
-    // Calculate LP gains
-    const hasLpGain = (rankedCount: number) =>
-      summary.ranked && rankedCount >= ratingConfig.min_ranked_count
-
-    const orderLpGain = hasLpGain(summary.order.row.rating_ranked_count)
-      ? summary.rankConverter.getTotalLP(summary.order.newRating.elo) -
-        summary.rankConverter.getTotalLP(summary.order.row.rating_score)
-      : null
-
-    const chaosLpGain = hasLpGain(summary.chaos.row.rating_ranked_count)
-      ? summary.rankConverter.getTotalLP(summary.chaos.newRating.elo) -
-        summary.rankConverter.getTotalLP(summary.chaos.row.rating_score)
-      : null
-
-    // Create a match summary to be sent via socket
     const socketSummary: MatchReportPayload = {
       order: {
-        lpGain: orderLpGain,
+        lpGain: summary.order.lpGain,
         score: summary.order.matchScore,
-        newRank: newOrderRank,
+        newRank: summary.order.newRank,
       },
       chaos: {
-        lpGain: chaosLpGain,
+        lpGain: summary.chaos.lpGain,
         score: summary.chaos.matchScore,
-        newRank: newChaosRank,
+        newRank: summary.chaos.newRank,
       },
       matchId: 'undefined-match-id',
       winner: summary.winner,
     }
 
-    // Send the summary to both players, unless one of them is a bot
     for (const player of [summary.chaos, summary.order]) {
       if (player.row.role === 'bot') continue
       this.websocketEmitterService.send(
