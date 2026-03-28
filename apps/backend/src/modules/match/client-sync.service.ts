@@ -24,29 +24,31 @@ export class ClientSyncService {
    */
   @OnEvent('match.finished')
   async sendMatchSummary(summary: FinishedMatchContext) {
-    const ratingConfig = summary.rankConverter?.config
+    const ratingConfig = summary.rankConverter.config
 
     const newOrderRank = summary.rankConverter.getRankFromElo(
       summary.order.newRating.elo,
-      summary.order.row.rating_ranked_count,
+      summary.order.row.rating_ranked_count + 1,
       summary.order.row.rating_apex_flag
     )
     const newChaosRank = summary.rankConverter.getRankFromElo(
       summary.chaos.newRating.elo,
-      summary.chaos.row.rating_ranked_count,
+      summary.chaos.row.rating_ranked_count + 1,
       summary.chaos.row.rating_apex_flag
     )
 
     // Calculate LP gains
-    const orderLpGain = ratingConfig
-      ? summary.ranked
-        ? summary.order.row.rating_ranked_count > ratingConfig.min_ranked_count
-          ? summary.rankConverter.getTotalLP(summary.order.newRating.elo) -
-            summary.rankConverter.getTotalLP(
-              summary.order.newRating.elo - summary.order.newRating.elo
-            )
-          : null
-        : null
+    const isRankedAfterGame = (rankedCount: number) =>
+      summary.ranked && !!ratingConfig && rankedCount + 1 >= ratingConfig.min_ranked_count
+
+    const orderLpGain = isRankedAfterGame(summary.order.row.rating_ranked_count)
+      ? summary.rankConverter.getTotalLP(summary.order.newRating.elo) -
+        summary.rankConverter.getTotalLP(summary.order.row.rating_score)
+      : null
+
+    const chaosLpGain = isRankedAfterGame(summary.chaos.row.rating_ranked_count)
+      ? summary.rankConverter.getTotalLP(summary.chaos.newRating.elo) -
+        summary.rankConverter.getTotalLP(summary.chaos.row.rating_score)
       : null
 
     // Create a match summary to be sent via socket
@@ -57,7 +59,7 @@ export class ClientSyncService {
         newRank: newOrderRank,
       },
       chaos: {
-        lpGain: null, // Replace with actual LP gain calculation for chaos if needed
+        lpGain: chaosLpGain,
         score: summary.chaos.matchScore,
         newRank: newChaosRank,
       },
