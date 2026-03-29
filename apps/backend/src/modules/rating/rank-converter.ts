@@ -87,6 +87,11 @@ export class RankConverter {
     }
   }
 
+  /** Returns the LP difference between two elo scores. */
+  getLpGain(oldElo: number, newElo: number): number {
+    return this.getTotalLP(newElo) - this.getTotalLP(oldElo)
+  }
+
   isChallengerEligible(eloScore: number): boolean {
     const totalPoints = this.getTotalLP(eloScore)
     return totalPoints >= MIN_CHALLENGER_POINTS

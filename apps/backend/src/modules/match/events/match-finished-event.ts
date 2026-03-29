@@ -1,17 +1,23 @@
-import { ClientRank, Team } from '@magic3t/common-types'
-import { MatchDocumentEvent, UserRow } from '@magic3t/database-types'
+import { ClientRank, Team, UserRole } from '@magic3t/common-types'
+import { MatchDocumentEvent } from '@magic3t/database-types'
 import { RatingState } from '@/modules/rating'
 
 type FinishedMatchContextPlayer = {
-  row: UserRow
+  userId: string
+  nickname: string
+  role: UserRole
+  previousElo: number
   matchScore: number
   timeSpent: number
   newRating: RatingState
-  newRank: ClientRank
+  newClientRank: ClientRank
   lpGain: number | null
 }
 
-export type FinishedMatchContext = {
+/**
+ * Payload emitted by MatchService when a match is finished, containing all necessary information to generate the match report for clients and persist the match result in the database.
+ */
+export type FinishedMatchSummary = {
   order: FinishedMatchContextPlayer
   chaos: FinishedMatchContextPlayer
   winner: Team | null

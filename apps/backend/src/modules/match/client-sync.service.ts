@@ -2,7 +2,7 @@ import { MatchReportPayload, MatchServerEvents, StateReportPayload } from '@magi
 import { Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { WebsocketEmitterService } from '@/infra/websocket/websocket-emitter.service'
-import { FinishedMatchContext } from './events/match-finished-event'
+import { FinishedMatchSummary } from './events/match-finished-event'
 
 /**
  * Service responsible for syncing match state and results to clients.
@@ -23,26 +23,26 @@ export class ClientSyncService {
    * Sends the final match summary to players after the match is finished.
    */
   @OnEvent('match.finished')
-  async sendMatchSummary(summary: FinishedMatchContext) {
+  async sendMatchSummary(summary: FinishedMatchSummary) {
     const socketSummary: MatchReportPayload = {
       order: {
         lpGain: summary.order.lpGain,
         score: summary.order.matchScore,
-        newRank: summary.order.newRank,
+        newRank: summary.order.newClientRank,
       },
       chaos: {
         lpGain: summary.chaos.lpGain,
         score: summary.chaos.matchScore,
-        newRank: summary.chaos.newRank,
+        newRank: summary.chaos.newClientRank,
       },
       matchId: 'undefined-match-id',
       winner: summary.winner,
     }
 
     for (const player of [summary.chaos, summary.order]) {
-      if (player.row.role === 'bot') continue
+      if (player.role === 'bot') continue
       this.websocketEmitterService.send(
-        player.row.id,
+        player.userId,
         'match',
         MatchServerEvents.MatchReport,
         socketSummary

@@ -5,7 +5,7 @@ import { DatabaseService } from '@/infra/database/database.service'
 import { UserRepository } from '@/infra/database/repositories'
 import { MatchRepository } from '@/infra/database/repositories/match-repository'
 import { UserRatingSnapshotRepository } from '@/infra/database/repositories/user-rating-snapshot-repository'
-import { FinishedMatchContext } from './events/match-finished-event'
+import { FinishedMatchSummary } from './events/match-finished-event'
 
 @Injectable()
 export class PersistanceService {
@@ -17,7 +17,7 @@ export class PersistanceService {
   ) {}
 
   @OnEvent('match.finished')
-  async persistMatch(summary: FinishedMatchContext): Promise<void> {
+  async persistMatch(summary: FinishedMatchSummary): Promise<void> {
     await this.databaseService.transaction(async (client) => {
       let orderRatingId: number | null
       let chaosRatingId: number | null
@@ -30,7 +30,7 @@ export class PersistanceService {
 
         orderRatingId = await this.snapshotRepository.createReturningId(
           {
-            user_id: summary.order.row.id,
+            user_id: summary.order.userId,
             score: summary.order.newRating.elo,
             apex_flag: summary.order.newRating.apexFlag,
             hidden: false,
@@ -41,7 +41,7 @@ export class PersistanceService {
 
         chaosRatingId = await this.snapshotRepository.createReturningId(
           {
-            user_id: summary.chaos.row.id,
+            user_id: summary.chaos.userId,
             score: summary.chaos.newRating.elo,
             apex_flag: summary.chaos.newRating.apexFlag,
             hidden: false,
@@ -51,13 +51,13 @@ export class PersistanceService {
         )
 
         // Delta = new elo - old elo, rounded to nearest integer
-        orderDelta = Math.round(summary.order.newRating.elo - summary.order.row.rating_score)
-        chaosDelta = Math.round(summary.chaos.newRating.elo - summary.chaos.row.rating_score)
+        orderDelta = Math.round(summary.order.newRating.elo - summary.order.previousElo)
+        chaosDelta = Math.round(summary.chaos.newRating.elo - summary.chaos.previousElo)
       } else {
         // Point to the latest existing snapshot for each player
         const [orderSnapshot, chaosSnapshot] = await Promise.all([
-          this.snapshotRepository.findLatestByUserId(summary.order.row.id, client),
-          this.snapshotRepository.findLatestByUserId(summary.chaos.row.id, client),
+          this.snapshotRepository.findLatestByUserId(summary.order.userId, client),
+          this.snapshotRepository.findLatestByUserId(summary.chaos.userId, client),
         ])
 
         orderRatingId = orderSnapshot?.id ?? null
@@ -91,15 +91,15 @@ export class PersistanceService {
       await this.matchRepository.persist(
         {
           match: {
-            order_id: summary.order.row.id,
-            order_nickname: summary.order.row.profile_nickname,
+            order_id: summary.order.userId,
+            order_nickname: summary.order.nickname,
             order_match_score: summary.order.matchScore,
             order_old_rating: orderRatingId,
             order_delta: orderDelta,
             order_time_spent: summary.order.timeSpent,
 
-            chaos_id: summary.chaos.row.id,
-            chaos_nickname: summary.chaos.row.profile_nickname,
+            chaos_id: summary.chaos.userId,
+            chaos_nickname: summary.chaos.nickname,
             chaos_old_rating: chaosRatingId,
             chaos_delta: chaosDelta,
             chaos_time_spent: summary.chaos.timeSpent,
@@ -118,15 +118,15 @@ export class PersistanceService {
         summary.winner === null ? 'draw' : summary.winner === 'chaos' ? 'win' : 'loss'
 
       await Promise.all([
-        this.userRepository.addMatchResult(summary.order.row.id, orderResult, client),
-        this.userRepository.addMatchResult(summary.chaos.row.id, chaosResult, client),
+        this.userRepository.addMatchResult(summary.order.userId, orderResult, client),
+        this.userRepository.addMatchResult(summary.chaos.userId, chaosResult, client),
       ])
 
       // Update rating for both players if ranked
       if (summary.ranked) {
         await Promise.all([
           this.userRepository.updateRating(
-            summary.order.row.id,
+            summary.order.userId,
             {
               rating_score: summary.order.newRating.elo,
               rating_k_factor: summary.order.newRating.kFactor,
@@ -136,7 +136,7 @@ export class PersistanceService {
             client
           ),
           this.userRepository.updateRating(
-            summary.chaos.row.id,
+            summary.chaos.userId,
             {
               rating_score: summary.chaos.newRating.elo,
               rating_k_factor: summary.chaos.newRating.kFactor,

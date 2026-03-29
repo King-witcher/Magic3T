@@ -5,6 +5,7 @@ import { MatchStore } from './lib/match-bank'
 import { MatchController } from './match.controller'
 import { MatchGateway } from './match.gateway'
 import { MatchService } from './match.service'
+import { MatchHistoryService } from './match-history.service'
 import { PersistanceService } from './persistance.service'
 
 @Module({
@@ -13,6 +14,7 @@ import { PersistanceService } from './persistance.service'
     MatchGateway,
     MatchStore,
     MatchService,
+    MatchHistoryService,
     ClientSyncService,
     BotsService,
     PersistanceService,

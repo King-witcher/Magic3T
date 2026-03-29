@@ -237,6 +237,34 @@ describe(RankConverter, () => {
 
   // ───────────────────────────────────────────────────────────────────────────
 
+  describe('getLpGain', () => {
+    it('returns the LP difference between two elo scores', () => {
+      const converter = createConverter()
+      const oldElo = faker.number.float({ min: 1000, max: 1500 })
+      const newElo = oldElo + faker.number.float({ min: 1, max: 200 })
+
+      expect(converter.getLpGain(oldElo, newElo)).toBe(
+        converter.getTotalLP(newElo) - converter.getTotalLP(oldElo)
+      )
+    })
+
+    it('returns 0 when elos are equal', () => {
+      const converter = createConverter()
+      const elo = faker.number.float({ min: 1000, max: 2000 })
+      expect(converter.getLpGain(elo, elo)).toBe(0)
+    })
+
+    it('returns a negative value when new elo is lower', () => {
+      const converter = createConverter()
+      const oldElo = faker.number.float({ min: 1200, max: 2000 })
+      const newElo = oldElo - faker.number.float({ min: 50, max: 200 })
+
+      expect(converter.getLpGain(oldElo, newElo)).toBeLessThan(0)
+    })
+  })
+
+  // ───────────────────────────────────────────────────────────────────────────
+
   describe('isChallengerEligible', () => {
     it('returns true exactly at the challenger threshold elo', () => {
       const converter = createConverter()
