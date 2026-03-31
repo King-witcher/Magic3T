@@ -47,4 +47,6 @@ export type UserRow = {
     draws: number
     defeats: number
   }
+  /** Ban info, if user is banned */
+  ban?: import('./user-ban').UserBan
 }

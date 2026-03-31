@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/commo
 import { Reflector } from '@nestjs/core'
 import { Socket } from 'socket.io'
 import { respondError } from '@/common'
+import { UserRepository } from '@/infra/database'
 import { AuthService } from './auth.service'
 import { AuthenticRequest } from './auth-request'
 import { SKIP_AUTH_KEY } from './skip-auth.decorator'
@@ -12,7 +13,8 @@ export class AuthGuard implements CanActivate {
 
   constructor(
     private readonly authService: AuthService,
-    private readonly reflector: Reflector
+    private readonly reflector: Reflector,
+    private readonly userRepository: UserRepository
   ) {}
 
   async canActivate(context: ExecutionContext) {
@@ -48,6 +50,24 @@ export class AuthGuard implements CanActivate {
     if (!token) respondError('unauthorized', 401, '"Authorization" header is missing')
     const userId = await this.authService.validateToken(token.replace('Bearer ', ''))
     if (!userId) respondError('unauthorized', 401, 'Invalid auth token')
+    // Ban check
+    const user = await this.userRepository.getById(userId)
+    if (user?.data?.ban) {
+      const ban = user.data.ban
+      const now = new Date()
+      if (
+        ban.type === 'permanent' ||
+        (ban.type === 'temporary' && ban.expiresAt && now < new Date(ban.expiresAt))
+      ) {
+        respondError(
+          'banned',
+          403,
+          ban.type === 'permanent'
+            ? 'User is permanently banned'
+            : `User is banned until ${ban.expiresAt}`
+        )
+      }
+    }
     request.userId = userId
     return true
   }
@@ -58,6 +78,20 @@ export class AuthGuard implements CanActivate {
     if (!('data' in socket) || !socket.data.userId) {
       this.logger.warn(`unauthenticated socket connection attempt refused`)
       return false
+    }
+
+    // Ban check
+    const user = await this.userRepository.getById(socket.data.userId)
+    if (user?.data?.ban) {
+      const ban = user.data.ban
+      const now = new Date()
+      if (
+        ban.type === 'permanent' ||
+        (ban.type === 'temporary' && ban.expiresAt && now < new Date(ban.expiresAt))
+      ) {
+        this.logger.warn(`banned user ${socket.data.userId} tried to connect`)
+        return false
+      }
     }
 
     return true
