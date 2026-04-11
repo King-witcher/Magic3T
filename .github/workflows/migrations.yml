@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'packages/migrations/**'
+      - 'apps/migrations/**'
       - '.github/workflows/migrations.yml'
   workflow_dispatch:
 
@@ -24,7 +24,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --workspace=packages/migrations --include-workspace-root
+        run: npm ci --workspace=apps/migrations --include-workspace-root
 
       - name: Run migrations
         run: npm run migrate:production
