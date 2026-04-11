@@ -53,9 +53,10 @@ export class PersistanceService {
           conn
         )
       }
-
-      await Promise.all([updateIfNotBot(summary.order, conn), updateIfNotBot(summary.chaos, conn)])
     }
+
+    updateIfNotBot(summary.order, conn)
+    updateIfNotBot(summary.chaos, conn)
   }
 
   private async saveMatch(summary: FinishedMatchSummary, conn: IDbClient): Promise<void> {
