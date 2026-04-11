@@ -1,5 +1,5 @@
 import { ClientRank, Team, UserRole } from '@magic3t/common-types'
-import { MatchDocumentEvent } from '@magic3t/database-types'
+import { MatchEventRow } from '@magic3t/database-types'
 import { RatingState } from '@/modules/rating'
 
 type FinishedMatchContextPlayer = {
@@ -22,6 +22,6 @@ export type FinishedMatchSummary = {
   chaos: FinishedMatchContextPlayer
   winner: Team | null
   startedAt: Date
-  events: MatchDocumentEvent[]
+  events: MatchEventRow[]
   ranked: boolean
 }

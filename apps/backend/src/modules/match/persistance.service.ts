@@ -84,7 +84,7 @@ export class PersistanceService {
         order_match_score: summary.order.matchScore,
         winner: summary.winner,
       },
-      events: [],
+      events: summary.events,
     })
   }
 }

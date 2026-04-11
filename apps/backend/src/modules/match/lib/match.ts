@@ -1,6 +1,6 @@
 import { Match as MatchNamespace, StateReportPayload } from '@magic3t/api-types'
 import { Choice, Team } from '@magic3t/common-types'
-import { MatchDocumentEvent, MatchDocumentEventType } from '@magic3t/database-types'
+import { MatchEventRow } from '@magic3t/database-types'
 import { Observable, Stopwatch } from '@/common'
 import { opposite } from '@/shared/opposite'
 import { matchException } from '../types/match-error'
@@ -23,7 +23,7 @@ export type MatchClassSummary = {
   }
   time: number
   winner: Team | null
-  events: MatchDocumentEvent[]
+  events: MatchEventRow[]
 }
 
 export type MatchClassEventsMap = {
@@ -46,7 +46,7 @@ interface MatchClassParams {
 export class Match extends Observable<MatchClassEventsMap> {
   private globalTime = new Stopwatch()
   public id: string
-  public events: MatchDocumentEvent[] = []
+  public events: MatchEventRow[] = []
   public turn: Team | null = null
   public winner: Team | null = null
   public finished = false
@@ -142,10 +142,12 @@ export class Match extends Observable<MatchClassEventsMap> {
     player.choices.push(choice)
 
     this.events.push({
-      event: MatchDocumentEventType.Choice,
+      type: 'choice',
       choice,
-      side: team,
-      time: this.time,
+      match_id: -1,
+      sequence: this.events.length,
+      team,
+      time_ms: this.time,
     })
 
     this.turn = opposite(team)
@@ -174,9 +176,12 @@ export class Match extends Observable<MatchClassEventsMap> {
     player.surrender = true
 
     this.events.push({
-      event: MatchDocumentEventType.Forfeit,
-      side,
-      time: this.time,
+      type: 'forfeit',
+      match_id: -1,
+      sequence: this.events.length,
+      team: side,
+      time_ms: this.time,
+      choice: null,
     })
 
     const oppositeSide = opposite(side)
@@ -190,9 +195,12 @@ export class Match extends Observable<MatchClassEventsMap> {
     const oppositeSide = opposite(side)
 
     this.events.push({
-      event: MatchDocumentEventType.Timeout,
-      side,
-      time: this.time,
+      type: 'timeout',
+      match_id: -1,
+      sequence: this.events.length,
+      team: side,
+      time_ms: this.time,
+      choice: null,
     })
 
     this.finishMatch(oppositeSide)
@@ -217,9 +225,9 @@ export class Match extends Observable<MatchClassEventsMap> {
       chaos: {
         timeSpent: this.timelimit - this[Team.Chaos].timer.remaining,
       },
-      events: this.events,
       time: this.time,
       winner: this.winner,
+      events: this.events,
     })
   }
 }

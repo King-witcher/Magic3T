@@ -196,7 +196,7 @@ export class MatchService {
       // --- Step 3: Compute post-match ranks ---
       // Returns the new rank and LP gain for a player.
       // Bots and unranked matches always yield a provisional rank with no LP gain.
-      const computePlayerRanking = (player: UserRow, newRating: RatingState) => {
+      const computeClientRanking = (player: UserRow, newRating: RatingState) => {
         if (!rankConverter || player.role === 'bot') {
           return {
             newRank: {
@@ -224,8 +224,8 @@ export class MatchService {
         return { newRank, lpGain }
       }
 
-      const orderRanking = computePlayerRanking(order, newOrderRating)
-      const chaosRanking = computePlayerRanking(chaos, newChaosRating)
+      const orderClientRanking = computeClientRanking(order, newOrderRating)
+      const chaosClientRanking = computeClientRanking(chaos, newChaosRating)
 
       // --- Step 4: Emit the finished match event ---
       const finishEvent: FinishedMatchSummary = {
@@ -237,8 +237,8 @@ export class MatchService {
           matchScore: orderScore,
           timeSpent: summary.order.timeSpent,
           newRating: newOrderRating,
-          newClientRank: orderRanking.newRank,
-          lpGain: orderRanking.lpGain,
+          newClientRank: orderClientRanking.newRank,
+          lpGain: orderClientRanking.lpGain,
         },
         chaos: {
           userId: chaos.id,
@@ -248,8 +248,8 @@ export class MatchService {
           matchScore: chaosScore,
           timeSpent: summary.chaos.timeSpent,
           newRating: newChaosRating,
-          newClientRank: chaosRanking.newRank,
-          lpGain: chaosRanking.lpGain,
+          newClientRank: chaosClientRanking.newRank,
+          lpGain: chaosClientRanking.lpGain,
         },
         events: match.events,
         ranked,
