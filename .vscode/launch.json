@@ -13,9 +13,9 @@
     },
     {
       "cwd": "${workspaceFolder}/apps/frontend",
-      "name": "Frontend",
-      "preLaunchTask": "vite: dev",
-      "postDebugTask": "vite: stop",
+      "name": "Frontend (Dev)",
+      "preLaunchTask": "frontend: dev",
+      "postDebugTask": "frontend: down",
       "request": "launch",
       "skipFiles": [
         "${workspaceFolder}/node_modules/**/*.js"
@@ -26,6 +26,19 @@
       "presentation": {
         "hidden": true
       }
+    },
+    {
+      "cwd": "${workspaceFolder}/apps/frontend",
+      "name": "Frontend (Production)",
+      "preLaunchTask": "frontend: prod",
+      "postDebugTask": "frontend: down",
+      "request": "launch",
+      "skipFiles": [
+        "${workspaceFolder}/node_modules/**/*.js"
+      ],
+      "type": "msedge",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/apps/frontend"
     },
     {
       "cwd": "${workspaceFolder}/apps/frontend",
@@ -43,7 +56,7 @@
   "compounds": [
     {
       "name": "Magic3T",
-      "configurations": ["Backend", "Frontend"],
+      "configurations": ["Backend", "Frontend (Dev)"],
     }
   ],
   "version": "0.2.0"

@@ -214,13 +214,13 @@
       }
     },
     {
-      "label": "vite: dev",
+      "label": "frontend: dev",
       "type": "shell",
       "command": "npm run dev",
       "options": {
         "cwd": "apps/frontend",
         "env": {
-          "VITE_API_URL": "${input:backend-url}"
+          "VITE_API_URL": "localhost:4000"
         }
       },
       "isBackground": true,
@@ -251,7 +251,44 @@
       "hide": true
     },
     {
-      "label": "vite: stop",
+      "label": "frontend: prod",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "apps/frontend",
+        "env": {
+          "VITE_API_URL": "api.magic3t.com.br"
+        }
+      },
+      "isBackground": true,
+      "icon": {
+        "id": "run",
+        "color": "terminal.ansiMagenta"
+      },
+      "problemMatcher": [
+        {
+          "owner": "vite",
+          "pattern": {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".",
+            "endsPattern": "."
+          }
+        }
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "hide": true
+    },
+    {
+      "label": "frontend: down",
       "type": "shell",
       "command": "npx kill-port 3000 -y",
       "hide": true,
