@@ -52,6 +52,7 @@ export class MatchRepository {
       WHERE m.order_id = ${uuid}
         OR m.chaos_id = ${uuid}
       GROUP BY m.id, ors.id, crs.id
+      ORDER BY m.date DESC
       LIMIT ${limit};
     `)
 
