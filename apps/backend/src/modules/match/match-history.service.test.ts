@@ -50,13 +50,13 @@ function createBaseMatch(overrides: Partial<MatchRowWithRatings> = {}): MatchRow
     order_nickname: faker.internet.username(),
     order_match_score: 1,
     order_old_rating: faker.number.int({ min: 1, max: 1000 }),
-    order_delta: faker.number.int({ min: -20, max: 20 }),
+    order_lp_gain: faker.number.int({ min: -20, max: 20 }),
     order_time_spent: faker.number.int({ min: 5000, max: 60000 }),
     chaos_id: faker.string.uuid(),
     chaos_nickname: faker.internet.username(),
     chaos_match_score: 0,
     chaos_old_rating: faker.number.int({ min: 1, max: 1000 }),
-    chaos_delta: faker.number.int({ min: -20, max: 20 }),
+    chaos_lp_gain: faker.number.int({ min: -20, max: 20 }),
     chaos_time_spent: faker.number.int({ min: 5000, max: 60000 }),
     winner: 'order',
     total_time_spent: faker.number.int({ min: 10000, max: 120000 }),
@@ -155,7 +155,7 @@ describe(MatchHistoryService, () => {
     it('computes LP gain from delta', async () => {
       const config = createConfig()
       const delta = 15
-      const match = createFullMatch({ order_delta: delta })
+      const match = createFullMatch({ order_lp_gain: delta })
       const { service, matchRepository } = createService(config)
       matchRepository.getByUuid.mockResolvedValue(match)
 
@@ -166,7 +166,7 @@ describe(MatchHistoryService, () => {
     })
 
     it('returns null LP gain when delta is null', async () => {
-      const match = createFullMatch({ order_delta: null })
+      const match = createFullMatch({ order_lp_gain: null })
       const { service, matchRepository } = createService()
       matchRepository.getByUuid.mockResolvedValue(match)
 

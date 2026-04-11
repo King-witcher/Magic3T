@@ -89,7 +89,7 @@ export class MatchHistoryService {
       winner: match.winner,
       order: this.buildTeamResult(
         match.order_rating,
-        match.order_delta,
+        match.order_lp_gain,
         match.order_nickname,
         match.order_match_score,
         match.order_id,
@@ -97,7 +97,7 @@ export class MatchHistoryService {
       ),
       chaos: this.buildTeamResult(
         match.chaos_rating,
-        match.chaos_delta,
+        match.chaos_lp_gain,
         match.chaos_nickname,
         match.chaos_match_score,
         match.chaos_id,
@@ -116,7 +116,7 @@ export class MatchHistoryService {
       winner: match.winner,
       order: this.buildTeamResult(
         match.order_rating,
-        match.order_delta,
+        match.order_lp_gain,
         match.order_nickname,
         match.order_match_score,
         match.order_id,
@@ -124,7 +124,7 @@ export class MatchHistoryService {
       ),
       chaos: this.buildTeamResult(
         match.chaos_rating,
-        match.chaos_delta,
+        match.chaos_lp_gain,
         match.chaos_nickname,
         match.chaos_match_score,
         match.chaos_id,

@@ -154,11 +154,15 @@ export class MatchService {
       }
     )
 
-    // Subscribe to match finished event
+    // Subscribe to match finished event and compute the final match summary.
     match.on(MatchClassEventType.Finish, async (summary) => {
+      // --- Step 1: Compute match scores ---
+      // Order score is in [0, 1]; chaos score is the complement.
       const orderScore = computeOrderScore(summary)
       const chaosScore = 1 - orderScore
 
+      // --- Step 2: Update player ratings ---
+      // Capture each player's pre-match rating state from their stored row.
       const orderRatingState: RatingState = {
         elo: order.rating_score,
         kFactor: order.rating_k_factor,
@@ -172,6 +176,7 @@ export class MatchService {
         apexFlag: chaos.rating_apex_flag,
       }
 
+      // Start from the current ratings; only overwrite for ranked human players.
       let newOrderRating = orderRatingState
       let newChaosRating = chaosRatingState
       let rankConverter: RankConverter | null = null
@@ -179,17 +184,20 @@ export class MatchService {
       if (ranked) {
         const ratingConfig = await this.configRepository.getRatingConfig()
         rankConverter = new RankConverter(ratingConfig)
-        ;[newOrderRating, newChaosRating] = rankConverter.updateRatings(
+        const [updatedOrder, updatedChaos] = rankConverter.updateRatings(
           [orderRatingState, chaosRatingState],
           orderScore
         )
+        // Bots are excluded from rating updates.
+        if (order.role !== 'bot') newOrderRating = updatedOrder
+        if (chaos.role !== 'bot') newChaosRating = updatedChaos
       }
 
-      const computePlayerRanking = (
-        oldRow: { rating_score: number; rating_ranked_count: number },
-        newRating: RatingState
-      ) => {
-        if (!rankConverter) {
+      // --- Step 3: Compute post-match ranks ---
+      // Returns the new rank and LP gain for a player.
+      // Bots and unranked matches always yield a provisional rank with no LP gain.
+      const computePlayerRanking = (player: UserRow, newRating: RatingState) => {
+        if (!rankConverter || player.role === 'bot') {
           return {
             newRank: {
               league: League.Provisional,
@@ -207,10 +215,10 @@ export class MatchService {
           newRating.apexFlag
         )
 
-        const hasLpGain =
-          ranked && oldRow.rating_ranked_count >= rankConverter.config.min_ranked_count
+        // LP gain is only shown once the player has enough ranked games.
+        const hasLpGain = player.rating_ranked_count >= rankConverter.config.min_ranked_count
         const lpGain = hasLpGain
-          ? rankConverter.getLpGain(oldRow.rating_score, newRating.elo)
+          ? rankConverter.getLpGain(player.rating_score, newRating.elo)
           : null
 
         return { newRank, lpGain }
@@ -219,6 +227,7 @@ export class MatchService {
       const orderRanking = computePlayerRanking(order, newOrderRating)
       const chaosRanking = computePlayerRanking(chaos, newChaosRating)
 
+      // --- Step 4: Emit the finished match event ---
       const finishEvent: FinishedMatchSummary = {
         order: {
           userId: order.id,

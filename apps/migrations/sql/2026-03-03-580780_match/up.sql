@@ -9,14 +9,14 @@ CREATE TABLE match
     order_nickname    VARCHAR(255)             NOT NULL,
     order_match_score FLOAT                    NOT NULL CHECK (order_match_score >= 0.0 AND order_match_score <= 1.0),
     order_old_rating  INTEGER                  NULL,
-    order_delta       SMALLINT                 NULL,
+    order_lp_gain     SMALLINT                 NULL,
     order_time_spent  INTEGER                  NOT NULL,
 
     chaos_id          uuid                     NULL,
     chaos_nickname    VARCHAR(255)             NOT NULL,
     chaos_match_score FLOAT GENERATED ALWAYS AS (1.0 - order_match_score),
     chaos_old_rating  INTEGER                  NULL,
-    chaos_delta       SMALLINT                 NULL,
+    chaos_lp_gain     SMALLINT                 NULL,
     chaos_time_spent  INTEGER                  NOT NULL,
 
     winner            match_team               NULL,
