@@ -64,7 +64,7 @@ export class MatchRepository {
             -- TODO: Remove unnecessary fields from the rating snapshots
             ROW_TO_JSON(ors.*)          AS order_rating,
             ROW_TO_JSON(crs.*)          AS chaos_rating,
-            JSON_AGG(ROW_TO_JSON(me.*)) AS events
+            COALESCE(JSON_AGG(ROW_TO_JSON(me.*)) FILTER (WHERE me.type IS NOT NULL), '[]') AS events
 
       FROM match m
               LEFT JOIN user_rating_snapshot ors
