@@ -41,7 +41,7 @@ export class ApiUserClient extends BaseApiClient<'user'> {
    * Gets the authenticated user's available icons.
    */
   async getMyIcons(signal?: AbortSignal): Promise<number[]> {
-    return this.get<number[]>('me/icons', { signal, authenticated: true })
+    return this.get<number[]>('me/icons', { signal })
   }
 
   /**
@@ -52,7 +52,7 @@ export class ApiUserClient extends BaseApiClient<'user'> {
    * authentication provider.
    */
   async register(data: RegisterUserCommand): Promise<void> {
-    await this.post<RegisterUserCommand, void>('register', data, { authenticated: true })
+    await this.post<RegisterUserCommand, void>('register', data)
   }
 
   /**
@@ -60,7 +60,7 @@ export class ApiUserClient extends BaseApiClient<'user'> {
    */
   async updateIcon(icon: number): Promise<void> {
     const payload: ChangeIconCommand = { iconId: icon }
-    await this.patch<ChangeIconCommand, void>('me/icon', payload, { authenticated: true })
+    await this.patch<ChangeIconCommand, void>('me/icon', payload)
   }
 
   /**
@@ -68,6 +68,6 @@ export class ApiUserClient extends BaseApiClient<'user'> {
    */
   async updateNickname(nickname: string): Promise<void> {
     const payload: ChangeNicknameCommand = { nickname }
-    await this.patch<ChangeNicknameCommand, void>('me/nickname', payload, { authenticated: true })
+    await this.patch<ChangeNicknameCommand, void>('me/nickname', payload)
   }
 }

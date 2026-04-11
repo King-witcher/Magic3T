@@ -20,11 +20,11 @@ export function ProfileTemplate({ user, matchesQuery }: Props) {
       name: 'userid',
       description: 'Logs the user ID',
       handler: async () => {
-        Console.log(user.uuid)
+        Console.log(user.id)
         return 0
       },
     },
-    [user.uuid]
+    [user.id]
   )
 
   return (
@@ -39,7 +39,7 @@ export function ProfileTemplate({ user, matchesQuery }: Props) {
 
         {/* Match History Card */}
         <Panel>
-          <MatchHistory matchesQuery={matchesQuery} currentUserId={user.uuid} />
+          <MatchHistory matchesQuery={matchesQuery} currentUserId={user.id} />
         </Panel>
       </div>
     </div>

@@ -16,7 +16,7 @@ import { firebaseClient } from '@/lib/firebase-client'
 import { apiClient } from '@/services/clients/api-client'
 import { toAuthError } from './errors'
 
-export enum AuthState {
+export const enum AuthState {
   /** Initial state. The authentication session is being loaded */
   LoadingSession = 'loading-session',
   /** The user is not signed in */
@@ -62,6 +62,7 @@ type AuthContextData =
       uuid: string
       signedIn: true
       logout: () => void
+      refreshUser: () => Promise<void>
     }
 
 interface Props {
@@ -95,7 +96,7 @@ export function AuthProvider({ children }: Props) {
           setSessionData(null)
           Console.log('Failed to validate session token.')
           console.error(e)
-          captureException(e)
+          // captureException(e)
         } finally {
           setLoadingInitSession(false)
         }
@@ -177,6 +178,17 @@ export function AuthProvider({ children }: Props) {
       setSessionId(response.sessionId)
     } catch (error) {
       await toAuthError(error)
+    }
+  }
+
+  async function refreshUser() {
+    try {
+      const response = await apiClient.auth.validateSession()
+      setSessionData(response)
+    } catch (error) {
+      Console.log('Failed to refresh user data')
+      captureException(error)
+      console.error(error)
     }
   }
 
@@ -270,6 +282,7 @@ export function AuthProvider({ children }: Props) {
       uuid: sessionData.userId,
       signedIn: true,
       state: AuthState.SignedIn,
+      refreshUser,
       logout: logout,
     }
   }, [loadingInitSession, sessionData, shouldRegister, sessionId])

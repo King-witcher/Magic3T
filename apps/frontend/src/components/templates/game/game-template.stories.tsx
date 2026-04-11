@@ -41,7 +41,7 @@ const MOCK_GAME_CONTEXT_DATA: GameContextData = {
     [Team.Order]: {
       timer: new Timer(45),
       profile: {
-        uuid: 'player-order-1',
+        id: 'player-order-1',
         nickname: 'OrderMaster',
         summonerIcon: 1,
         role: 'player',
@@ -64,7 +64,7 @@ const MOCK_GAME_CONTEXT_DATA: GameContextData = {
     [Team.Chaos]: {
       timer: new Timer(30),
       profile: {
-        uuid: 'player-chaos-2',
+        id: 'player-chaos-2',
         nickname: 'ChaosPrincess',
         summonerIcon: 3,
         role: 'player',

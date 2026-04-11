@@ -14,7 +14,6 @@ import {
 type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
 export type ClientRequestOptions = {
-  authenticated?: boolean
   signal?: AbortSignal
 }
 
@@ -69,7 +68,7 @@ export class BaseApiClient<Namespace extends ApiNamespace = ApiNamespace> {
     method: HTTPMethod,
     endpoint: string,
     payload?: TPayload | undefined,
-    { authenticated = true, signal }: ClientRequestOptions = {}
+    { signal }: ClientRequestOptions = {}
   ): Promise<TResonse> {
     const url = `${this.basePath}/${endpoint}`
     const headers = new Headers()
@@ -89,13 +88,9 @@ export class BaseApiClient<Namespace extends ApiNamespace = ApiNamespace> {
     }
 
     // If authentication is required, add the Authorization header with the token.
-    if (authenticated) {
-      const token = localStorage.getItem(AUTH_SESSION_STORAGE_KEY)
-      if (!token) {
-        Console.log('Authenticated request made without a token')
-      } else {
-        headers.set('Authorization', token)
-      }
+    const token = localStorage.getItem(AUTH_SESSION_STORAGE_KEY)
+    if (token) {
+      headers.set('Authorization', token)
     }
 
     const request = new Request(url, init)

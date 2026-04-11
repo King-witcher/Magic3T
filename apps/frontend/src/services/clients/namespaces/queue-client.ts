@@ -24,6 +24,6 @@ export class ApiQueueClient extends BaseApiClient<'queue'> {
    * Dequeues.
    */
   async dequeue(): Promise<void> {
-    await this.delete('', { authenticated: true })
+    await this.delete('')
   }
 }

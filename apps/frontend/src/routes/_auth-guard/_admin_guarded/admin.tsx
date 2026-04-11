@@ -22,7 +22,7 @@ function AdminPage() {
   const [search, setSearch] = useState('')
   const [selectedUser, setSelectedUser] = useState<Admin.ListAccountsResultItem | null>(null)
 
-  const usersQuery = useClientQuery(apiClient.admin, 'listAccounts', { authenticated: true })
+  const usersQuery = useClientQuery(apiClient.admin, 'listAccounts', undefined)
 
   const users = usersQuery.data?.users ?? []
   const filteredUsers = users

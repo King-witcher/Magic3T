@@ -15,9 +15,7 @@ export const Route = createFileRoute('/leaderboard')({
 })
 
 export function LeaderboardTemplate() {
-  const query = useClientQuery(apiClient.user, 'getRanking', {
-    authenticated: false,
-  })
+  const query = useClientQuery(apiClient.user, 'getRanking')
 
   return (
     <div className="w-full min-h-full p-4 sm:p-8 flex justify-center items-start">
@@ -61,7 +59,7 @@ export function LeaderboardTemplate() {
                     from="/leaderboard"
                     to="/users/$nickname"
                     params={{ nickname: user.nickname?.replaceAll(' ', '') ?? '' }}
-                    key={user.uuid}
+                    key={user.id}
                   >
                     <div className="flex items-center sm:gap-4 p-3 sm:p-5">
                       {/* Rank Number */}

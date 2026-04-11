@@ -19,14 +19,7 @@ type UseClientQueryOptions = Omit<
   // biome-ignore lint/suspicious/noExplicitAny: Function types are contravariant in their parameters
   UseQueryOptions<any, ClientError>,
   'queryKey' | 'queryFn'
-> & {
-  /**
-   * Defines whether the user id should be included in the query key. The request methods themselves handle authentication.
-   *
-   * Defaults to `true`
-   */
-  authenticated?: boolean
-}
+>
 
 type UseClientQueryResult<Result> = UseQueryResult<Result, ClientError> & {
   setData: (data: Result | ((oldData: Result | undefined) => Result)) => void
@@ -49,7 +42,9 @@ type ClientQueryResult<
   // biome-ignore lint/suspicious/noExplicitAny: Function types are contravariant in their parameters
 > = Client[Method] extends (...args: any[]) => Promise<infer R> ? R : never
 
-type FinalARgsList<T, OptionalLast> = T extends void ? [OptionalLast?] : [T, OptionalLast?]
+type ArgsAndOptions<ArgsType> = ArgsType extends void
+  ? [args?: ArgsType, options?: UseClientQueryOptions]
+  : [args: ArgsType, options?: UseClientQueryOptions]
 
 export function useClientQuery<
   Namespace extends ApiNamespace,
@@ -58,30 +53,18 @@ export function useClientQuery<
 >(
   client: Client,
   functionName: Method,
-  ...argsList: FinalARgsList<ClientQueryParams<Client, Method>, UseClientQueryOptions>
+  ...rest: ArgsAndOptions<ClientQueryParams<Client, Method>>
 ): UseClientQueryResult<ClientQueryResult<Client, Method>> {
-  const { authenticated, ...tanstackQueryOptions } = (
-    argsList.length === 2 ? argsList[1] : argsList[0]
-  ) as UseClientQueryOptions
-
+  const [args, options] = rest
   const auth = use(AuthContext)
   const queryClient = useQueryClient()
 
-  if (authenticated && !auth) {
-    throw new Error('useClientQuery: Authenticated query used outside of AuthProvider')
-  }
-
-  const queryKey =
-    argsList.length === 2
-      ? authenticated
-        ? [client.namespace, functionName, argsList[0], auth?.uuid]
-        : [client.namespace, functionName, argsList[0]]
-      : authenticated
-        ? [client.namespace, functionName, auth?.uuid]
-        : [client.namespace, functionName]
+  const queryKey = auth?.sessionId
+    ? [client.namespace, functionName, args, auth.sessionId]
+    : [client.namespace, functionName, args]
 
   const query = useQuery({
-    ...tanstackQueryOptions,
+    ...options,
     queryKey,
     queryFn: async ({ signal }) => {
       const queryFunction = (
@@ -89,7 +72,7 @@ export function useClientQuery<
       ).bind(client)
       switch (queryFunction.length) {
         case 2:
-          return await queryFunction(argsList[0], signal)
+          return await queryFunction(args, signal)
         case 1:
           return await queryFunction(signal)
         default:
@@ -127,7 +110,7 @@ const userClient = new ApiUserClient()
 
 function _useTest() {
   // biome-ignore lint/correctness/useHookAtTopLevel: This is just a test
-  const _getRanking = useClientQuery(userClient, 'getRanking', {})
+  const _getRanking = useClientQuery(userClient, 'getRanking', undefined, {})
   // biome-ignore lint/correctness/useHookAtTopLevel: This is just a test
   const _getById = useClientQuery(userClient, 'getById', '123', {})
 

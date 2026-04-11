@@ -11,7 +11,6 @@ export class AdminApiClient extends BaseApiClient<'admin'> {
    */
   listAccounts(signal?: AbortSignal): Promise<Admin.ListAccountsResult> {
     return this.get('accounts', {
-      authenticated: true,
       signal,
     })
   }

@@ -24,7 +24,7 @@ const ServiceStatusContext = createContext<ServiceStatusData>({
 
 export function ServiceStatusProvider({ children }: Props) {
   const pollRate = Console.useCvarNumber(SystemCvars.ClStatusPoll)
-  const statusQuery = useClientQuery(apiClient, 'getStatus', {
+  const statusQuery = useClientQuery(apiClient, 'getStatus', undefined, {
     refetchInterval: pollRate,
   })
 

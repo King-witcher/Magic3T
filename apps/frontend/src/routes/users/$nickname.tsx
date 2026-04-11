@@ -13,7 +13,7 @@ function RouteComponent() {
   const { nickname } = Route.useParams()
   const slug = nickname.toLowerCase().replaceAll(' ', '')
 
-  const userQuery = useClientQuery(apiClient.user, 'getByNickname', slug, { authenticated: false })
+  const userQuery = useClientQuery(apiClient.user, 'getByNickname', slug)
   const matchesQuery = useClientQuery(
     apiClient.match,
     'listUserMatches',

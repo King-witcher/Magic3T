@@ -17,14 +17,14 @@ export class ApiMatchClient extends BaseApiClient<'match'> {
    * Gets the current match for the authenticated user.
    */
   async getCurrentMatch(signal?: AbortSignal): Promise<{ id: string }> {
-    return this.get<{ id: string }>('current', { authenticated: true, signal })
+    return this.get<{ id: string }>('current', { signal })
   }
 
   /**
    * Checks if the authenticated user is in an active match.
    */
   async amActiveMatch(signal?: AbortSignal): Promise<boolean> {
-    return this.get<boolean>('me/am-active', { authenticated: true, signal })
+    return this.get<boolean>('me/am-active', { signal })
   }
 
   /**

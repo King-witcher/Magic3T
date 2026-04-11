@@ -22,7 +22,6 @@ export class AuthApiClient extends BaseApiClient<'auth'> {
   validateSession(signal?: AbortSignal): Promise<ValidateSessionResponse> {
     return this.get('session', {
       signal,
-      authenticated: true,
     })
   }
 
@@ -54,8 +53,6 @@ export class AuthApiClient extends BaseApiClient<'auth'> {
 
   /** Deletes the current user session, effectively logging out the user. */
   logout(): Promise<void> {
-    return this.post('logout', undefined, {
-      authenticated: true,
-    })
+    return this.post('logout', undefined)
   }
 }

@@ -72,11 +72,9 @@ export function GameProvider({ children }: Props) {
   const [chaosId, setChaosId] = useState<null | string>(null)
   const orderQuery = useClientQuery(apiClient.user, 'getById', orderId!, {
     enabled: !!orderId,
-    authenticated: false,
   })
   const chaosQuery = useClientQuery(apiClient.user, 'getById', chaosId!, {
     enabled: !!chaosId,
-    authenticated: false,
   })
 
   const orderProfile = orderQuery.data

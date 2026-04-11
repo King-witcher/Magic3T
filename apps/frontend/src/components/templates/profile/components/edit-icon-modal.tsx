@@ -41,8 +41,8 @@ function EditIconModalInner({ currentIcon, onClose }: InnerProps) {
   const [selectedIcon, setSelectedIcon] = useState(currentIcon)
   const auth = useSignedAuth()
 
-  const userQuery = useClientQuery(apiClient.user, 'getById', auth.uuid, { authenticated: false })
-  const iconsQuery = useClientQuery(apiClient.user, 'getMyIcons', {
+  const userQuery = useClientQuery(apiClient.user, 'getById', auth.uuid)
+  const iconsQuery = useClientQuery(apiClient.user, 'getMyIcons', undefined, {
     staleTime: 60 * 1000, // 1 minute
   })
 
@@ -59,6 +59,9 @@ function EditIconModalInner({ currentIcon, onClose }: InnerProps) {
     },
     onError() {
       userQuery.invalidate()
+    },
+    onSuccess() {
+      auth.refreshUser()
     },
   })
 
@@ -87,13 +90,6 @@ function EditIconModalInner({ currentIcon, onClose }: InnerProps) {
           />
         </div>
       </div>
-
-      {/* Icon Grid */}
-      {/* {iconsQuery.isPending && (
-        <div className="flex justify-center py-8">
-          <span className="text-grey-1 text-sm animate-pulse">Loading icons...</span>
-        </div>
-      )} */}
 
       {iconsQuery.isError && (
         <div className="flex justify-center py-8">
