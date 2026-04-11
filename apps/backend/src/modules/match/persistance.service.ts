@@ -55,8 +55,8 @@ export class PersistanceService {
       }
     }
 
-    updateIfNotBot(summary.order, conn)
-    updateIfNotBot(summary.chaos, conn)
+    await updateIfNotBot(summary.order, conn)
+    await updateIfNotBot(summary.chaos, conn)
   }
 
   private async saveMatch(summary: FinishedMatchSummary, conn: IDbClient): Promise<void> {
@@ -70,22 +70,25 @@ export class PersistanceService {
     if (!chaosSnap)
       unexpected('should always find a rating snapshot for chaos player', summary.chaos.userId)
 
-    await this.matchRepository.persist({
-      match: {
-        order_lp_gain: summary.order.lpGain,
-        chaos_lp_gain: summary.chaos.lpGain,
-        order_id: summary.order.userId,
-        chaos_id: summary.chaos.userId,
-        order_nickname: summary.order.nickname,
-        chaos_nickname: summary.chaos.nickname,
-        order_old_rating: orderSnap.id,
-        chaos_old_rating: chaosSnap.id,
-        order_time_spent: summary.order.timeSpent,
-        chaos_time_spent: summary.chaos.timeSpent,
-        order_match_score: summary.order.matchScore,
-        winner: summary.winner,
+    await this.matchRepository.persist(
+      {
+        match: {
+          order_lp_gain: summary.order.lpGain,
+          chaos_lp_gain: summary.chaos.lpGain,
+          order_id: summary.order.userId,
+          chaos_id: summary.chaos.userId,
+          order_nickname: summary.order.nickname,
+          chaos_nickname: summary.chaos.nickname,
+          order_old_rating: orderSnap.id,
+          chaos_old_rating: chaosSnap.id,
+          order_time_spent: summary.order.timeSpent,
+          chaos_time_spent: summary.chaos.timeSpent,
+          order_match_score: summary.order.matchScore,
+          winner: summary.winner,
+        },
+        events: summary.events,
       },
-      events: summary.events,
-    })
+      conn
+    )
   }
 }

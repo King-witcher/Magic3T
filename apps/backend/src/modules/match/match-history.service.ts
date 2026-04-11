@@ -56,7 +56,7 @@ export class MatchHistoryService {
 
   private buildTeamResult(
     rating: RatingSnapshot,
-    delta: number | null,
+    lpGain: number | null,
     nickname: string,
     matchScore: number,
     uuid: string | null,
@@ -65,8 +65,6 @@ export class MatchHistoryService {
     const rank = rating
       ? converter.getRankFromElo(rating.score, rating.hidden ? 0 : null, rating.apex_flag)
       : PROVISIONAL_RANK
-
-    const lpGain = delta !== null ? converter.getLpGain(0, delta) : null
 
     return { lpGain, nickname, rank, score: matchScore, uuid: uuid ?? '' }
   }
