@@ -1,4 +1,4 @@
-import { UserCredentialRow, UserRowRole } from '@magic3t/database-types'
+import { UserCredentialRow, UserRoleEnum } from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
 import { IDbClient, INSERT_INTO, sql } from '@/shared/database'
 import { DatabaseService } from '../database.service'
@@ -41,7 +41,7 @@ export class CredentialRepository {
   ): Promise<{
     user_id: string
     profile_nickname: string
-    role: UserRowRole
+    role: UserRoleEnum
     profile_icon: number
     password_digest: string
   } | null> {

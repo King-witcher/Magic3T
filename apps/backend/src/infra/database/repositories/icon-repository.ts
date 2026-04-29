@@ -1,4 +1,4 @@
-import { IconRarity, IconRow } from '@magic3t/database-types'
+import { IconRarityEnum, IconRow } from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import z from 'zod'
@@ -67,7 +67,7 @@ const RARITIES = [
   'ultimate',
   'exalted',
   'transcendent',
-] as const satisfies IconRarity[]
+] as const satisfies IconRarityEnum[]
 
 const COMMUNITY_DRAGON_URL =
   'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/summoner-icons.json'

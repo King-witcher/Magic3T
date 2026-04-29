@@ -1,5 +1,4 @@
-import { UUID } from 'node:crypto'
-import type { TEXT } from '../postgres'
+import type { TEXT, UUID } from '../postgres'
 
 export type UserIdentityProvider = 'firebase'
 

@@ -2,4 +2,4 @@
 
 DROP TABLE "user";
 DROP TYPE "user_role";
-DROP TYPE "user_apex_flag";
+DROP TYPE "league";

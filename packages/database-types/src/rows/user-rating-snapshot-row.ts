@@ -1,11 +1,17 @@
-import type { BOOLEAN, INTEGER, REAL, TIMESTAMPTZ, UUID } from '../postgres'
-import type { UserApexFlag } from './user-row'
+import type { INTEGER, REAL, SMALLINT, TIMESTAMPTZ, UUID } from '../postgres'
+import { LeagueEnum } from '../types'
 
 export type UserRatingSnapshotRow = {
   id: INTEGER
   user_id: UUID
-  score: REAL
-  apex_flag: UserApexFlag | null
-  hidden: BOOLEAN
+
+  league: LeagueEnum | null
+  division: SMALLINT | null
+  lp: SMALLINT | null
+  matches: INTEGER
+
+  mmr_score: REAL
+  mmr_k_factor: REAL
+
   date: TIMESTAMPTZ
 }

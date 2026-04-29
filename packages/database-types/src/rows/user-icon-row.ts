@@ -1,5 +1,4 @@
-import { UUID } from 'node:crypto'
-import type { SMALLINT, TIMESTAMPTZ } from '../postgres'
+import type { SMALLINT, TIMESTAMPTZ, UUID } from '../postgres'
 
 export type UserIconRow = {
   user_id: UUID

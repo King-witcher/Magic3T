@@ -1,13 +1,10 @@
-import type { DATE, INTEGER, REAL, SMALLINT, TIMESTAMPTZ, UUID, VARCHAR } from '../postgres'
-
-export type UserRowRole = 'bot' | 'player' | 'admin' | 'superuser'
-
-export type UserApexFlag = 'challenger' | 'grandmaster'
+import type { INTEGER, REAL, SMALLINT, TIMESTAMPTZ, UUID, VARCHAR } from '../postgres'
+import { LeagueEnum, UserRoleEnum } from '../types'
 
 export type UserRow = {
   id: UUID
 
-  role: UserRowRole
+  role: UserRoleEnum
   credits: INTEGER
   xp: INTEGER
 
@@ -16,11 +13,14 @@ export type UserRow = {
   profile_nickname_date: TIMESTAMPTZ
   profile_icon: SMALLINT
 
-  rating_score: REAL
-  rating_k_factor: REAL
-  rating_apex_flag: UserApexFlag | null
-  rating_ranked_count: SMALLINT
-  rating_date: DATE
+  mmr_score: REAL
+  mmr_k_factor: REAL
+
+  rank_league: LeagueEnum | null
+  rank_division: SMALLINT | null
+  rank_lp: SMALLINT | null
+  rank_matches: INTEGER
+  rank_date: TIMESTAMPTZ
 
   stats_victories: INTEGER
   stats_draws: INTEGER

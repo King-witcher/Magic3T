@@ -1,14 +1,13 @@
 import { Choice } from '@magic3t/common-types'
 import type { INTEGER, SMALLINT } from '../postgres'
-import { MatchTeam } from './match-row'
-
-export type MatchEventType = 'choice' | 'forfeit' | 'timeout'
+import { MatchEventTypeEnum } from '../types/match-event-type-enum'
+import { MatchTeamEnum } from '../types/match-team-enum'
 
 export type MatchEventRow = {
   match_id: INTEGER
   sequence: SMALLINT
   time_ms: INTEGER
-  type: MatchEventType
-  team: MatchTeam
+  type: MatchEventTypeEnum
+  team: MatchTeamEnum
   choice: Choice | null
 }

@@ -32,7 +32,7 @@ export class PersistanceService {
       conn: IDbClient
     ) => {
       if (player.role !== 'bot') {
-        await this.userRepository.updateRating(
+        await this.userRepository.updateRank(
           player.userId,
           {
             rating_apex_flag: player.newRating.apexFlag,

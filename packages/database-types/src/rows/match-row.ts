@@ -1,6 +1,5 @@
 import type { FLOAT, INTEGER, SMALLINT, TIMESTAMPTZ, UUID, VARCHAR } from '../postgres'
-
-export type MatchTeam = 'order' | 'chaos'
+import { MatchTeamEnum } from '../types/match-team-enum'
 
 export type MatchRow = {
   id: INTEGER
@@ -20,7 +19,7 @@ export type MatchRow = {
   chaos_lp_gain: SMALLINT | null
   chaos_time_spent: SMALLINT
 
-  winner: MatchTeam | null
+  winner: MatchTeamEnum | null
   total_time_spent: SMALLINT
   date: TIMESTAMPTZ
 }

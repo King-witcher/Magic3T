@@ -1,4 +1,4 @@
-import { close, getConnection, sql, transaction } from './utils/db'
+import { close, transaction } from './utils/db'
 import {
   createTableMigrationsIfNotExists,
   getMigrationSql,

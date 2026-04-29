@@ -1,8 +1,15 @@
-import { IconRow, UserDocumentRole, UserRow, UserRowRole } from '@magic3t/database-types'
+import {
+  IconRow,
+  LeagueEnum,
+  UserDocumentRole,
+  UserRoleEnum,
+  UserRow,
+} from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
 import { UserRecord } from 'firebase-admin/auth'
 import { FirebaseAuthService } from '@/infra/firebase'
 import { ConfigRepository, UserDocumentRepository } from '@/infra/firestore'
+import { RankConverter } from '@/modules'
 import { DatabaseError } from '@/shared/database/database-error'
 import { IDbClient } from '@/shared/database/db-client'
 import { INSERT_INTO, UPDATE } from '@/shared/database/pg-chain'
@@ -10,7 +17,7 @@ import { sql } from '@/shared/database/sql'
 import { DatabaseService } from '../database.service'
 import { UserRepositoryError } from './user-repository-error'
 
-const roleMap: Record<UserDocumentRole, UserRowRole> = {
+const roleMap: Record<UserDocumentRole, UserRoleEnum> = {
   [UserDocumentRole.Player]: 'player',
   [UserDocumentRole.Creator]: 'superuser',
   [UserDocumentRole.Bot]: 'bot',
@@ -30,7 +37,7 @@ export class UserRepository {
   /** Imports users and their identities from Firebase Auth and Firestore */
   async importFromFirebase() {
     // Gets all identities and users from Firebase
-    const [identities, allUsers] = await Promise.all([
+    const [identities, allUsers, rankConverter] = await Promise.all([
       this.firebaseAuthService.listFirebaseAccounts().then(([identities]) => {
         this.logger.log(`Fetched ${identities.length} identities from Firebase Auth`)
         const map = new Map(identities.map((identity) => [identity.uid, identity]))
@@ -39,6 +46,10 @@ export class UserRepository {
       this.userDocumentRepository.getAll().then((items) => {
         this.logger.log(`Fetched ${items.length} user documents from Firestore`)
         return items
+      }),
+      this.configRepository.getRatingConfig().then((config) => {
+        this.logger.log(`Fetched rating config from Firestore`)
+        return new RankConverter(config)
       }),
     ])
 
@@ -56,20 +67,30 @@ export class UserRepository {
 
       const identity = identities.get(user.id)
 
+      const rank = rankConverter.getRankFromElo(
+        user.data.elo.score,
+        user.data.elo.matches,
+        user.data.elo.challenger ? 'challenger' : null
+      )
+
       return [
         {
           role: roleMap[user.data.role],
           profile_nickname: user.data.identification.nickname,
           profile_nickname_slug: user.data.identification.unique_id,
           profile_icon: summoner_icon,
-          rating_score: user.data.elo.score,
-          rating_k_factor: user.data.elo.k,
-          rating_apex_flag: user.data.elo.challenger ? 'challenger' : null,
-          rating_ranked_count: user.data.elo.matches,
+          profile_nickname_date: user.data.identification.last_changed ?? new Date(),
+
+          mmr_score: user.data.elo.score,
+          mmr_k_factor: user.data.elo.k,
+
+          rank_league: rank.league as LeagueEnum,
+          rank_lp: rank.points,
+          rank_matches: user.data.elo.matches,
+
           stats_victories: user.data.stats.wins,
           stats_draws: user.data.stats.draws,
           stats_defeats: user.data.stats.defeats,
-          profile_nickname_date: user.data.identification.last_changed ?? new Date(),
           created_at: identity ? new Date(identity.metadata.creationTime) : new Date(),
         },
         identity ?? null,
@@ -137,8 +158,8 @@ export class UserRepository {
           profile_icon: 29,
           profile_nickname: nickname,
           profile_nickname_slug: slug,
-          rating_score: ratingConfig.initial_elo,
-          rating_k_factor: ratingConfig.initial_k_factor,
+          mmr_score: ratingConfig.initial_elo,
+          mmr_k_factor: ratingConfig.initial_k_factor,
         }).RETURNING`*`
       )
 
@@ -204,24 +225,13 @@ export class UserRepository {
   }
 
   /** Updates a user's rating fields after a ranked match. */
-  async updateRating(
+  async updateRank(
     id: string,
-    rating: Pick<
-      UserRow,
-      'rating_score' | 'rating_k_factor' | 'rating_ranked_count' | 'rating_apex_flag'
-    >,
+    rating: Pick<UserRow, keyof UserRow & `rank_${string}`>,
     conn?: IDbClient
   ): Promise<void> {
     conn ??= this.databaseService
-    await conn.query(sql`
-      UPDATE "user"
-      SET rating_score = ${rating.rating_score},
-          rating_k_factor = ${rating.rating_k_factor},
-          rating_ranked_count = ${rating.rating_ranked_count},
-          rating_apex_flag = ${rating.rating_apex_flag},
-          rating_date = CURRENT_DATE
-      WHERE id = ${id}
-    `)
+    await conn.query(UPDATE`"user"`.SET(rating).WHERE`id = ${id}`)
   }
 
   /** Increments the win, draw or loss counter for a user after a match. */
