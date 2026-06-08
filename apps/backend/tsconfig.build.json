@@ -5,7 +5,7 @@
   "extends": "./tsconfig.json",
   "include": ["src"],
   "compilerOptions": {
-    "rootDir": ".",
+    "rootDir": "./src",
     "preserveSymlinks": true,
     "paths": {
       "@/*": ["./src/*"]

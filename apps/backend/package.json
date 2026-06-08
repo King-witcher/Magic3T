@@ -56,7 +56,7 @@
     "build": "nest build && npm run sentry:sourcemaps",
     "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register --watch ../../packages src/main.ts",
     "lint": "biome check src --error-on-warnings --diagnostic-level=warn",
-    "start:prod": "node dist/src/main",
+    "start:prod": "node dist/main",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org magic3t --project magic3t-backend ./dist && sentry-cli sourcemaps upload --org magic3t --project magic3t-backend ./dist"
