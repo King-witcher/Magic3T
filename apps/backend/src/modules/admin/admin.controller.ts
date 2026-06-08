@@ -5,7 +5,7 @@ import { UserRepository } from '@/infra/database/repositories/user-repository'
 
 @Controller('admin')
 // @UseGuards(AuthGuard, AdminGuard)
-@ApiBearerAuth()
+// @ApiBearerAuth()
 export class AdminController {
   constructor(
     private readonly userRepository: UserRepository,
