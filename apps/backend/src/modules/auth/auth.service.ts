@@ -8,7 +8,7 @@ import {
   SignInFirebaseResponse,
   ValidateSessionResponse,
 } from '@magic3t/api-types'
-import { UserRow, UserRowRole } from '@magic3t/database-types'
+import { UserRow, UserRoleEnum } from '@magic3t/database-types'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { HttpStatus, Inject, Injectable } from '@nestjs/common'
 import bcrypt from 'bcrypt'
@@ -102,7 +102,7 @@ export class AuthService {
     id: string
     profile_nickname: string
     profile_icon: number
-    role: UserRowRole
+    role: UserRoleEnum
   }): ClientSessionData {
     return {
       userId: user.id,
@@ -191,7 +191,7 @@ export class AuthService {
   ): Promise<{
     user_id: string
     profile_nickname: string
-    role: UserRowRole
+    role: UserRoleEnum
     profile_icon: number
   }> {
     const credential = await this.credentialRepository.findByUsername(username)
@@ -214,7 +214,7 @@ export class AuthService {
     }
   }
 
-  private async createSession(userId: string, userRole: UserRowRole): Promise<string> {
+  private async createSession(userId: string, userRole: UserRoleEnum): Promise<string> {
     const sessionData: ServerSessionData = {
       userId,
       role: userRole,

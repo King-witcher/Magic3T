@@ -1,13 +1,12 @@
 import { MatchServerEvents } from '@magic3t/api-types'
-import { BotId, League, Team } from '@magic3t/common-types'
+import { BotId, Team } from '@magic3t/common-types'
 import { UserRow } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { unexpected } from '@/common'
 import { UserRepository } from '@/infra/database/repositories/user-repository'
-import { ConfigRepository } from '@/infra/firestore'
 import { WebsocketEmitterService } from '@/infra/websocket/websocket-emitter.service'
-import { RankConverter, RatingState } from '@/modules/rating'
+import { RatingService, UserRatingFields } from '@/modules/rating'
 import { BotsService } from './bots.service'
 import { FinishedMatchSummary } from './events/match-finished-event'
 import { Match, MatchClassEventType, MatchClassSummary, MatchStore } from './lib'
@@ -19,19 +18,18 @@ const TEAMS: [Team, Team] = [Team.Order, Team.Chaos]
 @Injectable()
 export class MatchService {
   constructor(
-    private configRepository: ConfigRepository,
     private userRepository: UserRepository,
     private matchBank: MatchStore,
     private eventEmitter: EventEmitter2,
     private websocketEmitterService: WebsocketEmitterService,
-    private botsService: BotsService
+    private botsService: BotsService,
+    private ratingService: RatingService
   ) {}
 
   /**
    * Create a new Player vs Bot match, returning the match id.
    */
   async createPlayerVsBot(userId: string, botId: BotId): Promise<string> {
-    // Get profiles
     const userProfilePromise = this.userRepository.getById(userId)
 
     const [userProfile, botProfile] = await Promise.all([
@@ -41,12 +39,10 @@ export class MatchService {
 
     if (!userProfile) unexpected('User not found for player vs bot match creation', userId)
 
-    // Coin flip sides
     const humanTeam = TEAMS[Math.round(Math.random())]
     const [orderProfile, chaosProfile] =
       humanTeam === Team.Order ? [userProfile, botProfile] : [botProfile, userProfile]
 
-    // Get perspectives
     const { match, id } = this.matchBank.createAndRegisterMatch({
       timelimit: HUMAN_VS_BOT_TIMELIMIT,
     })
@@ -56,16 +52,13 @@ export class MatchService {
       chaosId: chaosProfile.id,
     })
 
-    // Get bot, passing perspective
     const bot = this.botsService.getBot(
       botId,
       humanTeam === Team.Order ? chaosPerspective : orderPerspective
     )
 
-    // Sync
     this.subscribeMatchEvents(match, orderProfile, chaosProfile, true, new Date())
 
-    // Start match
     match.start()
     bot.start()
     return id
@@ -75,33 +68,27 @@ export class MatchService {
    * Create a new Player vs Player match.
    */
   async createPvPMatch(userId1: string, userId2: string) {
-    // Get profiles
     const [profile1, profile2] = await Promise.all([
       this.getProfile(userId1),
       this.getProfile(userId2),
     ])
 
-    // Coinflips sides
     const sideOfFirst = TEAMS[Math.round(Math.random())]
     const [orderProfile, chaosProfile] =
       sideOfFirst === Team.Order ? [profile1, profile2] : [profile2, profile1]
 
-    // Create and register a match in match bank
     const { match, id } = this.matchBank.createAndRegisterMatch({
       timelimit: HUMAN_VS_HUMAN_TIMELIMIT,
     })
 
-    // Register perspectives for both players in match bank
     this.matchBank.createPerspectives({
       match,
       orderId: orderProfile.id,
       chaosId: chaosProfile.id,
     })
 
-    // Sync
     this.subscribeMatchEvents(match, orderProfile, chaosProfile, true, new Date())
 
-    // Start match
     match.start()
     return id
   }
@@ -120,9 +107,6 @@ export class MatchService {
     return !this.matchBank.containsUser(userId)
   }
 
-  /**
-   * Listens to match class events and re-emits them as application events so that other services can listen to them.
-   */
   private subscribeMatchEvents(
     match: Match,
     order: UserRow,
@@ -130,7 +114,6 @@ export class MatchService {
     ranked: boolean,
     startedAt: Date
   ) {
-    // Subscribe to any events that can change the state of the game and send state reports via websockets.
     match.onMany(
       [
         MatchClassEventType.Choice,
@@ -141,7 +124,6 @@ export class MatchService {
       () => {
         const stateReport = match.stateReport
         for (const player of [order, chaos]) {
-          // Validate that the player is not a bot
           if (player.role !== 'bot') {
             this.websocketEmitterService.send(
               player.id,
@@ -154,102 +136,68 @@ export class MatchService {
       }
     )
 
-    // Subscribe to match finished event and compute the final match summary.
     match.on(MatchClassEventType.Finish, async (summary) => {
-      // --- Step 1: Compute match scores ---
-      // Order score is in [0, 1]; chaos score is the complement.
       const orderScore = computeOrderScore(summary)
       const chaosScore = 1 - orderScore
 
-      // --- Step 2: Update player ratings ---
-      // Capture each player's pre-match rating state from their stored row.
-      const orderRatingState: RatingState = {
-        elo: order.rating_score,
-        kFactor: order.rating_k_factor,
-        rankedCount: order.rating_ranked_count,
-        apexFlag: order.rating_apex_flag,
+      const orderFields: UserRatingFields = {
+        mmr_score: order.mmr_score,
+        mmr_k_factor: order.mmr_k_factor,
+        rank_league: order.rank_league,
+        rank_division: order.rank_division,
+        rank_lp: order.rank_lp,
+        rank_matches: order.rank_matches,
+        rank_date: order.rank_date,
       }
-      const chaosRatingState: RatingState = {
-        elo: chaos.rating_score,
-        kFactor: chaos.rating_k_factor,
-        rankedCount: chaos.rating_ranked_count,
-        apexFlag: chaos.rating_apex_flag,
+      const chaosFields: UserRatingFields = {
+        mmr_score: chaos.mmr_score,
+        mmr_k_factor: chaos.mmr_k_factor,
+        rank_league: chaos.rank_league,
+        rank_division: chaos.rank_division,
+        rank_lp: chaos.rank_lp,
+        rank_matches: chaos.rank_matches,
+        rank_date: chaos.rank_date,
       }
 
-      // Start from the current ratings; only overwrite for ranked human players.
-      let newOrderRating = orderRatingState
-      let newChaosRating = chaosRatingState
-      let rankConverter: RankConverter | null = null
+      let newOrderRating = orderFields
+      let newChaosRating = chaosFields
+      let orderLpGain: number | null = null
+      let chaosLpGain: number | null = null
 
       if (ranked) {
-        const ratingConfig = await this.configRepository.getRatingConfig()
-        rankConverter = new RankConverter(ratingConfig)
-        const [updatedOrder, updatedChaos] = rankConverter.updateRatings(
-          [orderRatingState, chaosRatingState],
+        const { results, lpGains } = this.ratingService.computeMatchResult(
+          orderFields,
+          chaosFields,
           orderScore
         )
-        // Bots are excluded from rating updates.
-        if (order.role !== 'bot') newOrderRating = updatedOrder
-        if (chaos.role !== 'bot') newChaosRating = updatedChaos
-      }
-
-      // --- Step 3: Compute post-match ranks ---
-      // Returns the new rank and LP gain for a player.
-      // Bots and unranked matches always yield a provisional rank with no LP gain.
-      const computeClientRanking = (player: UserRow, newRating: RatingState) => {
-        if (!rankConverter || player.role === 'bot') {
-          return {
-            newRank: {
-              league: League.Provisional,
-              division: null,
-              points: null,
-              rankedCount: 0,
-            } as const,
-            lpGain: null,
-          }
+        if (order.role !== 'bot') {
+          newOrderRating = results[0]
+          orderLpGain = lpGains[0]
         }
-
-        const newRank = rankConverter.getRankFromElo(
-          newRating.elo,
-          newRating.rankedCount,
-          newRating.apexFlag
-        )
-
-        // LP gain is only shown once the player has enough ranked games.
-        const hasLpGain = player.rating_ranked_count >= rankConverter.config.min_ranked_count
-        const lpGain = hasLpGain
-          ? rankConverter.getLpGain(player.rating_score, newRating.elo)
-          : null
-
-        return { newRank, lpGain }
+        if (chaos.role !== 'bot') {
+          newChaosRating = results[1]
+          chaosLpGain = lpGains[1]
+        }
       }
 
-      const orderClientRanking = computeClientRanking(order, newOrderRating)
-      const chaosClientRanking = computeClientRanking(chaos, newChaosRating)
-
-      // --- Step 4: Emit the finished match event ---
       const finishEvent: FinishedMatchSummary = {
         order: {
           userId: order.id,
           nickname: order.profile_nickname,
           role: order.role,
-          previousElo: order.rating_score,
           matchScore: orderScore,
           timeSpent: summary.order.timeSpent,
           newRating: newOrderRating,
-          newClientRank: orderClientRanking.newRank,
-          lpGain: orderClientRanking.lpGain,
+          lpGain: orderLpGain,
         },
         chaos: {
           userId: chaos.id,
           nickname: chaos.profile_nickname,
           role: chaos.role,
-          previousElo: chaos.rating_score,
           matchScore: chaosScore,
           timeSpent: summary.chaos.timeSpent,
           newRating: newChaosRating,
-          newClientRank: chaosClientRanking.newRank,
-          lpGain: chaosClientRanking.lpGain,
+          lpGain: chaosLpGain,
         },
         events: match.events,
         ranked,

@@ -9,7 +9,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import { UserRecord } from 'firebase-admin/auth'
 import { FirebaseAuthService } from '@/infra/firebase'
 import { ConfigRepository, UserDocumentRepository } from '@/infra/firestore'
-import { RankConverter } from '@/modules'
+import { RatingService } from '@/modules/rating'
 import { DatabaseError } from '@/shared/database/database-error'
 import { IDbClient } from '@/shared/database/db-client'
 import { INSERT_INTO, UPDATE } from '@/shared/database/pg-chain'
@@ -23,6 +23,17 @@ const roleMap: Record<UserDocumentRole, UserRoleEnum> = {
   [UserDocumentRole.Bot]: 'bot',
 }
 
+type RatingUpdateFields = Pick<
+  UserRow,
+  | 'mmr_score'
+  | 'mmr_k_factor'
+  | 'rank_league'
+  | 'rank_division'
+  | 'rank_lp'
+  | 'rank_matches'
+  | 'rank_date'
+>
+
 @Injectable()
 export class UserRepository {
   private readonly logger = new Logger(UserRepository.name, { timestamp: true })
@@ -31,13 +42,13 @@ export class UserRepository {
     private readonly databaseService: DatabaseService,
     private readonly userDocumentRepository: UserDocumentRepository,
     private readonly firebaseAuthService: FirebaseAuthService,
-    private readonly configRepository: ConfigRepository
+    private readonly configRepository: ConfigRepository,
+    private readonly ratingService: RatingService
   ) {}
 
   /** Imports users and their identities from Firebase Auth and Firestore */
   async importFromFirebase() {
-    // Gets all identities and users from Firebase
-    const [identities, allUsers, rankConverter] = await Promise.all([
+    const [identities, allUsers] = await Promise.all([
       this.firebaseAuthService.listFirebaseAccounts().then(([identities]) => {
         this.logger.log(`Fetched ${identities.length} identities from Firebase Auth`)
         const map = new Map(identities.map((identity) => [identity.uid, identity]))
@@ -47,18 +58,12 @@ export class UserRepository {
         this.logger.log(`Fetched ${items.length} user documents from Firestore`)
         return items
       }),
-      this.configRepository.getRatingConfig().then((config) => {
-        this.logger.log(`Fetched rating config from Firestore`)
-        return new RankConverter(config)
-      }),
     ])
 
-    // Filters users that don't have a corresponding identity
     const mappedUsers = allUsers.filter(
       (user) => identities.has(user.id) || user.data.role === UserDocumentRole.Bot
     )
 
-    // Map user documents to user rows and hash join them with identities
     const userRows = mappedUsers.map((user): [Partial<UserRow>, UserRecord | null] => {
       const summoner_icon =
         user.data.summoner_icon >= 59 && user.data.summoner_icon <= 78
@@ -67,10 +72,9 @@ export class UserRepository {
 
       const identity = identities.get(user.id)
 
-      const rank = rankConverter.getRankFromElo(
+      const { rank_league, rank_division, rank_lp } = this.ratingService.getRankFromLegacyMmr(
         user.data.elo.score,
-        user.data.elo.matches,
-        user.data.elo.challenger ? 'challenger' : null
+        user.data.elo.matches
       )
 
       return [
@@ -84,8 +88,9 @@ export class UserRepository {
           mmr_score: user.data.elo.score,
           mmr_k_factor: user.data.elo.k,
 
-          rank_league: rank.league as LeagueEnum,
-          rank_lp: rank.points,
+          rank_league: rank_league as LeagueEnum | null,
+          rank_division,
+          rank_lp,
           rank_matches: user.data.elo.matches,
 
           stats_victories: user.data.stats.wins,
@@ -99,7 +104,6 @@ export class UserRepository {
 
     await this.databaseService.transaction(async (client) => {
       for (const [user, identity] of userRows) {
-        // Create a user entry in the database
         this.logger.verbose(`Creating user ${user.profile_nickname}...`)
         const createUserChain = INSERT_INTO('"user"', user).RETURNING`id`
         const [row] = await client.query<{ id: number }>({
@@ -108,7 +112,6 @@ export class UserRepository {
           values: createUserChain.values,
         })
 
-        // Create it's legacy identity entry
         if (identity) {
           this.logger.verbose(`Creating legacy identity for user ${user.profile_nickname}...`)
           const identityChain = INSERT_INTO('legacy_user_identity', {
@@ -191,7 +194,7 @@ export class UserRepository {
     const rows = await this.databaseService.query<UserRow>(sql`
       SELECT *
       FROM "user"
-      WHERE rating_apex = 'challenger'
+      WHERE rank_league = 'challenger'
     `)
     return rows
   }
@@ -225,11 +228,7 @@ export class UserRepository {
   }
 
   /** Updates a user's rating fields after a ranked match. */
-  async updateRank(
-    id: string,
-    rating: Pick<UserRow, keyof UserRow & `rank_${string}`>,
-    conn?: IDbClient
-  ): Promise<void> {
+  async updateRank(id: string, rating: Partial<RatingUpdateFields>, conn?: IDbClient): Promise<void> {
     conn ??= this.databaseService
     await conn.query(UPDATE`"user"`.SET(rating).WHERE`id = ${id}`)
   }
@@ -267,41 +266,33 @@ export class UserRepository {
     }
   }
 
-  /** Gets all bot users. */
-  // async getBots(): Promise<UserRow[]> {
-  //   // FIXME: set ids
-  //   const bots = await this.configRepository.getBotConfigs()
-  //   const uids = [bots.bot0.uid, bots.bot1.uid, bots.bot2.uid, bots.bot3.uid]
-  //   return await Promise.all(
-  //     uids.map(async (uid) => {
-  //       const user = await this.getByFirebaseId(uid)
-  //       if (!user) unexpected('Bot user not found', { uid })
-  //       return user
-  //     })
-  //   )
-  // }
-
   async setOrReplaceChallengers(newChallengerIds: string[]): Promise<void> {
     const oldChallengers = await this.listChallengers()
     const oldChallengerIdsSet = new Set(oldChallengers.map((c) => c.id))
     const newChallengerIdsSet = new Set(newChallengerIds)
 
     await this.databaseService.transaction(async (client) => {
-      // Remove challenger status from old challengers not in the new list
       const toRemove = oldChallengers.filter((c) => !newChallengerIdsSet.has(c.id))
-      await client.query(sql`
-        UPDATE "user"
-        SET rating_apex_flag = NULL
-        WHERE id IN (${toRemove.map((c) => c.id)})
-      `)
+      for (const user of toRemove) {
+        const { rank_league, rank_division, rank_lp } = this.ratingService.getRankFromLegacyMmr(
+          user.mmr_score,
+          user.rank_matches
+        )
+        await client.query(sql`
+          UPDATE "user"
+          SET rank_league = ${rank_league}, rank_division = ${rank_division}, rank_lp = ${rank_lp}
+          WHERE id = ${user.id}
+        `)
+      }
 
-      // Add challenger status to new challengers not in the old list
       const idsToAdd = newChallengerIds.filter((id) => !oldChallengerIdsSet.has(id))
-      await client.query(sql`
-        UPDATE "user"
-        SET rating_apex_flag = 'challenger'
-        WHERE id IN (${idsToAdd})
-      `)
+      if (idsToAdd.length > 0) {
+        await client.query(sql`
+          UPDATE "user"
+          SET rank_league = 'challenger', rank_division = NULL
+          WHERE id IN (${idsToAdd})
+        `)
+      }
     })
   }
 
@@ -309,9 +300,10 @@ export class UserRepository {
     const rows = await this.databaseService.query<UserRow>(sql`
       SELECT *
       FROM "user"
-      WHERE rating_ranked_count >= ${minPlayed}
+      WHERE rank_league IS NOT NULL
+        AND rank_matches >= ${minPlayed}
         AND "role" != 'bot'
-      ORDER BY rating_score DESC, id DESC
+      ORDER BY rank_league DESC, rank_division ASC NULLS FIRST, rank_lp DESC, id DESC
       LIMIT ${limit}
     `)
     return rows
@@ -335,9 +327,6 @@ export class UserRepository {
     return rows
   }
 
-  /**
-   * Gets a map from Firebase ID, user ID or Firebase UID to an object containing the corresponding ids.
-   */
   async getIdMap(): Promise<
     Map<string | number, { firebase_id: string; uuid: string; id: number }>
   > {

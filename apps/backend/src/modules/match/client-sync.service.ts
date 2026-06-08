@@ -1,8 +1,18 @@
 import { MatchReportPayload, MatchServerEvents, StateReportPayload } from '@magic3t/api-types'
+import { ClientRank, Division, League } from '@magic3t/common-types'
 import { Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { WebsocketEmitterService } from '@/infra/websocket/websocket-emitter.service'
+import { UserRatingFields } from '@/modules/rating'
 import { FinishedMatchSummary } from './events/match-finished-event'
+
+function toClientRank(r: UserRatingFields): ClientRank {
+  return {
+    league: r.rank_league as League | null,
+    division: r.rank_division as Division | null,
+    lp: r.rank_lp,
+  }
+}
 
 /**
  * Service responsible for syncing match state and results to clients.
@@ -28,12 +38,12 @@ export class ClientSyncService {
       order: {
         lpGain: summary.order.lpGain,
         score: summary.order.matchScore,
-        newRank: summary.order.newClientRank,
+        newRank: toClientRank(summary.order.newRating),
       },
       chaos: {
         lpGain: summary.chaos.lpGain,
         score: summary.chaos.matchScore,
-        newRank: summary.chaos.newClientRank,
+        newRank: toClientRank(summary.chaos.newRating),
       },
       matchId: 'undefined-match-id',
       winner: summary.winner,

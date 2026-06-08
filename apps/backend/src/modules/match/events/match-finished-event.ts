@@ -1,16 +1,14 @@
-import { ClientRank, Team, UserRole } from '@magic3t/common-types'
+import { Team, UserRole } from '@magic3t/common-types'
 import { MatchEventRow } from '@magic3t/database-types'
-import { RatingState } from '@/modules/rating'
+import { UserRatingFields } from '@/modules/rating'
 
 type FinishedMatchContextPlayer = {
   userId: string
   nickname: string
   role: UserRole
-  previousElo: number
   matchScore: number
   timeSpent: number
-  newRating: RatingState
-  newClientRank: ClientRank
+  newRating: UserRatingFields
   lpGain: number | null
 }
 
