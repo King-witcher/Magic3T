@@ -1,7 +1,6 @@
-export const enum AuthErrorCode {
-  NicknameUnavailable = 'NicknameUnavailable',
-  UserAlreadyRegistered = 'UserAlreadyRegistered',
-  UsernameUnavailable = 'UsernameUnavailable',
-  InvalidCredentials = 'InvalidCredentials',
-  Unknown = 'Unknown',
-}
+export type AuthErrorCode =
+  | 'NicknameUnavailable'
+  | 'UserAlreadyRegistered'
+  | 'UsernameUnavailable'
+  | 'InvalidCredentials'
+  | 'Unknown'

@@ -2,9 +2,7 @@ import {
   GameClientEventsMap,
   GameServerEventsMap,
   GetUserResult,
-  MatchClientEvents,
   MatchReportPayload,
-  MatchServerEvents,
 } from '@magic3t/api-types'
 import { Choice, Team } from '@magic3t/common-types'
 import {
@@ -98,7 +96,7 @@ export function GameProvider({ children }: Props) {
   )
 
   // Handles text messages from the server. To be done.
-  useListener(gateway, MatchServerEvents.Message, (message) => {
+  useListener(gateway, 'message', (message) => {
     setMessages((current) => [
       ...current,
       {
@@ -112,15 +110,15 @@ export function GameProvider({ children }: Props) {
   // Handles team assignments messages from the server.
   useListener(
     gateway,
-    MatchServerEvents.Assignments,
+    'assignments',
     (assignments) => {
-      setOrderId(assignments[Team.Order].profile.id)
-      setChaosId(assignments[Team.Chaos].profile.id)
+      setOrderId(assignments.order.profile.id)
+      setChaosId(assignments.chaos.profile.id)
 
-      if (assignments[Team.Order].profile.id === auth.uuid) {
-        setCurrentTeam(Team.Order)
-      } else if (assignments[Team.Chaos].profile.id === auth.uuid) {
-        setCurrentTeam(Team.Chaos)
+      if (assignments.order.profile.id === auth.uuid) {
+        setCurrentTeam('order')
+      } else if (assignments.chaos.profile.id === auth.uuid) {
+        setCurrentTeam('chaos')
       } else {
         setCurrentTeam(null)
       }
@@ -129,18 +127,18 @@ export function GameProvider({ children }: Props) {
   )
 
   // Handles state updates from the server.
-  useListener(gateway, MatchServerEvents.StateReport, (report) => {
+  useListener(gateway, 'state-report', (report) => {
     setTurn(report.turn)
-    setOrderChoices(report[Team.Order].choices)
-    setChaosChoices(report[Team.Chaos].choices)
+    setOrderChoices(report.order.choices)
+    setChaosChoices(report.chaos.choices)
     orderTimer.current.pause()
     chaosTimer.current.pause()
-    orderTimer.current.setRemaining(report[Team.Order].timeLeft)
-    chaosTimer.current.setRemaining(report[Team.Chaos].timeLeft)
+    orderTimer.current.setRemaining(report.order.timeLeft)
+    chaosTimer.current.setRemaining(report.chaos.timeLeft)
 
-    if (report.turn === Team.Order) {
+    if (report.turn === 'order') {
       orderTimer.current.start()
-    } else if (report.turn === Team.Chaos) {
+    } else if (report.turn === 'chaos') {
       chaosTimer.current.start()
     }
   })
@@ -148,19 +146,19 @@ export function GameProvider({ children }: Props) {
   // Handles final match reports from the server.
   useListener(
     gateway,
-    MatchServerEvents.MatchReport,
+    'match-report',
     (report) => {
       if (!auth.signedIn) return
       if (orderQuery.data) {
         orderQuery.setData((oldData) => ({
           ...oldData!,
-          rank: report[Team.Order].newRank,
+          rank: report.order.newRank,
         }))
       }
       if (chaosQuery.data) {
         chaosQuery.setData((oldData) => ({
           ...oldData!,
-          rank: report[Team.Chaos].newRank,
+          rank: report.chaos.newRank,
         }))
       }
       setFinalReport(report)
@@ -192,8 +190,8 @@ export function GameProvider({ children }: Props) {
     if (!matchId) return
     if (!gateway.socket) return
 
-    gateway.emit(MatchClientEvents.GetState)
-    gateway.emit(MatchClientEvents.GetAssignments)
+    gateway.emit('get-state')
+    gateway.emit('get-assignments')
   }, [matchId, gateway])
 
   useListener(gateway, 'disconnect', (reason) => {
@@ -205,18 +203,18 @@ export function GameProvider({ children }: Props) {
     (choice: Choice) => {
       if (currentTeam === null) return
       if (currentTeam !== turn) return
-      gateway.emit(MatchClientEvents.Pick, choice)
+      gateway.emit('pick', choice)
       switch (currentTeam) {
-        case Team.Order: {
+        case 'order': {
           setOrderChoices((old) => [...old, choice])
-          setTurn(Team.Chaos)
+          setTurn('chaos')
           orderTimer.current.pause()
           chaosTimer.current.start()
           break
         }
-        case Team.Chaos: {
+        case 'chaos': {
           setChaosChoices((old) => [...old, choice])
-          setTurn(Team.Order)
+          setTurn('order')
           chaosTimer.current.pause()
           orderTimer.current.start()
           break
@@ -238,7 +236,7 @@ export function GameProvider({ children }: Props) {
           },
         ])
 
-        gateway.emit(MatchClientEvents.Message, message)
+        gateway.emit('message', message)
       }
     },
     [gateway]
@@ -250,7 +248,7 @@ export function GameProvider({ children }: Props) {
 
     Console.log('You surrendered the match.')
 
-    gateway.emit(MatchClientEvents.Surrender)
+    gateway.emit('surrender')
     setTurn(null)
     orderTimer.current.pause()
     chaosTimer.current.pause()
@@ -302,19 +300,19 @@ export function GameProvider({ children }: Props) {
     <GameContext
       value={{
         teams: {
-          [Team.Order]: {
+          order: {
             choices: orderChoices,
             profile: orderProfile ?? null,
             timer: orderTimer.current,
-            gain: finalReport?.[Team.Order].lpGain || null,
-            score: finalReport?.[Team.Order].score || null,
+            gain: finalReport?.order.lpGain || null,
+            score: finalReport?.order.score || null,
           },
-          [Team.Chaos]: {
+          chaos: {
             choices: chaosChoices,
             profile: chaosProfile ?? null,
             timer: chaosTimer.current,
-            gain: finalReport?.[Team.Chaos].lpGain || null,
-            score: finalReport?.[Team.Chaos].score || null,
+            gain: finalReport?.chaos.lpGain || null,
+            score: finalReport?.chaos.score || null,
           },
         },
         availableChoices,

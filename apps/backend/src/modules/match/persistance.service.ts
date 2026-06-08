@@ -1,4 +1,3 @@
-import { League } from '@magic3t/common-types'
 import { Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { unexpected } from '@/common'
@@ -32,23 +31,30 @@ export class PersistanceService {
       conn: IDbClient
     ) => {
       if (player.role !== 'bot') {
+        const r = player.newRating
         await this.userRepository.updateRank(
           player.userId,
           {
-            rating_apex_flag: player.newRating.apexFlag,
-            rating_k_factor: player.newRating.kFactor,
-            rating_ranked_count: player.newRating.rankedCount,
-            rating_score: player.newRating.elo,
+            mmr_score: r.mmr_score,
+            mmr_k_factor: r.mmr_k_factor,
+            rank_league: r.rank_league,
+            rank_division: r.rank_division,
+            rank_lp: r.rank_lp,
+            rank_matches: r.rank_matches,
+            rank_date: r.rank_date,
           },
           conn
         )
         await this.snapshotRepository.create(
           {
             user_id: player.userId,
-            apex_flag: player.newRating.apexFlag,
+            league: r.rank_league,
+            division: r.rank_division,
+            lp: r.rank_lp,
+            matches: r.rank_matches,
+            mmr_score: r.mmr_score,
+            mmr_k_factor: r.mmr_k_factor,
             date: new Date(),
-            hidden: player.newClientRank.league !== League.Provisional,
-            score: player.newRating.elo,
           },
           conn
         )

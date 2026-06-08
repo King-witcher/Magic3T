@@ -1,4 +1,1 @@
-export const enum Team {
-  Order = 'order',
-  Chaos = 'chaos',
-}
+export type Team = 'order' | 'chaos'

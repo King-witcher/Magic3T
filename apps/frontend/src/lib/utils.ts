@@ -48,5 +48,5 @@ export function delay(ms: number): Promise<void> {
 }
 
 export function opposite(team: Team): Team {
-  return team === Team.Chaos ? Team.Order : Team.Chaos
+  return team === 'chaos' ? 'order' : 'chaos'
 }

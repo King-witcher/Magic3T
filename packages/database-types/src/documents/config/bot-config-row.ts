@@ -17,12 +17,7 @@ export type SingleBotConfig = { uid: string } & (
  * Not to be confused with bot id.
  */
 /** @deprecated */
-export const enum BotName {
-  Bot0 = 'bot0',
-  Bot1 = 'bot1',
-  Bot2 = 'bot2',
-  Bot3 = 'bot3',
-}
+export type BotName = 'bot0' | 'bot1' | 'bot2' | 'bot3'
 
 /** Defines the configuration settings for all bots */
 /** @deprecated */

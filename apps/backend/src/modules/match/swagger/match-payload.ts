@@ -8,19 +8,15 @@ import { ApiProperty } from '@nestjs/swagger'
 
 export class MatchPayloadEvent {
   @ApiProperty({
-    description: `The event type. ${MatchDocumentEventType.Choice} = choice, ${MatchDocumentEventType.Forfeit} = surrender, ${MatchDocumentEventType.Timeout} = timeout`,
-    enum: [
-      MatchDocumentEventType.Choice,
-      MatchDocumentEventType.Forfeit,
-      MatchDocumentEventType.Timeout,
-    ],
+    description: `The event type. ${0} = choice, ${1} = surrender, ${2} = timeout`,
+    enum: [0, 1, 2],
   })
   event: MatchDocumentEventType
 
   @ApiProperty({
     description: 'The team that triggered the event.',
-    example: Team.Chaos,
-    enum: [Team.Order, Team.Chaos],
+    example: 'chaos',
+    enum: ['order', 'chaos'],
   })
   side: Team
 
@@ -32,7 +28,7 @@ export class MatchPayloadEvent {
 
   @ApiProperty({
     nullable: true,
-    description: `The choice made, if event is ${MatchDocumentEventType.Choice}; otherwise, undefined`,
+    description: `The choice made, if event is ${0}; otherwise, undefined`,
     example: 7,
   })
   choice?: Choice
@@ -60,9 +56,9 @@ export class MatchPayload {
 
   @ApiProperty({
     description: 'The match winner, if any; otherwise, null',
-    enum: [Team.Order, Team.Chaos],
+    enum: ['order', 'chaos'],
     nullable: true,
-    example: Team.Chaos,
+    example: 'chaos',
   })
   winner: Team | null
 

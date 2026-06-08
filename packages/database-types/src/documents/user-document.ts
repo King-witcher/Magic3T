@@ -13,11 +13,7 @@ export type UserDocumentElo = {
   challenger: boolean
 }
 
-export const enum UserDocumentRole {
-  Player = 'player',
-  Creator = 'creator',
-  Bot = 'bot',
-}
+export type UserDocumentRole = 'player' | 'creator' | 'bot'
 
 export type UserDocument = {
   identification: {

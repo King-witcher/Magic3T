@@ -1,6 +1,6 @@
 import { Division, League } from '@magic3t/common-types'
 import { ComponentProps } from 'react'
-import { divisionMap, leaguesMap } from '@/utils/ranks'
+import { divisionMap, leaguesMap, provisionalLeagueInfo } from '@/utils/ranks'
 import { cn, getIconUrl } from '@/utils/utils'
 
 // Wings are in a 287/372 ratio
@@ -28,18 +28,18 @@ export function AvatarImage({ icon, className, ...props }: AvatarImageProps) {
 }
 
 type AvatarWingProps = {
-  league: League
+  league: League | null
   type?: 'wing' | 'plate'
 }
 export function AvatarWing({ league, type = 'plate' }: AvatarWingProps) {
-  const leagueInfo = leaguesMap[league]
+  const leagueInfo = league ? leaguesMap[league] : provisionalLeagueInfo
 
   return (
     <div className="absolute inset-0">
       <div
         className={cn(
           'absolute h-auto left-1/2 -translate-x-1/2 ',
-          league === League.Provisional
+          !league
             ? 'top-1/2 w-1264/683 -translate-y-1/2' // Unranked
             : 'w-287/96 -translate-y-467/992' // Ranked
         )}
@@ -55,10 +55,10 @@ export function AvatarWing({ league, type = 'plate' }: AvatarWingProps) {
 }
 
 type AvatarWingAnimationProps = {
-  league: League
+  league: League | null
 }
 export function AvatarWingAnimation({ league }: AvatarWingAnimationProps) {
-  const leagueInfo = leaguesMap[league]
+  const leagueInfo = league ? leaguesMap[league] : provisionalLeagueInfo
 
   if (!leagueInfo.animation) return null
 
@@ -67,7 +67,7 @@ export function AvatarWingAnimation({ league }: AvatarWingAnimationProps) {
       <div
         className={cn(
           'absolute h-auto left-1/2 -translate-x-1/2 ',
-          league === League.Provisional
+          !league
             ? 'top-1/2 w-1264/683 -translate-y-1/2' // Unranked
             : 'w-287/96 -translate-y-467/992' // Ranked
         )}

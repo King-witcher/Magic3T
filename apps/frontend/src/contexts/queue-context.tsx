@@ -1,8 +1,6 @@
 import {
   LiveGameStatsPayload,
-  QueueClientEvents,
   QueueClientEventsMap,
-  QueueServerEvents,
   QueueServerEventsMap,
 } from '@magic3t/api-types'
 import { BotId } from '@magic3t/common-types'
@@ -24,10 +22,10 @@ export type QueueModesType = {
 const emptyQueueModes: QueueModesType = {
   ranked: {
     pvp: false,
-    [BotId.Recruit]: false,
-    [BotId.Soldier]: false,
-    [BotId.Elite]: false,
-    [BotId.Legend]: false,
+    recruit: false,
+    soldier: false,
+    elite: false,
+    legend: false,
   },
 }
 
@@ -67,16 +65,16 @@ export function QueueProvider({ children }: QueueContextProps) {
     authState === AuthState.SignedIn
   )
 
-  useListener(gateway, QueueServerEvents.MatchFound, (data) => {
+  useListener(gateway, 'matchFound', (data) => {
     setQueueModes(emptyQueueModes)
     gameCtx.connect(data.matchId)
   })
 
-  useListener(gateway, QueueServerEvents.LiveGameStats, (data) => {
+  useListener(gateway, 'liveGameStats', (data) => {
     setQueueUserCount(data)
   })
 
-  useListener(gateway, QueueServerEvents.QueueModes, (data) => {
+  useListener(gateway, 'queueModes', (data) => {
     if (!data.ranked) {
       setQueueModes(emptyQueueModes)
     }
@@ -98,7 +96,7 @@ export function QueueProvider({ children }: QueueContextProps) {
   })
 
   useEffect(() => {
-    gateway.emit(QueueClientEvents.Interact)
+    gateway.emit('interact')
   }, [gateway])
 
   const enqueueMutation = useClientMutation(apiClient.queue, 'enqueue', {

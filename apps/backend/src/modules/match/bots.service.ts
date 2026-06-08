@@ -8,10 +8,10 @@ import { BaseBot } from './bots/base-bot'
 import { Perspective } from './lib'
 
 const BOT_NICKNAMES = new Map([
-  [BotId.Recruit, 'boteasy'],
-  [BotId.Soldier, 'botmedium'],
-  [BotId.Legend, 'bothard'],
-  [BotId.Elite, 'botinvincible'],
+  ['recruit', 'boteasy'],
+  ['soldier', 'botmedium'],
+  ['legend', 'bothard'],
+  ['elite', 'botinvincible'],
 ])
 
 @Injectable()
@@ -20,13 +20,13 @@ export class BotsService {
 
   getBot(botId: BotId, perspective: Perspective): BaseBot {
     switch (botId) {
-      case BotId.Recruit:
+      case 'recruit':
         return new RandomBot(perspective)
-      case BotId.Soldier:
+      case 'soldier':
         return new MinMaxBot(perspective, 2)
-      case BotId.Legend:
+      case 'legend':
         return new MinMaxBot(perspective, 4)
-      case BotId.Elite:
+      case 'elite':
         return new MinMaxBot(perspective, 7)
       default:
         unexpected('Tried to get bot with invalid bot id', botId)

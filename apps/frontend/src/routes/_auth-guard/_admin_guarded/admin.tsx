@@ -1,6 +1,5 @@
 import type { Admin } from '@magic3t/api-types'
 import { League } from '@magic3t/common-types'
-import { UserDocumentRole } from '@magic3t/database-types'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { GiCrown, GiRobotGrab } from 'react-icons/gi'
@@ -155,12 +154,12 @@ function AccountRow({
       {/* Info */}
       <div className="flex flex-col min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          {hasData && user.userRow.role === UserDocumentRole.Bot && (
+          {hasData && user.userRow.role === 'bot' && (
             <Tooltip text="Bot account">
               <GiRobotGrab className="text-gold-4 size-4 shrink-0" />
             </Tooltip>
           )}
-          {hasData && user.userRow.role === UserDocumentRole.Creator && (
+          {hasData && user.userRow.role === 'creator' && (
             <Tooltip text="Creator account">
               <GiCrown className="text-gold-4 size-4 shrink-0" />
             </Tooltip>
@@ -173,14 +172,15 @@ function AccountRow({
       </div>
 
       {/* Rank badge */}
-      {hasData && user.rating && <RankBadge league={user.rating.league} />}
+      {hasData && user.rating?.league && <RankBadge league={user.rating.league} />}
 
       {!hasData && <span className="text-xs text-grey-1-5 italic shrink-0">No data</span>}
     </button>
   )
 }
 
-function RankBadge({ league }: { league: League }) {
+function RankBadge({ league }: { league: League | null }) {
+  if (!league) return null
   const info = leaguesMap[league]
   return (
     <Tooltip text={info.name}>
@@ -223,16 +223,16 @@ function AccountDetail({ user }: { user: Admin.ListAccountsResultItem }) {
             <div className="flex items-center gap-3 mb-2">
               <img
                 className="size-10 drop-shadow-lg"
-                alt={leaguesMap[user.rating.league].name}
-                src={leaguesMap[user.rating.league].icon}
+                alt={user.rating.league ? leaguesMap[user.rating.league].name : 'Unranked'}
+                src={user.rating.league ? leaguesMap[user.rating.league].icon : ''}
               />
               <div>
                 <p className="font-serif font-bold text-gold-1">
-                  {leaguesMap[user.rating.league].name}
+                  {user.rating.league ? leaguesMap[user.rating.league].name : 'Unranked'}
                   {user.rating.division ? ` ${divisionMap[user.rating.division]}` : ''}
                 </p>
-                {user.rating.points !== null && (
-                  <p className="text-xs text-grey-1">{user.rating.points} LP</p>
+                {user.rating.lp !== null && (
+                  <p className="text-xs text-grey-1">{user.rating.lp} LP</p>
                 )}
               </div>
             </div>

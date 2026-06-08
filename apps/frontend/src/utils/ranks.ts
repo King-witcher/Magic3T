@@ -1,4 +1,4 @@
-import { League } from '@magic3t/common-types'
+import type { League } from '@magic3t/common-types'
 
 export type LeagueInfo = {
   emblem: string
@@ -10,16 +10,17 @@ export type LeagueInfo = {
   animation?: string
 }
 
+export const provisionalLeagueInfo: LeagueInfo = {
+  emblem: `${import.meta.env.VITE_CDN_URL}/leagues/emblems/unranked.png`,
+  emblemOldest: `${import.meta.env.VITE_CDN_URL}/ranks-old/provisional.png`,
+  icon: `${import.meta.env.VITE_CDN_URL}/leagues/icons/unranked.svg`,
+  wing: `${import.meta.env.VITE_CDN_URL}/leagues/wings/provisional-1.png`,
+  plate: `${import.meta.env.VITE_CDN_URL}/leagues/wings/provisional-1.png`,
+  name: 'Unranked',
+}
+
 export const leaguesMap: Record<League, LeagueInfo> = {
-  [League.Provisional]: {
-    emblem: `${import.meta.env.VITE_CDN_URL}/leagues/emblems/unranked.png`,
-    emblemOldest: `${import.meta.env.VITE_CDN_URL}/ranks-old/provisional.png`,
-    icon: `${import.meta.env.VITE_CDN_URL}/leagues/icons/unranked.svg`,
-    wing: `${import.meta.env.VITE_CDN_URL}/leagues/wings/provisional-1.png`,
-    plate: `${import.meta.env.VITE_CDN_URL}/leagues/wings/provisional-1.png`,
-    name: 'Unranked',
-  },
-  [League.Bronze]: {
+  bronze: {
     emblem: `${import.meta.env.VITE_CDN_URL}/leagues/emblems/bronze.png`,
     emblemOldest: `${import.meta.env.VITE_CDN_URL}/ranks-old/bronze.png`,
     wing: `${import.meta.env.VITE_CDN_URL}/leagues/wings/bronze.png`,
@@ -27,7 +28,7 @@ export const leaguesMap: Record<League, LeagueInfo> = {
     plate: `${import.meta.env.VITE_CDN_URL}/leagues/plates/bronze.png`,
     name: 'Bronze',
   },
-  [League.Silver]: {
+  silver: {
     emblem: `${import.meta.env.VITE_CDN_URL}/leagues/emblems/silver.png`,
     emblemOldest: `${import.meta.env.VITE_CDN_URL}/ranks-old/silver.png`,
     wing: `${import.meta.env.VITE_CDN_URL}/leagues/wings/silver.png`,
@@ -35,7 +36,7 @@ export const leaguesMap: Record<League, LeagueInfo> = {
     plate: `${import.meta.env.VITE_CDN_URL}/leagues/plates/silver.png`,
     name: 'Silver',
   },
-  [League.Gold]: {
+  gold: {
     emblem: `${import.meta.env.VITE_CDN_URL}/leagues/emblems/gold.png`,
     emblemOldest: `${import.meta.env.VITE_CDN_URL}/ranks-old/gold.png`,
     wing: `${import.meta.env.VITE_CDN_URL}/leagues/wings/gold.png`,
@@ -43,7 +44,7 @@ export const leaguesMap: Record<League, LeagueInfo> = {
     plate: `${import.meta.env.VITE_CDN_URL}/leagues/plates/gold.png`,
     name: 'Gold',
   },
-  [League.Diamond]: {
+  diamond: {
     // animation: `${import.meta.env.VITE_CDN_URL}/leagues/videos/diamond.webm`,
     emblem: `${import.meta.env.VITE_CDN_URL}/leagues/emblems/diamond.png`,
     emblemOldest: `${import.meta.env.VITE_CDN_URL}/ranks-old/diamond.png`,
@@ -52,7 +53,7 @@ export const leaguesMap: Record<League, LeagueInfo> = {
     plate: `${import.meta.env.VITE_CDN_URL}/leagues/plates/diamond.png`,
     name: 'Diamond',
   },
-  [League.Master]: {
+  master: {
     animation: `${import.meta.env.VITE_CDN_URL}/leagues/videos/master.webm`,
     emblem: `${import.meta.env.VITE_CDN_URL}/leagues/emblems/master.png`,
     emblemOldest: `${import.meta.env.VITE_CDN_URL}/ranks-old/master.png`,
@@ -61,7 +62,7 @@ export const leaguesMap: Record<League, LeagueInfo> = {
     plate: `${import.meta.env.VITE_CDN_URL}/leagues/plates/master.png`,
     name: 'Master',
   },
-  [League.Challenger]: {
+  challenger: {
     animation: `${import.meta.env.VITE_CDN_URL}/leagues/videos/challenger.webm`,
     emblem: `${import.meta.env.VITE_CDN_URL}/leagues/emblems/challenger.png`,
     emblemOldest: `${import.meta.env.VITE_CDN_URL}/ranks-old/challenger.png`,

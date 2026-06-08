@@ -1,5 +1,4 @@
 import { GetUserResult } from '@magic3t/api-types'
-import { UserDocumentRole } from '@magic3t/database-types'
 import { useState } from 'react'
 import { GiCrown, GiRobotGrab } from 'react-icons/gi'
 import { Tooltip } from '@/components/ui/tooltip'
@@ -37,9 +36,8 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
 
         {/* User Info */}
         <div className="text-center mt-4 space-y-2">
-          {/* Nickname with Role Badge */}
           <div className="flex items-center justify-center gap-2">
-            {user.role === UserDocumentRole.Bot && (
+            {user.role === 'bot' && (
               <Tooltip text="Bot account">
                 <GiRobotGrab className="text-gold-4 size-7" />
               </Tooltip>

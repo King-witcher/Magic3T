@@ -1,4 +1,3 @@
-import { Team } from '@magic3t/common-types'
 import { Injectable } from '@nestjs/common'
 import { FirestoreService } from '@/infra/firestore'
 import { Match, MatchClassEventType } from './match'
@@ -43,7 +42,7 @@ export class MatchStore {
   } {
     const orderPerspective = new Perspective({
       match,
-      team: Team.Order,
+      team: 'order',
       teams: {
         order: orderId,
         chaos: chaosId,
@@ -51,7 +50,7 @@ export class MatchStore {
     })
     const chaosPerspective = new Perspective({
       match,
-      team: Team.Chaos,
+      team: 'chaos',
       teams: {
         order: orderId,
         chaos: chaosId,

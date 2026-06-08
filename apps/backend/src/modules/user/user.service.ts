@@ -1,12 +1,11 @@
 import { GetUserResult, ListUsersResult, ListUsersResultData } from '@magic3t/api-types'
+import { Division, League } from '@magic3t/common-types'
 import { UserRow } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
 import { range } from 'lodash'
 import { respondError, unexpected } from '@/common'
-import { ConfigService } from '@/infra'
 import { UserRepository } from '@/infra/database/repositories/user-repository'
 import { UserRepositoryError } from '@/infra/database/repositories/user-repository-error'
-import { RankConverter } from '@/modules/rating'
 
 const BASE_ICONS = new Set([...range(0, 30)])
 const MIN_RANKED_MATCHES = 5
@@ -14,10 +13,7 @@ const NICKNAME_COOLDOWN_MS = 1000 * 60 * 60 * 24 * 30 // 30 days
 
 @Injectable()
 export class UserService {
-  constructor(
-    private configService: ConfigService,
-    private userRepository: UserRepository
-  ) {}
+  constructor(private userRepository: UserRepository) {}
 
   async getById(uuid: string): Promise<GetUserResult> {
     const row = await this.userRepository.getById(uuid)
@@ -33,9 +29,7 @@ export class UserService {
 
   async getLeaderboard(): Promise<ListUsersResult> {
     const rows = await this.userRepository.getLeaderboard(MIN_RANKED_MATCHES, 10)
-    return {
-      data: await Promise.all(rows.map((row) => this.toListedUserResult(row))),
-    }
+    return { data: rows.map((row) => this.toListedUserResult(row)) }
   }
 
   async getProfile(userId: string): Promise<GetUserResult> {
@@ -84,15 +78,7 @@ export class UserService {
     await this.userRepository.updateIcon(userId, iconId)
   }
 
-  private async toGetUserResult(row: UserRow): Promise<GetUserResult> {
-    const ratingConfig = await this.configService.ratingConfig
-    const ratingService = new RankConverter(ratingConfig)
-    const rank = ratingService.getRankFromElo(
-      row.rating_score,
-      row.rating_ranked_count,
-      row.rating_apex_flag
-    )
-
+  private toGetUserResult(row: UserRow): GetUserResult {
     return {
       id: row.id,
       role: row.role,
@@ -103,25 +89,25 @@ export class UserService {
         draws: row.stats_draws,
         defeats: row.stats_defeats,
       },
-      rank,
+      rank: {
+        league: row.rank_league as League | null,
+        division: row.rank_division as Division | null,
+        lp: row.rank_lp,
+      },
     }
   }
 
-  private async toListedUserResult(row: UserRow): Promise<ListUsersResultData> {
-    const ratingConfig = await this.configService.ratingConfig
-    const ratingService = new RankConverter(ratingConfig)
-    const rank = ratingService.getRankFromElo(
-      row.rating_score,
-      row.rating_ranked_count,
-      row.rating_apex_flag
-    )
-
+  private toListedUserResult(row: UserRow): ListUsersResultData {
     return {
       id: row.id,
       role: row.role,
       nickname: row.profile_nickname,
       summonerIcon: row.profile_icon,
-      rank,
+      rank: {
+        league: row.rank_league as League | null,
+        division: row.rank_division as Division | null,
+        lp: row.rank_lp,
+      },
     }
   }
 }

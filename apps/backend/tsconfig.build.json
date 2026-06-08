@@ -3,5 +3,12 @@
     "sourceRoot": "/"
   },
   "extends": "./tsconfig.json",
-  "include": ["src"]
+  "include": ["src"],
+  "compilerOptions": {
+    "rootDir": ".",
+    "preserveSymlinks": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
 }

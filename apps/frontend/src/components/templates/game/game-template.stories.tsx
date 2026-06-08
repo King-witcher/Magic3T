@@ -1,4 +1,3 @@
-import { League, Team } from '@magic3t/common-types'
 import {
   createMemoryHistory,
   createRootRoute,
@@ -32,13 +31,13 @@ const router = createRouter({
 const MOCK_GAME_CONTEXT_DATA: GameContextData = {
   matchId: 'match-abc123def456',
   isActive: true,
-  turn: Team.Order,
-  currentTeam: Team.Order,
+  turn: 'order',
+  currentTeam: 'order',
   availableChoices: [4, 5, 6, 7, 8],
   finished: false,
   finalReport: null,
   teams: {
-    [Team.Order]: {
+    order: {
       timer: new Timer(45),
       profile: {
         id: 'player-order-1',
@@ -47,9 +46,8 @@ const MOCK_GAME_CONTEXT_DATA: GameContextData = {
         role: 'player',
         rank: {
           division: 4,
-          league: League.Diamond,
-          points: 50,
-          rankedCount: 10,
+          league: 'diamond',
+          lp: 50,
         },
         stats: {
           wins: 45,
@@ -61,7 +59,7 @@ const MOCK_GAME_CONTEXT_DATA: GameContextData = {
       gain: null,
       score: null,
     },
-    [Team.Chaos]: {
+    chaos: {
       timer: new Timer(30),
       profile: {
         id: 'player-chaos-2',
@@ -70,9 +68,8 @@ const MOCK_GAME_CONTEXT_DATA: GameContextData = {
         role: 'player',
         rank: {
           division: 4,
-          league: League.Diamond,
-          points: 50,
-          rankedCount: 10,
+          league: 'diamond',
+          lp: 50,
         },
         stats: {
           wins: 32,

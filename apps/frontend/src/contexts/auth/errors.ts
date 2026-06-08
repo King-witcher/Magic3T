@@ -51,10 +51,10 @@ export async function toAuthError(error: unknown): Promise<never> {
   if (error instanceof ClientError) {
     const code = (await error.errorCode) as AuthErrorCode | null
     switch (code) {
-      case AuthErrorCode.InvalidCredentials:
-      case AuthErrorCode.NicknameUnavailable:
-      case AuthErrorCode.UsernameUnavailable:
-      case AuthErrorCode.UserAlreadyRegistered:
+      case 'InvalidCredentials':
+      case 'NicknameUnavailable':
+      case 'UsernameUnavailable':
+      case 'UserAlreadyRegistered':
         throw new AuthError(`Api::${code}`)
       default:
         captureException(error)

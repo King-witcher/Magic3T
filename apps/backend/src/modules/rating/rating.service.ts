@@ -1,48 +1,38 @@
-import { LeagueEnum, UserRow } from '@magic3t/database-types'
+import { LeagueEnum } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
 import { unexpected } from '@/common'
 
-const LEAGUES: LeagueEnum[] = [
-  'bronze',
-  'silver',
-  'gold',
-  'platinum',
-  'diamond',
-  'master',
-  'challenger',
-]
+const LEAGUES: LeagueEnum[] = ['bronze', 'silver', 'gold', 'diamond', 'master', 'challenger']
 const APEX_LEAGUES = new Set<LeagueEnum>(['master', 'challenger'])
 
-// MMR at BASE_LEAGUE (silver), division 4, 0 LP — change here to shift the entire curve
 const BASE_MMR = 1500
 const BASE_LEAGUE_INDEX = LEAGUES.indexOf('silver')
 
-// MMR change per division; also defines LP-to-MMR ratio (LP_PER_DIVISION LP = MMR_PER_DIVISION MMR)
 const MMR_PER_DIVISION = 50
 const LP_PER_DIVISION = 100
 const DIVISIONS_PER_LEAGUE = 4
 
-// MMR at the absolute floor (Bronze 4, 0 LP)
 const BRONZE_4_MMR = BASE_MMR - BASE_LEAGUE_INDEX * MMR_PER_DIVISION * DIVISIONS_PER_LEAGUE
-
-// How many LP one MMR point is worth (= LP_PER_DIVISION / MMR_PER_DIVISION = 2)
 const MMR_TO_LP = LP_PER_DIVISION / MMR_PER_DIVISION
 
-// Placement series: number of matches required before a rank is assigned
 const PLACEMENT_MATCHES_REQUIRED = 5
 
-// Highest rank assignable after placements (Gold 1 @ 0 LP)
 const PLACEMENT_MAX_LEAGUE: LeagueEnum = 'gold'
 const PLACEMENT_MAX_DIVISION = 1
 const PLACEMENT_MAX_LP = 0
 
-// K-factor decay: converges exponentially toward MIN_K_FACTOR
 const MIN_K_FACTOR = 38
 const K_DECAY_FACTOR = 0.1
 
-type UserRankFields = Pick<UserRow, keyof UserRow & `rank_${string}`>
-type UserMmrFields = Pick<UserRow, keyof UserRow & `mmr_${string}`>
-type UserRatingFields = UserRankFields & UserMmrFields
+export type UserRatingFields = {
+  mmr_score: number
+  mmr_k_factor: number
+  rank_league: LeagueEnum | null
+  rank_division: number | null
+  rank_lp: number | null
+  rank_matches: number
+  rank_date: Date
+}
 
 type Rank = { league: LeagueEnum; division: number | null; lp: number }
 
@@ -52,26 +42,42 @@ export class RatingService {
     a: UserRatingFields,
     b: UserRatingFields,
     scoreA: number
-  ): [UserRatingFields, UserRatingFields] {
+  ): { results: [UserRatingFields, UserRatingFields]; lpGains: [number | null, number | null] } {
     const newA = { ...a }
     const newB = { ...b }
 
-    this.updateLeagues(newA, newB, scoreA)
+    const lpGains = this.updateLeagues(newA, newB, scoreA)
     this.updateMMRs(newA, newB, scoreA)
 
-    return [newA, newB]
+    return { results: [newA, newB], lpGains }
   }
 
-  private updateLeagues(a: UserRatingFields, b: UserRatingFields, scoreA: number): void {
-    this.updatePlayerLeague(a, b.mmr_score, scoreA)
-    this.updatePlayerLeague(b, a.mmr_score, 1 - scoreA)
+  getRankFromLegacyMmr(
+    mmrScore: number,
+    matches: number
+  ): { rank_league: LeagueEnum | null; rank_division: number | null; rank_lp: number | null } {
+    if (matches < PLACEMENT_MATCHES_REQUIRED) {
+      return { rank_league: null, rank_division: null, rank_lp: null }
+    }
+    const { league, division, lp } = this.mmrToRank(mmrScore)
+    return { rank_league: league, rank_division: division, rank_lp: lp }
+  }
+
+  private updateLeagues(
+    a: UserRatingFields,
+    b: UserRatingFields,
+    scoreA: number
+  ): [number | null, number | null] {
+    const lpGainA = this.updatePlayerLeague(a, b.mmr_score, scoreA)
+    const lpGainB = this.updatePlayerLeague(b, a.mmr_score, 1 - scoreA)
+    return [lpGainA, lpGainB]
   }
 
   private updatePlayerLeague(
     player: UserRatingFields,
     opponentMmr: number,
     score: number
-  ): void {
+  ): number | null {
     player.rank_matches++
     player.rank_date = new Date()
 
@@ -82,21 +88,23 @@ export class RatingService {
         player.rank_division = rank.division
         player.rank_lp = rank.lp
       }
-      return
+      return null
     }
 
-    // Compare rank's expected MMR against opponent's real MMR to decide LP gain/loss
+    const currentLp = player.rank_lp as number
     const expectedMmr = this.getExpectedMmr({
       league: player.rank_league,
       division: player.rank_division,
-      lp: player.rank_lp!,
+      lp: currentLp,
     })
     const expected = this.getExpectedResult(expectedMmr, opponentMmr)
     const eloChange = player.mmr_k_factor * (score - expected)
-    this.applyLpChange(player, eloChange * MMR_TO_LP)
+    const lpDelta = Math.round(eloChange * MMR_TO_LP)
+    this.applyLpChange(player, lpDelta)
+    return lpDelta
   }
 
-  private updateMMRs(a: UserMmrFields, b: UserMmrFields, scoreA: number): void {
+  private updateMMRs(a: UserRatingFields, b: UserRatingFields, scoreA: number): void {
     const scoreB = 1 - scoreA
     const expectedA = this.getExpectedResult(a.mmr_score, b.mmr_score)
     const expectedB = 1 - expectedA
@@ -105,7 +113,7 @@ export class RatingService {
     this.updateMMR(b, scoreB - expectedB)
   }
 
-  private updateMMR(rating: UserMmrFields, surpriseFactor: number): void {
+  private updateMMR(rating: UserRatingFields, surpriseFactor: number): void {
     rating.mmr_score += rating.mmr_k_factor * surpriseFactor
     rating.mmr_k_factor = this.decayKFactor(rating.mmr_k_factor)
   }
@@ -114,8 +122,6 @@ export class RatingService {
     return 1 / (1 + 10 ** ((mmrB - mmrA) / 400))
   }
 
-  // Expected MMR for a rank position. `lp` is LP within the division (0-99) for non-apex,
-  // and cumulative LP above the apex floor for apex leagues (where division is null).
   private getExpectedMmr(rank: Rank): number {
     const leagueIndex = LEAGUES.indexOf(rank.league)
     if (leagueIndex === -1) unexpected(`Unknown league: ${rank.league}`)
@@ -126,7 +132,7 @@ export class RatingService {
       return leagueFloorMmr + rank.lp * (MMR_PER_DIVISION / LP_PER_DIVISION)
     }
 
-    const divisionsAboveFloor = DIVISIONS_PER_LEAGUE - rank.division!
+    const divisionsAboveFloor = DIVISIONS_PER_LEAGUE - (rank.division as number)
     return (
       leagueFloorMmr +
       divisionsAboveFloor * MMR_PER_DIVISION +
@@ -134,8 +140,7 @@ export class RatingService {
     )
   }
 
-  // Derives a rank from a raw MMR value.
-  private mmrToRank(mmr: number): Rank {
+  mmrToRank(mmr: number): Rank {
     const lpAboveFloor = (mmr - BRONZE_4_MMR) / (MMR_PER_DIVISION / LP_PER_DIVISION)
     const totalLp = Math.max(0, lpAboveFloor)
 
@@ -162,11 +167,16 @@ export class RatingService {
     const currentLeagueIndex = LEAGUES.indexOf(rank.league)
 
     if (currentLeagueIndex > maxLeagueIndex) {
-      return { league: PLACEMENT_MAX_LEAGUE, division: PLACEMENT_MAX_DIVISION, lp: PLACEMENT_MAX_LP }
+      return {
+        league: PLACEMENT_MAX_LEAGUE,
+        division: PLACEMENT_MAX_DIVISION,
+        lp: PLACEMENT_MAX_LP,
+      }
     }
     if (currentLeagueIndex === maxLeagueIndex) {
+      const rankDivision = rank.division as number
       const isAboveCap =
-        rank.division! < PLACEMENT_MAX_DIVISION ||
+        rankDivision < PLACEMENT_MAX_DIVISION ||
         (rank.division === PLACEMENT_MAX_DIVISION && rank.lp > PLACEMENT_MAX_LP)
       if (isAboveCap) {
         return {
@@ -179,62 +189,58 @@ export class RatingService {
     return rank
   }
 
-  private applyLpChange(player: UserRankFields, lpDelta: number): void {
-    const roundedDelta = Math.round(lpDelta)
-    let league = player.rank_league!
+  private applyLpChange(player: UserRatingFields, lpDelta: number): void {
+    const startLeague = player.rank_league as LeagueEnum
 
-    if (APEX_LEAGUES.has(league)) {
-      player.rank_lp = Math.max(0, player.rank_lp! + roundedDelta)
+    if (APEX_LEAGUES.has(startLeague)) {
+      const currentLp = player.rank_lp as number
+      player.rank_lp = Math.max(0, currentLp + lpDelta)
       return
     }
 
-    let division = player.rank_division!
-    let newLp = player.rank_lp! + roundedDelta
+    let runLeague = startLeague
+    let runDivision = player.rank_division as number
+    let newLp = (player.rank_lp as number) + lpDelta
 
-    // Promotions: cross division/league boundaries upward
     while (newLp >= LP_PER_DIVISION) {
       newLp -= LP_PER_DIVISION
-      if (division > 1) {
-        division--
+      if (runDivision > 1) {
+        runDivision--
         continue
       }
-      // Division 1 overflow → promote to next league
-      const nextLeagueIndex = LEAGUES.indexOf(league) + 1
+      const nextLeagueIndex = LEAGUES.indexOf(runLeague) + 1
       if (nextLeagueIndex >= LEAGUES.length) {
         newLp = LP_PER_DIVISION - 1
         break
       }
-      league = LEAGUES[nextLeagueIndex]
-      if (APEX_LEAGUES.has(league)) {
-        // Entering apex: no divisions, LP carries over
-        player.rank_league = league
+      runLeague = LEAGUES[nextLeagueIndex]
+      if (APEX_LEAGUES.has(runLeague)) {
+        player.rank_league = runLeague
         player.rank_division = null
         player.rank_lp = newLp
         return
       }
-      division = DIVISIONS_PER_LEAGUE
+      runDivision = DIVISIONS_PER_LEAGUE
     }
 
-    // Demotions: cross division/league boundaries downward
     while (newLp < 0) {
-      if (division < DIVISIONS_PER_LEAGUE) {
-        division++
+      if (runDivision < DIVISIONS_PER_LEAGUE) {
+        runDivision++
         newLp += LP_PER_DIVISION
         continue
       }
-      // Division 4 underflow → demote to previous league
-      const prevLeagueIndex = LEAGUES.indexOf(league) - 1
+      const prevLeagueIndex = LEAGUES.indexOf(runLeague) - 1
       if (prevLeagueIndex < 0) {
         newLp = 0
         break
       }
-      league = LEAGUES[prevLeagueIndex]
-      division = 1
+      runLeague = LEAGUES[prevLeagueIndex]
+      runDivision = 1
       newLp += LP_PER_DIVISION
     }
 
-    player.rank_league = league
-    player.rank_division = division
+    player.rank_league = runLeague
+    player.rank_division = runDivision
     player.rank_lp = newLp
   }
 

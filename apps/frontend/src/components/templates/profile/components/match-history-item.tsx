@@ -1,9 +1,8 @@
 import { Match } from '@magic3t/api-types'
-import { Team } from '@magic3t/common-types'
 import { ComponentProps } from 'react'
 import { Tooltip } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-import { leaguesMap } from '@/utils/ranks'
+import { leaguesMap, provisionalLeagueInfo } from '@/utils/ranks'
 import { AvatarImage, AvatarRoot, AvatarWing } from './profile-avatar'
 
 type MatchHistoryItemProps = ComponentProps<'button'> & {
@@ -21,22 +20,21 @@ export function MatchHistoryItem({
   className,
   ...props
 }: MatchHistoryItemProps) {
-  // Determine which side the current user played on
   const isOrder = match.order.uuid === currentUserId
   const currentPlayer = isOrder ? match.order : match.chaos
   const opponent = isOrder ? match.chaos : match.order
 
-  // Determine match result for the current user
   const getResult = (): MatchResult => {
     if (match.winner === null) return 'draw'
-    const userTeam = isOrder ? Team.Order : Team.Chaos
+    const userTeam = isOrder ? 'order' : 'chaos'
     return match.winner === userTeam ? 'victory' : 'defeat'
   }
 
   const result = getResult()
-  const opponentLeagueInfo = leaguesMap[opponent.rank.league]
+  const opponentLeagueInfo = opponent.rank.league
+    ? leaguesMap[opponent.rank.league]
+    : provisionalLeagueInfo
 
-  // Format date
   const matchDate = new Date(match.date)
   const formattedDate = matchDate.toLocaleDateString('en-US', {
     month: 'short',
@@ -48,7 +46,6 @@ export function MatchHistoryItem({
     minute: '2-digit',
   })
 
-  // LP change styling
   const lpGain = currentPlayer.lpGain ?? 0
   const lpColor = lpGain > 0 ? 'text-green-400' : lpGain < 0 ? 'text-red-400' : 'text-grey-1'
   const lpPrefix = lpGain > 0 ? '+' : ''

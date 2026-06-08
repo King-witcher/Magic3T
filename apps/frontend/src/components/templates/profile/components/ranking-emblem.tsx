@@ -1,5 +1,5 @@
-import { ClientRank, League } from '@magic3t/common-types'
-import { leaguesMap } from '@/utils/ranks'
+import { ClientRank } from '@magic3t/common-types'
+import { leaguesMap, provisionalLeagueInfo } from '@/utils/ranks'
 
 const DIVISION_STRINGS = ['I', 'II', 'III', 'IV', 'V']
 
@@ -8,8 +8,7 @@ type Props = {
 }
 
 export function RankingEmblem({ rating }: Props) {
-  const leagueInfo = leaguesMap[rating.league]
-  const bestOf5Status = rating.rankedCount
+  const leagueInfo = rating.league ? leaguesMap[rating.league] : provisionalLeagueInfo
 
   return (
     <div className="flex flex-col items-center">
@@ -17,15 +16,11 @@ export function RankingEmblem({ rating }: Props) {
       <p className="text-gold-1 tracking-wider font-serif font-medium text-2xl">
         {leagueInfo.name} {rating.division ? DIVISION_STRINGS[rating.division - 1] : ''}
       </p>
-      {rating.league !== League.Provisional && (
-        <p className="text-gold-4 tracking-wider font-serif font-bold text-lg">
-          {rating.points} LP
-        </p>
+      {rating.league !== null && (
+        <p className="text-gold-4 tracking-wider font-serif font-bold text-lg">{rating.lp} LP</p>
       )}
-      {rating.league === League.Provisional && (
-        <p className="text-grey-1 tracking-wider font-serif font-bold text-lg">
-          {bestOf5Status} / 5
-        </p>
+      {rating.league === null && (
+        <p className="text-grey-1 tracking-wider font-serif font-bold text-lg">Placement</p>
       )}
     </div>
   )

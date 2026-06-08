@@ -12,19 +12,19 @@
       },
     },
     {
-      "cwd": "${workspaceFolder}/apps/frontend",
       "name": "Frontend (Dev)",
-      "preLaunchTask": "frontend: dev",
-      "postDebugTask": "frontend: down",
       "request": "launch",
-      "skipFiles": [
-        "${workspaceFolder}/node_modules/**/*.js"
-      ],
-      "type": "msedge",
-      "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}/apps/frontend",
+      "type": "node-terminal",
+      "command": "npm run dev --workspace=apps/frontend",
       "presentation": {
         "hidden": true
+      },
+      "serverReadyAction": {
+        "action": "debugWithEdge",
+        "pattern": "Local:\\s+http://localhost:(\\d+)",
+        "uriFormat": "http://localhost:%s",
+        "webRoot": "${workspaceFolder}/apps/frontend",
+        "killOnServerStop": true
       }
     },
     {

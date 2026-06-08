@@ -1,4 +1,3 @@
-import { Team } from '@magic3t/common-types'
 import { useEffect } from 'react'
 import { GiCrossedSwords } from 'react-icons/gi'
 import { Button, Panel } from '@/components/atoms'
@@ -16,7 +15,7 @@ export function GameTemplate() {
   // const chatInputRef = useRef<HTMLInputElement>(null)
 
   // Current player's team and opponent's team
-  const myTeam = gameCtx.currentTeam || Team.Order
+  const myTeam = gameCtx.currentTeam || 'order'
   const enemyTeam = opposite(myTeam)
   const myPlayer = gameCtx.teams[myTeam]
   const enemyPlayer = gameCtx.teams[enemyTeam]

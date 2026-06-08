@@ -14,7 +14,7 @@ import { Tooltip } from '@/components/ui/tooltip'
 import { useClientQuery } from '@/hooks/use-client-query'
 import { cn } from '@/lib/utils'
 import { apiClient } from '@/services/clients'
-import { leaguesMap } from '@/utils/ranks'
+import { leaguesMap, provisionalLeagueInfo } from '@/utils/ranks'
 
 const DIVISIONS = ['I', 'II', 'III', 'IV', 'V']
 
@@ -62,12 +62,12 @@ export function MatchDetail({ matchId, className }: MatchDetailProps) {
   })
 
   const resultLabel =
-    match.winner === null ? 'Draw' : match.winner === Team.Order ? 'Order Victory' : 'Chaos Victory'
+    match.winner === null ? 'Draw' : match.winner === 'order' ? 'Order Victory' : 'Chaos Victory'
 
   const resultColor =
     match.winner === null
       ? 'text-grey-1'
-      : match.winner === Team.Order
+      : match.winner === 'order'
         ? 'text-blue-400'
         : 'text-red-400'
 
@@ -106,10 +106,8 @@ export function MatchDetail({ matchId, className }: MatchDetailProps) {
 
       {/* Players Versus Section */}
       <div className="flex items-center justify-center gap-4 sm:gap-8">
-        {/* Order Player */}
-        <PlayerCard player={match.order} team={Team.Order} isWinner={match.winner === Team.Order} />
+        <PlayerCard player={match.order} team={'order'} isWinner={match.winner === 'order'} />
 
-        {/* VS Divider */}
         <div className="flex flex-col items-center gap-1 shrink-0">
           <GiSwordClash className="text-gold-3 text-3xl" />
           <span className="font-serif font-bold text-gold-4 text-sm uppercase tracking-widest">
@@ -117,8 +115,7 @@ export function MatchDetail({ matchId, className }: MatchDetailProps) {
           </span>
         </div>
 
-        {/* Chaos Player */}
-        <PlayerCard player={match.chaos} team={Team.Chaos} isWinner={match.winner === Team.Chaos} />
+        <PlayerCard player={match.chaos} team={'chaos'} isWinner={match.winner === 'chaos'} />
       </div>
 
       {/* LP Changes */}
@@ -167,9 +164,9 @@ interface PlayerCardProps {
 }
 
 function PlayerCard({ player, team, isWinner }: PlayerCardProps) {
-  const leagueInfo = leaguesMap[player.rank.league]
-  const teamColor = team === Team.Order ? 'text-blue-400' : 'text-red-400'
-  const teamLabel = team === Team.Order ? 'Order' : 'Chaos'
+  const leagueInfo = player.rank.league ? leaguesMap[player.rank.league] : provisionalLeagueInfo
+  const teamColor = team === 'order' ? 'text-blue-400' : 'text-red-400'
+  const teamLabel = team === 'order' ? 'Order' : 'Chaos'
 
   return (
     <Link
@@ -222,7 +219,7 @@ interface EventRowProps {
 }
 
 function EventRow({ event, orderName, chaosName }: EventRowProps) {
-  const isOrder = event.team === Team.Order
+  const isOrder = event.team === 'order'
   const playerName = isOrder ? orderName : chaosName
   const sideColor = isOrder ? 'text-blue-400' : 'text-red-400'
   const bgColor = isOrder ? 'bg-blue-900/20' : 'bg-red-900/20'

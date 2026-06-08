@@ -1,6 +1,9 @@
 {
   "dependencies": {
     "@keyv/valkey": "^1.0.11",
+    "@magic3t/api-types": "*",
+    "@magic3t/common-types": "*",
+    "@magic3t/database-types": "*",
     "@nestjs/cache-manager": "^3.1.0",
     "@nestjs/common": "^11.1.12",
     "@nestjs/config": "^4.0.2",
@@ -32,8 +35,6 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^10.2.0",
-    "@magic3t/api-types": "*",
-    "@magic3t/database-types": "*",
     "@nestjs/cli": "^11.0.16",
     "@nestjs/schematics": "^11.0.9",
     "@nestjs/testing": "^11.1.8",
@@ -53,7 +54,7 @@
   "name": "magic3t-backend",
   "scripts": {
     "build": "nest build && npm run sentry:sourcemaps",
-    "dev": "nest start -wd",
+    "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register --watch ../../packages src/main.ts",
     "lint": "biome check src --error-on-warnings --diagnostic-level=warn",
     "start:prod": "node dist/main",
     "test": "vitest",

@@ -1,4 +1,3 @@
-import { MatchServerEvents } from '@magic3t/api-types'
 import { BotId, Team } from '@magic3t/common-types'
 import { UserRow } from '@magic3t/database-types'
 import { Injectable } from '@nestjs/common'
@@ -13,7 +12,7 @@ import { Match, MatchClassEventType, MatchClassSummary, MatchStore } from './lib
 
 const HUMAN_VS_BOT_TIMELIMIT = 180 * 1000 // 3 minutes per player
 const HUMAN_VS_HUMAN_TIMELIMIT = 240 * 1000 // 4 minutes per player
-const TEAMS: [Team, Team] = [Team.Order, Team.Chaos]
+const TEAMS: [Team, Team] = ['order', 'chaos']
 
 @Injectable()
 export class MatchService {
@@ -41,7 +40,7 @@ export class MatchService {
 
     const humanTeam = TEAMS[Math.round(Math.random())]
     const [orderProfile, chaosProfile] =
-      humanTeam === Team.Order ? [userProfile, botProfile] : [botProfile, userProfile]
+      humanTeam === 'order' ? [userProfile, botProfile] : [botProfile, userProfile]
 
     const { match, id } = this.matchBank.createAndRegisterMatch({
       timelimit: HUMAN_VS_BOT_TIMELIMIT,
@@ -54,7 +53,7 @@ export class MatchService {
 
     const bot = this.botsService.getBot(
       botId,
-      humanTeam === Team.Order ? chaosPerspective : orderPerspective
+      humanTeam === 'order' ? chaosPerspective : orderPerspective
     )
 
     this.subscribeMatchEvents(match, orderProfile, chaosProfile, true, new Date())
@@ -75,7 +74,7 @@ export class MatchService {
 
     const sideOfFirst = TEAMS[Math.round(Math.random())]
     const [orderProfile, chaosProfile] =
-      sideOfFirst === Team.Order ? [profile1, profile2] : [profile2, profile1]
+      sideOfFirst === 'order' ? [profile1, profile2] : [profile2, profile1]
 
     const { match, id } = this.matchBank.createAndRegisterMatch({
       timelimit: HUMAN_VS_HUMAN_TIMELIMIT,
@@ -125,12 +124,7 @@ export class MatchService {
         const stateReport = match.stateReport
         for (const player of [order, chaos]) {
           if (player.role !== 'bot') {
-            this.websocketEmitterService.send(
-              player.id,
-              'match',
-              MatchServerEvents.StateReport,
-              stateReport
-            )
+            this.websocketEmitterService.send(player.id, 'match', 'state-report', stateReport)
           }
         }
       }
@@ -209,8 +203,8 @@ export class MatchService {
     })
 
     function computeOrderScore(summary: MatchClassSummary): number {
-      if (summary.winner === Team.Order) return 1
-      if (summary.winner === Team.Chaos) return 0
+      if (summary.winner === 'order') return 1
+      if (summary.winner === 'chaos') return 0
       return summary.chaos.timeSpent / (summary.order.timeSpent + summary.chaos.timeSpent || 1)
     }
   }

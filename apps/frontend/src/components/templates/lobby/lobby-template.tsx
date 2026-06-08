@@ -1,4 +1,3 @@
-import { BotId } from '@magic3t/common-types'
 import {
   GiArtificialHive,
   GiArtificialIntelligence,
@@ -55,7 +54,7 @@ export function LobbyTemplate() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <GameModeCard
-              mode={BotId.Recruit}
+              mode={'recruit'}
               title="Recruit"
               description="Perfect for learning the basics. The bot makes random moves."
               icon={<GiGoose className="text-green-400" />}
@@ -64,7 +63,7 @@ export function LobbyTemplate() {
             />
 
             <GameModeCard
-              mode={BotId.Soldier}
+              mode={'soldier'}
               title="Soldier"
               description="A moderate challenge. The bot thinks a few moves ahead."
               icon={<GiArtificialIntelligence className="text-yellow-400" />}
@@ -73,7 +72,7 @@ export function LobbyTemplate() {
             />
 
             <GameModeCard
-              mode={BotId.Elite}
+              mode={'elite'}
               title="Elite"
               description="A faster opponent. The bot plans multiple moves ahead."
               icon={<GiBrain className="text-orange-400" />}
@@ -82,7 +81,7 @@ export function LobbyTemplate() {
             />
 
             <GameModeCard
-              mode={BotId.Legend}
+              mode={'legend'}
               title="Legend"
               description="The ultimate challenge. An invincible strategic mastermind."
               icon={<GiArtificialHive className="text-red-400" />}

@@ -1,6 +1,1 @@
-export const enum BotId {
-  Recruit = 'recruit',
-  Soldier = 'soldier',
-  Elite = 'elite',
-  Legend = 'legend',
-}
+export type BotId = 'recruit' | 'soldier' | 'elite' | 'legend'

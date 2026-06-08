@@ -18,9 +18,9 @@ import { DatabaseService } from '../database.service'
 import { UserRepositoryError } from './user-repository-error'
 
 const roleMap: Record<UserDocumentRole, UserRoleEnum> = {
-  [UserDocumentRole.Player]: 'player',
-  [UserDocumentRole.Creator]: 'superuser',
-  [UserDocumentRole.Bot]: 'bot',
+  player: 'player',
+  creator: 'superuser',
+  bot: 'bot',
 }
 
 type RatingUpdateFields = Pick<
@@ -61,7 +61,7 @@ export class UserRepository {
     ])
 
     const mappedUsers = allUsers.filter(
-      (user) => identities.has(user.id) || user.data.role === UserDocumentRole.Bot
+      (user) => identities.has(user.id) || user.data.role === 'bot'
     )
 
     const userRows = mappedUsers.map((user): [Partial<UserRow>, UserRecord | null] => {
@@ -228,7 +228,11 @@ export class UserRepository {
   }
 
   /** Updates a user's rating fields after a ranked match. */
-  async updateRank(id: string, rating: Partial<RatingUpdateFields>, conn?: IDbClient): Promise<void> {
+  async updateRank(
+    id: string,
+    rating: Partial<RatingUpdateFields>,
+    conn?: IDbClient
+  ): Promise<void> {
     conn ??= this.databaseService
     await conn.query(UPDATE`"user"`.SET(rating).WHERE`id = ${id}`)
   }

@@ -1,5 +1,3 @@
-import { League } from '@magic3t/common-types'
-import { UserDocumentRole } from '@magic3t/database-types'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { GiCrown, GiRobotGrab } from 'react-icons/gi'
 import { Panel } from '@/components/ui'
@@ -7,7 +5,7 @@ import { Tooltip } from '@/components/ui/tooltip'
 import { useClientQuery } from '@/hooks/use-client-query'
 import { cn } from '@/lib/utils'
 import { apiClient } from '@/services/clients/api-client'
-import { divisionMap, leaguesMap } from '@/utils/ranks'
+import { divisionMap, leaguesMap, provisionalLeagueInfo } from '@/utils/ranks'
 import { getIconUrl } from '@/utils/utils'
 
 export const Route = createFileRoute('/leaderboard')({
@@ -35,9 +33,10 @@ export function LeaderboardTemplate() {
           {query.isSuccess && (
             <div className="space-y-2">
               {query.data.data.map((user, index) => {
-                const isApex =
-                  user.rank.league === League.Master || user.rank.league === League.Challenger
-                const leagueInfo = leaguesMap[user.rank.league]
+                const isApex = user.rank.league === 'master' || user.rank.league === 'challenger'
+                const leagueInfo = user.rank.league
+                  ? leaguesMap[user.rank.league]
+                  : provisionalLeagueInfo
                 const isTop1 = index === 0
                 const isTopThree = index < 3
                 const divisionString = user.rank.division ? divisionMap[user.rank.division] : ''
@@ -83,7 +82,7 @@ export function LeaderboardTemplate() {
                         />
                         <div className="flex flex-col min-w-0">
                           <div className="flex items-center gap-2 flex-nowrap">
-                            {user.role === UserDocumentRole.Bot && (
+                            {user.role === 'bot' && (
                               <Tooltip text="Bot account">
                                 <GiRobotGrab className="text-gold-4 size-6" />
                               </Tooltip>
@@ -102,9 +101,7 @@ export function LeaderboardTemplate() {
 
                       {/* Rank Badge */}
                       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                        <Tooltip
-                          text={`${leagueInfo.name} ${divisionString} - ${user.rank.points} LP`}
-                        >
+                        <Tooltip text={`${leagueInfo.name} ${divisionString} - ${user.rank.lp} LP`}>
                           <img
                             className="w-8 sm:w-10 h-8 sm:h-10 drop-shadow-lg"
                             alt={leagueInfo.name}
@@ -115,7 +112,7 @@ export function LeaderboardTemplate() {
                         <div className="text-right">
                           <div className="text-sm sm:text-base font-semibold text-gold-1">
                             {!isApex && divisionString}
-                            {isApex && `${user.rank.points} LP`}
+                            {isApex && `${user.rank.lp} LP`}
                           </div>
                         </div>
                       </div>

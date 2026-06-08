@@ -1,22 +1,8 @@
 import type { Choice, ClientRank, Team } from '@magic3t/common-types'
 
-export const enum MatchClientEvents {
-  GetAssignments = 'get-assignments',
-  GetState = 'get-state',
-  Pick = 'pick',
-  Message = 'message',
-  Surrender = 'surrender',
-}
+export type MatchClientEvents = 'get-assignments' | 'get-state' | 'pick' | 'message' | 'surrender'
 
-export const enum MatchServerEvents {
-  Message = 'message',
-  /// Sends the player assignments
-  Assignments = 'assignments',
-  /// Send the match state report
-  StateReport = 'state-report',
-  /// Send the match result report
-  MatchReport = 'match-report',
-}
+export type MatchServerEvents = 'message' | 'assignments' | 'state-report' | 'match-report'
 
 /** Represents a message data sent by the server */
 export type MessagePayload = {
@@ -70,16 +56,16 @@ export type MatchReportPayload = {
 }
 
 export interface GameServerEventsMap {
-  [MatchServerEvents.Message](message: MessagePayload): void
-  [MatchServerEvents.Assignments](assignments: AssignmentsPayload): void
-  [MatchServerEvents.StateReport](state: StateReportPayload): void
-  [MatchServerEvents.MatchReport](results: MatchReportPayload): void
+  message(message: MessagePayload): void
+  assignments(assignments: AssignmentsPayload): void
+  'state-report'(state: StateReportPayload): void
+  'match-report'(results: MatchReportPayload): void
 }
 
 export interface GameClientEventsMap {
-  [MatchClientEvents.GetAssignments](): void
-  [MatchClientEvents.GetState](): void
-  [MatchClientEvents.Message](message: string): void
-  [MatchClientEvents.Pick](choice: Choice): void
-  [MatchClientEvents.Surrender](): void
+  'get-assignments'(): void
+  'get-state'(): void
+  message(message: string): void
+  pick(choice: Choice): void
+  surrender(): void
 }

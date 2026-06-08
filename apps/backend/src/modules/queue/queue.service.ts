@@ -1,4 +1,3 @@
-import { QueueServerEvents } from '@magic3t/api-types'
 import { BotId } from '@magic3t/common-types'
 import { HttpStatus, Injectable, Logger } from '@nestjs/common'
 import { respondError } from '@/common'
@@ -40,11 +39,11 @@ export class QueueService {
         this.dequeue(pendingUserId)
         const matchId = await this.matchService.createPvPMatch(pendingUserId, userId)
 
-        this.websocketEmitterService.send(pendingUserId, 'queue', QueueServerEvents.MatchFound, {
+        this.websocketEmitterService.send(pendingUserId, 'queue', 'matchFound', {
           matchId,
           opponentId: userId,
         })
-        this.websocketEmitterService.send(userId, 'queue', QueueServerEvents.MatchFound, {
+        this.websocketEmitterService.send(userId, 'queue', 'matchFound', {
           matchId,
           opponentId: pendingUserId,
         })
@@ -56,7 +55,7 @@ export class QueueService {
   enqueue(userId: string, mode: 'casual' | 'ranked') {
     this.enqueueInternal(userId, mode)
     const userQueueModes = this.getQueueModes(userId)
-    this.websocketEmitterService.send(userId, 'queue', QueueServerEvents.QueueModes, userQueueModes)
+    this.websocketEmitterService.send(userId, 'queue', 'queueModes', userQueueModes)
   }
 
   /** Gets the queue modes a user is currently in. */
@@ -85,7 +84,7 @@ export class QueueService {
     }
 
     const userQueueModes = this.getQueueModes(uuid)
-    this.websocketEmitterService.send(uuid, 'queue', QueueServerEvents.QueueModes, userQueueModes)
+    this.websocketEmitterService.send(uuid, 'queue', 'queueModes', userQueueModes)
   }
 
   /** Gets the count of users currently in each queue mode. */
@@ -102,7 +101,7 @@ export class QueueService {
     const matchId = await this.matchService.createPlayerVsBot(userId, botId)
 
     // Notify the user
-    this.websocketEmitterService.send(userId, 'queue', QueueServerEvents.MatchFound, {
+    this.websocketEmitterService.send(userId, 'queue', 'matchFound', {
       matchId,
       opponentId: '', // FIXME: bot id
     })

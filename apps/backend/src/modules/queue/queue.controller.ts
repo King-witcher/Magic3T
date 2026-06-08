@@ -31,10 +31,7 @@ export class QueueController {
   @Post('/ranked/:botId')
   async enqueueBot(
     @UserId() userId: string,
-    @Param(
-      'botId',
-      new ZodValidationPipe(z.enum([BotId.Elite, BotId.Legend, BotId.Recruit, BotId.Soldier]))
-    )
+    @Param('botId', new ZodValidationPipe(z.enum(['elite', 'legend', 'recruit', 'soldier'])))
     botId: BotId
   ) {
     return this.queueService.joinVsBot(userId, botId)

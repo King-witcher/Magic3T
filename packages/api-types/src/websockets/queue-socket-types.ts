@@ -1,22 +1,20 @@
-export const enum QueueServerEvents {
-  QueueRejected = 'queueRejected',
-  QueueAccepted = 'queueAccepted',
-  QueueModes = 'queueModes',
-  MatchFound = 'matchFound',
-  LiveGameStats = 'liveGameStats',
-}
+export type QueueServerEvents =
+  | 'queueRejected'
+  | 'queueAccepted'
+  | 'queueModes'
+  | 'matchFound'
+  | 'liveGameStats'
 
-export const enum QueueClientEvents {
-  Interact = 'interact',
-  Fair = 'fair',
-  Bot0 = 'bot-0',
-  Bot1 = 'bot-1',
-  Bot2 = 'bot-2',
-  Bot3 = 'bot-3',
-  Casual = 'casual',
-  Ranked = 'ranked',
-  Dequeue = 'dequeue',
-}
+export type QueueClientEvents =
+  | 'interact'
+  | 'fair'
+  | 'bot-0'
+  | 'bot-1'
+  | 'bot-2'
+  | 'bot-3'
+  | 'casual'
+  | 'ranked'
+  | 'dequeue'
 
 export type LiveGameStatsPayload = {
   connected: number
@@ -25,11 +23,11 @@ export type LiveGameStatsPayload = {
 }
 
 export interface QueueServerEventsMap {
-  [QueueServerEvents.QueueModes](payload: { casual: boolean; ranked: boolean }): void
-  [QueueServerEvents.MatchFound](data: { matchId: string; opponentId: string }): void
-  [QueueServerEvents.LiveGameStats](data: LiveGameStatsPayload): void
+  queueModes(payload: { casual: boolean; ranked: boolean }): void
+  matchFound(data: { matchId: string; opponentId: string }): void
+  liveGameStats(data: LiveGameStatsPayload): void
 }
 
 export interface QueueClientEventsMap {
-  [QueueClientEvents.Interact](): void
+  interact(): void
 }

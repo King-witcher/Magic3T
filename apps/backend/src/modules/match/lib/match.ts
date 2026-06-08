@@ -1,4 +1,4 @@
-import { Match as MatchNamespace, StateReportPayload } from '@magic3t/api-types'
+import { StateReportPayload } from '@magic3t/api-types'
 import { Choice, Team } from '@magic3t/common-types'
 import { MatchEventRow } from '@magic3t/database-types'
 import { Observable, Stopwatch } from '@/common'
@@ -58,8 +58,8 @@ export class Match extends Observable<MatchClassEventsMap> {
     super()
     this.timelimit = timelimit
 
-    this.order = new Player(timelimit, () => this.handleTimeout(Team.Order))
-    this.chaos = new Player(timelimit, () => this.handleTimeout(Team.Chaos))
+    this.order = new Player(timelimit, () => this.handleTimeout('order'))
+    this.chaos = new Player(timelimit, () => this.handleTimeout('chaos'))
   }
 
   public get time() {
@@ -75,12 +75,12 @@ export class Match extends Observable<MatchClassEventsMap> {
     const chaos = this.chaos
 
     const report: StateReportPayload = {
-      [Team.Order]: {
+      order: {
         choices: [...order.choices],
         surrender: order.surrender,
         timeLeft: order.timer.remaining,
       },
-      [Team.Chaos]: {
+      chaos: {
         choices: [...chaos.choices],
         surrender: chaos.surrender,
         timeLeft: chaos.timer.remaining,
@@ -106,7 +106,7 @@ export class Match extends Observable<MatchClassEventsMap> {
 
     this.order.timer.start()
     this.globalTime.start()
-    this.turn = Team.Order
+    this.turn = 'order'
     this.emit(MatchClassEventType.Start)
   }
 
@@ -132,11 +132,11 @@ export class Match extends Observable<MatchClassEventsMap> {
 
   public handleChoice(team: Team, choice: Choice): void {
     // TODO: Impvoe encapsulation of errors
-    if (this.turn !== team) matchException(MatchNamespace.MatchError.WrongTurn)
-    if (!this.isAvailable(choice)) matchException(MatchNamespace.MatchError.ChoiceUnavailable)
+    if (this.turn !== team) matchException('WrongTurn')
+    if (!this.isAvailable(choice)) matchException('ChoiceUnavailable')
 
-    this[Team.Order].timer.pause()
-    this[Team.Chaos].timer.pause()
+    this.order.timer.pause()
+    this.chaos.timer.pause()
 
     const player = this[team]
     player.choices.push(choice)
@@ -170,7 +170,7 @@ export class Match extends Observable<MatchClassEventsMap> {
   }
 
   public handleSurrender(side: Team): void {
-    if (this.turn === null) matchException(MatchNamespace.MatchError.WrongTurn)
+    if (this.turn === null) matchException('WrongTurn')
 
     const player = this[side]
     player.surrender = true
@@ -212,18 +212,18 @@ export class Match extends Observable<MatchClassEventsMap> {
    */
   private finishMatch(winner: Team | null) {
     this.globalTime.pause()
-    this[Team.Order].timer.pause()
-    this[Team.Chaos].timer.pause()
+    this.order.timer.pause()
+    this.chaos.timer.pause()
     this.winner = winner
     this.finished = true
     this.turn = null
 
     this.emit(MatchClassEventType.Finish, {
       order: {
-        timeSpent: this.timelimit - this[Team.Order].timer.remaining,
+        timeSpent: this.timelimit - this.order.timer.remaining,
       },
       chaos: {
-        timeSpent: this.timelimit - this[Team.Chaos].timer.remaining,
+        timeSpent: this.timelimit - this.chaos.timer.remaining,
       },
       time: this.time,
       winner: this.winner,

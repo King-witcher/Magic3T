@@ -1,4 +1,4 @@
-import { QueueClientEventsMap, QueueServerEvents, QueueServerEventsMap } from '@magic3t/api-types'
+import { QueueClientEventsMap, QueueServerEventsMap } from '@magic3t/api-types'
 import { Cron } from '@nestjs/schedule'
 import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets'
 import { BaseGateway } from '@/common/websocket/base.gateway'
@@ -18,7 +18,7 @@ export class QueueGateway extends BaseGateway<QueueClientEventsMap, QueueServerE
   @Cron('*/1 * * * * *')
   sendQueueStatus() {
     const queueCount = this.queueService.getUserCount()
-    this.broadcast(QueueServerEvents.LiveGameStats, {
+    this.broadcast('liveGameStats', {
       casual: {
         inGame: 0,
         queue: queueCount.casual,

@@ -1,4 +1,3 @@
-import { Team } from '@magic3t/common-types'
 import { MatchDocument } from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
 import { FieldPath, Filter } from 'firebase-admin/firestore'
@@ -25,8 +24,8 @@ export class MatchDocumentRepository extends BaseFirestoreRepository<MatchDocume
     const query = this.collection
       .where(
         Filter.or(
-          Filter.where(`${Team.Chaos}.uid`, '==', id),
-          Filter.where(`${Team.Order}.uid`, '==', id)
+          Filter.where(`${'chaos'}.uid`, '==', id),
+          Filter.where(`${'order'}.uid`, '==', id)
         )
       )
       .orderBy(FieldPath.documentId())

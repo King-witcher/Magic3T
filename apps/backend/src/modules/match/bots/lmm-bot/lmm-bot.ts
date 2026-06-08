@@ -6,8 +6,8 @@ import { Perspective } from '@/modules/match/lib'
 import { createTree } from './lib'
 
 function getMatchChoices(state: StateReportPayload, _team: Team) {
-  const order = state[Team.Order].choices
-  const chaos = state[Team.Chaos].choices
+  const order = state.order.choices
+  const chaos = state.chaos.choices
   const result: Choice[] = []
   for (let i = 0; i < chaos.length; i++) {
     result.push(order[i], chaos[i])
@@ -25,7 +25,7 @@ export class MinMaxBot extends BaseBot {
   }
 
   private async simulateThinkTime(state: StateReportPayload): Promise<void> {
-    const choicesMade = state[Team.Order].choices.length + state[Team.Chaos].choices.length
+    const choicesMade = state.order.choices.length + state.chaos.choices.length
 
     const baseDelays = [1000, 1500, 2500, 5000, 6000, 7000, 6000, 5000, 1000]
     const detphFactor = 3 / (1 + this.depth)
@@ -50,7 +50,7 @@ export class MinMaxBot extends BaseBot {
       wins: [],
     }
 
-    const winNumber = team === Team.Order ? 1 : -1
+    const winNumber = team === 'order' ? 1 : -1
 
     for (const branchId of Object.keys(tree.branches)) {
       if (!tree.branches[branchId]) continue

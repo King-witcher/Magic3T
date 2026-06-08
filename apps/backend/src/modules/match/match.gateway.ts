@@ -1,11 +1,4 @@
-import {
-  GameClientEventsMap,
-  GameServerEventsMap,
-  Match,
-  MatchClientEvents,
-  MatchServerEvents,
-  MessagePayload,
-} from '@magic3t/api-types'
+import { GameClientEventsMap, GameServerEventsMap, MessagePayload } from '@magic3t/api-types'
 import { Choice } from '@magic3t/common-types'
 import { UseGuards } from '@nestjs/common'
 import {
@@ -39,20 +32,20 @@ export class MatchGateway extends BaseGateway<GameClientEventsMap, GameServerEve
     super('match')
   }
 
-  @SubscribeMessage(MatchClientEvents.Surrender)
+  @SubscribeMessage('surrender')
   handleForfeit(@CurrentPerspective() perspective: Perspective) {
     perspective.surrender()
   }
 
-  @SubscribeMessage(MatchClientEvents.GetState)
+  @SubscribeMessage('get-state')
   handleGetStatus(
     @CurrentPerspective() perspective: Perspective,
     @ConnectedSocket() client: MatchSocket
   ) {
-    client.emit(MatchServerEvents.StateReport, perspective.getStateReport())
+    client.emit('state-report', perspective.getStateReport())
   }
 
-  @SubscribeMessage(MatchClientEvents.Message)
+  @SubscribeMessage('message')
   handleMessage(@UserId() uid: string, @MessageBody() body: unknown) {
     // Validate message type and length
     if (!body || typeof body !== 'string' || body.length > MAX_MESSAGE_LENGTH) {
@@ -60,7 +53,7 @@ export class MatchGateway extends BaseGateway<GameClientEventsMap, GameServerEve
     }
 
     const opponent = this.matchService.getOpponent(uid)
-    if (!opponent) matchException(Match.MatchError.MatchNotFound)
+    if (!opponent) matchException('MatchNotFound')
 
     // Sanitize message content
     const sanitizedMessage = body.trim().slice(0, MAX_MESSAGE_LENGTH)
@@ -72,20 +65,20 @@ export class MatchGateway extends BaseGateway<GameClientEventsMap, GameServerEve
       time: Date.now(),
     }
 
-    this.websocketEmitterService.send(opponent, 'match', MatchServerEvents.Message, messageData)
-    this.websocketEmitterService.send(uid, 'match', MatchServerEvents.Message, messageData)
+    this.websocketEmitterService.send(opponent, 'match', 'message', messageData)
+    this.websocketEmitterService.send(uid, 'match', 'message', messageData)
   }
 
-  @SubscribeMessage(MatchClientEvents.GetAssignments)
+  @SubscribeMessage('get-assignments')
   async getOpponent(
     @CurrentPerspective() perspective: Perspective,
     @ConnectedSocket() socket: MatchSocket
   ) {
     const assignments = await perspective.getAssignments()
-    socket.emit(MatchServerEvents.Assignments, assignments)
+    socket.emit('assignments', assignments)
   }
 
-  @SubscribeMessage(MatchClientEvents.Pick)
+  @SubscribeMessage('pick')
   async handleChoice(
     @CurrentPerspective() adapter: Perspective,
     @MessageBody(ChoicePipe) choice: Choice

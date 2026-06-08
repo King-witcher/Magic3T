@@ -4,7 +4,7 @@ CREATE TYPE user_role AS ENUM (
     'bot',
     'player',
     'admin',
-    'suderuser'
+    'superuser'
     );
 
 CREATE TYPE league AS ENUM (

@@ -30,12 +30,12 @@ export class Perspective {
 
   async getAssignments(): Promise<AssignmentsPayload> {
     return {
-      [Team.Order]: {
+      order: {
         profile: {
           id: this.teamIds.order,
         },
       },
-      [Team.Chaos]: {
+      chaos: {
         profile: {
           id: this.teamIds.chaos,
         },

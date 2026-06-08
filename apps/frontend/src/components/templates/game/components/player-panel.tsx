@@ -5,7 +5,7 @@ import { SmoothNumber, TimerValue } from '@/components/atoms'
 import { Tooltip } from '@/components/ui/tooltip'
 import type { Timer } from '@/lib/timer'
 import { cn } from '@/lib/utils'
-import { divisionMap, leaguesMap } from '@/utils/ranks'
+import { divisionMap, leaguesMap, provisionalLeagueInfo } from '@/utils/ranks'
 import { AvatarImage, AvatarRoot } from '../../profile/components/profile-avatar'
 
 interface PlayerPanelProps {
@@ -29,7 +29,11 @@ export function PlayerPanel({
   showSurrender,
   onSurrender,
 }: PlayerPanelProps) {
-  const tierInfo = profile?.rank ? leaguesMap[profile.rank.league] : null
+  const tierInfo = profile?.rank
+    ? profile.rank.league
+      ? leaguesMap[profile.rank.league]
+      : provisionalLeagueInfo
+    : null
   const isBot = profile?.role === 'bot'
 
   return (
@@ -77,9 +81,9 @@ export function PlayerPanel({
               <span className="text-grey-1 capitalize">
                 {profile?.rank.league} {divisionMap[profile?.rank.division ?? 0]}
               </span>
-              {profile?.rank.points !== null && (
+              {profile?.rank.lp !== null && (
                 <span className="text-grey-1">
-                  • <SmoothNumber value={profile?.rank.points || 0} /> LP
+                  • <SmoothNumber value={profile?.rank.lp || 0} /> LP
                 </span>
               )}
             </div>

@@ -1,6 +1,5 @@
 import { randomBytes } from 'node:crypto'
 import {
-  AuthErrorCode,
   ClientSessionData,
   LoginResult,
   RegisterFirebaseResponse,
@@ -8,7 +7,7 @@ import {
   SignInFirebaseResponse,
   ValidateSessionResponse,
 } from '@magic3t/api-types'
-import { UserRow, UserRoleEnum } from '@magic3t/database-types'
+import { UserRoleEnum, UserRow } from '@magic3t/database-types'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { HttpStatus, Inject, Injectable } from '@nestjs/common'
 import bcrypt from 'bcrypt'
@@ -168,7 +167,7 @@ export class AuthService {
           error instanceof DatabaseError &&
           error.cause.constraint === 'user_profile_nickname_slug_key'
         ) {
-          respondError(AuthErrorCode.NicknameUnavailable, HttpStatus.CONFLICT)
+          respondError('NicknameUnavailable', HttpStatus.CONFLICT)
         }
         throw error
       })
@@ -176,7 +175,7 @@ export class AuthService {
         .create(username, passwordDigest, 'bcrypt', user.id, conn)
         .catch((error) => {
           if (error instanceof DatabaseError && error.cause.constraint === 'user_credential_pkey') {
-            respondError(AuthErrorCode.UsernameUnavailable, HttpStatus.CONFLICT)
+            respondError('UsernameUnavailable', HttpStatus.CONFLICT)
           }
           throw error
         })
