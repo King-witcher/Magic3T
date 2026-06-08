@@ -1,11 +1,13 @@
-import { Controller, Post } from '@nestjs/common'
+import { Controller, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { IconRepository } from '@/infra/database/repositories/icon-repository'
 import { UserRepository } from '@/infra/database/repositories/user-repository'
+import { AuthGuard } from '../auth'
+import { AdminGuard } from './admin.guard'
 
 @Controller('admin')
-// @UseGuards(AuthGuard, AdminGuard)
-// @ApiBearerAuth()
+@UseGuards(AuthGuard, AdminGuard)
+@ApiBearerAuth()
 export class AdminController {
   constructor(
     private readonly userRepository: UserRepository,
