@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
-import { unexpected } from '@/common'
 import { DatabaseService } from '@/infra/database/database.service'
 import { UserRepository } from '@/infra/database/repositories'
 import { MatchRepository } from '@/infra/database/repositories/match-repository'
@@ -71,11 +70,6 @@ export class PersistanceService {
       this.snapshotRepository.findLatestByUserId(summary.chaos.userId, conn),
     ])
 
-    if (!orderSnap)
-      unexpected('should always find a rating snapshot for order player', summary.order.userId)
-    if (!chaosSnap)
-      unexpected('should always find a rating snapshot for chaos player', summary.chaos.userId)
-
     await this.matchRepository.persist(
       {
         match: {
@@ -85,8 +79,8 @@ export class PersistanceService {
           chaos_id: summary.chaos.userId,
           order_nickname: summary.order.nickname,
           chaos_nickname: summary.chaos.nickname,
-          order_old_rating: orderSnap.id,
-          chaos_old_rating: chaosSnap.id,
+          order_old_rating: orderSnap?.id ?? null,
+          chaos_old_rating: chaosSnap?.id ?? null,
           order_time_spent: summary.order.timeSpent,
           chaos_time_spent: summary.chaos.timeSpent,
           order_match_score: summary.order.matchScore,
