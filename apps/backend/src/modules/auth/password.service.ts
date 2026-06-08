@@ -1,6 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import {
-  MIN_PASSWORD_SCORE,
   PasswordScore,
   PasswordStrengthCommand,
   PasswordStrengthFeedback,
@@ -10,10 +9,21 @@ import { HttpStatus, Injectable } from '@nestjs/common'
 import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core'
 import { adjacencyGraphs, dictionary as commonDictionary } from '@zxcvbn-ts/language-common'
 import { dictionary as enDictionary, translations } from '@zxcvbn-ts/language-en'
-import { respondError, unexpected } from '@/common'
+import { respondError } from '@/common'
 
 /** Length of the base64-truncated anti-abuse signature (last 8 chars). */
 const SIGNATURE_LENGTH = 8
+
+/** Minimum score (0-4) required to accept a password on registration. */
+const MIN_PASSWORD_SCORE = 2
+
+/**
+ * Shared key used to verify requests to POST /auth/password-strength. Kept
+ * hardcoded and IDENTICAL to the frontend copy in
+ * apps/frontend/src/routes/_auth/-password-hash.ts. It ships in the frontend
+ * bundle, so it is only an anti-abuse deterrent, not a real secret.
+ */
+const PASSWORD_STRENGTH_SECRET = 'c5cf22e07f589950877e0340ecbea5159c0e6a7857837ecbe1df07b3a26a5188'
 
 @Injectable()
 export class PasswordService {
@@ -85,10 +95,10 @@ export class PasswordService {
    * implementation (apps/frontend/src/routes/_auth/-password-hash.ts).
    */
   private computeSignature(password: string, inputs: string[]): string {
-    const secret = process.env.PASSWORD_STRENGTH_SECRET
-    if (!secret) unexpected('PASSWORD_STRENGTH_SECRET is not configured')
-
     const message = JSON.stringify([password, ...inputs])
-    return createHmac('sha256', secret).update(message).digest('base64').slice(-SIGNATURE_LENGTH)
+    return createHmac('sha256', PASSWORD_STRENGTH_SECRET)
+      .update(message)
+      .digest('base64')
+      .slice(-SIGNATURE_LENGTH)
   }
 }

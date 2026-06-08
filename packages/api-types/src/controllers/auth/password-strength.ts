@@ -1,11 +1,3 @@
-/**
- * Minimum score (0-4) required for a password to be accepted on
- * registration. Shared between the backend (server-side gate on /auth/register)
- * and the frontend (enabling the submit button / showing feedback) so both
- * agree on the same threshold.
- */
-export const MIN_PASSWORD_SCORE = 2
-
 /** strength score, from 0 (weakest) to 4 (strongest). */
 export type PasswordScore = 0 | 1 | 2 | 3 | 4
 
@@ -33,7 +25,7 @@ export type PasswordStrengthFeedback = {
 export type PasswordStrengthResult = {
   /** The score, from 0 (weakest) to 4 (strongest). */
   score: PasswordScore
-  /** Whether the score meets {@link MIN_PASSWORD_SCORE} and would be accepted. */
+  /** Whether the score meets the minimum required threshold and would be accepted. */
   acceptable: boolean
   /** Human-readable feedback to help the user improve the password. */
   feedback: PasswordStrengthFeedback

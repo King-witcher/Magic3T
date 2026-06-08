@@ -2,11 +2,12 @@
 const SIGNATURE_LENGTH = 8
 
 /**
- * Shared anti-abuse key, embedded in the frontend bundle. This is NOT a real
- * secret (anyone can read the bundle) — it only deters casual third-party calls
- * to the password-strength endpoint.
+ * Shared key used to sign requests to `POST /auth/password-strength`. Kept
+ * hardcoded and IDENTICAL to the backend copy in
+ * apps/backend/src/modules/auth/password.service.ts. It ships in this bundle,
+ * so it is only an anti-abuse deterrent, not a real secret.
  */
-const SECRET = import.meta.env.VITE_PASSWORD_STRENGTH_SECRET ?? ''
+const PASSWORD_STRENGTH_SECRET = 'c5cf22e07f589950877e0340ecbea5159c0e6a7857837ecbe1df07b3a26a5188'
 
 /**
  * Computes the signature expected by `POST /auth/password-strength`.
@@ -22,7 +23,7 @@ export async function computePasswordStrengthHash(
   const encoder = new TextEncoder()
   const key = await crypto.subtle.importKey(
     'raw',
-    encoder.encode(SECRET),
+    encoder.encode(PASSWORD_STRENGTH_SECRET),
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign']

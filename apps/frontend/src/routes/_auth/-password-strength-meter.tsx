@@ -1,4 +1,4 @@
-import { MIN_PASSWORD_SCORE, PasswordScore } from '@magic3t/api-types'
+import { PasswordScore } from '@magic3t/api-types'
 import { cn } from '@/lib/utils'
 import type { PasswordStrengthState } from './-use-password-strength'
 
@@ -49,7 +49,7 @@ export function PasswordStrengthMeter({ active, strength }: Props) {
         {meta && (
           <span className={cn('font-semibold', meta.text)}>
             {meta.label}
-            {score !== undefined && score < MIN_PASSWORD_SCORE && ' — too weak'}
+            {result && !result.acceptable && ' — too weak'}
           </span>
         )}
       </div>
