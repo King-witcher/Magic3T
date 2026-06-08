@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { HelpCircle } from 'lucide-react'
+import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { RiGoogleFill } from 'react-icons/ri'
 import { toast } from 'sonner'
@@ -11,6 +12,8 @@ import { Label } from '@/components/ui/label'
 import { Tooltip } from '@/components/ui/tooltip'
 import { AuthError, AuthState, useAuth } from '@/contexts/auth'
 import { ERROR_MAP } from './-error-map'
+import { PasswordStrengthMeter } from './-password-strength-meter'
+import { usePasswordStrength } from './-use-password-strength'
 import { NICKNAME_SCHEMA, PASSWORD_SCHEMA, USERNAME_SCHEMA } from './-validation'
 
 export const Route = createFileRoute('/_auth/register')({
@@ -37,10 +40,20 @@ function RouteComponent() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
   })
+
+  // Password is gated by strength (evaluated on the backend, debounced)
+  // instead of length/character rules.
+  const password = watch('password') ?? ''
+  const username = watch('username') ?? ''
+  const nickname = watch('nickname') ?? ''
+  const strengthInputs = useMemo(() => [username, nickname].filter(Boolean), [username, nickname])
+  const strength = usePasswordStrength(password, strengthInputs)
+  const passwordTooWeak = strength.result !== undefined && !strength.result.acceptable
 
   const registerMutation = useMutation({
     mutationKey: ['register'],
@@ -146,6 +159,7 @@ function RouteComponent() {
           {...register('password', { required: true })}
         />
         {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password.message}</p>}
+        <PasswordStrengthMeter active={password.length > 0} strength={strength} />
       </div>
 
       {/* Confirm Password Input */}
@@ -172,7 +186,7 @@ function RouteComponent() {
       )}
 
       {/* Register Button */}
-      <Button type="submit" disabled={pending} size="lg" className="w-full">
+      <Button type="submit" disabled={pending || passwordTooWeak} size="lg" className="w-full">
         {registerMutation.isPending ? (
           <>
             <Spinner className="size-5" />

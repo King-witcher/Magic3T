@@ -1,5 +1,6 @@
 export * from './auth-error-code'
 export * from './login'
+export * from './password-strength'
 export * from './register'
 export * from './register-firebase'
 export * from './sign-in-firebase'

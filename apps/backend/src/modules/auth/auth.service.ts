@@ -22,6 +22,7 @@ import {
 import { FirebaseAuthService } from '@/infra/firebase'
 import { DatabaseError, PgErrorCode } from '@/shared/database'
 import { SessionData as ServerSessionData } from '@/shared/types/session-data'
+import { PasswordService } from './password.service'
 
 const ONE_WEEK = 1000 * 60 * 60 * 24 * 7
 
@@ -33,7 +34,8 @@ export class AuthService {
     private databaseService: DatabaseService,
     private userRepository: UserRepository,
     private identityRepository: IdentityRepository,
-    private credentialRepository: CredentialRepository
+    private credentialRepository: CredentialRepository,
+    private passwordService: PasswordService
   ) {}
 
   async signInFirebase(token: string): Promise<SignInFirebaseResponse> {
@@ -65,6 +67,12 @@ export class AuthService {
   }
 
   async register(nickname: string, username: string, password: string): Promise<RegisterResult> {
+    // Password is validated by strength only, not by length/char rules.
+    const { score } = this.passwordService.evaluate(password, [nickname, username])
+    if (!this.passwordService.isAcceptable(score)) {
+      respondError('WeakPassword', HttpStatus.BAD_REQUEST, 'Password is too weak')
+    }
+
     const user = await this.registerWithCredentials(nickname, username, password)
     const sessionId = await this.createSession(user.id, user.role)
 

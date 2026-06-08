@@ -55,6 +55,7 @@ export async function toAuthError(error: unknown): Promise<never> {
       case 'NicknameUnavailable':
       case 'UsernameUnavailable':
       case 'UserAlreadyRegistered':
+      case 'WeakPassword':
         throw new AuthError(`Api::${code}`)
       default:
         captureException(error)

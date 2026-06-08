@@ -5,6 +5,7 @@ export const ERROR_MAP: Record<AuthContextErrorCode, string> = {
   'Api::NicknameUnavailable': 'This nickname is unavailable.',
   'Api::UsernameUnavailable': 'This username is unavailable.',
   'Api::UserAlreadyRegistered': 'This account is already registered.',
+  'Api::WeakPassword': 'This password is too weak. Please choose a stronger one.',
   'Api::Unknown': 'An unknown API error occurred during authentication.',
   'OAuth::PopupClosed':
     'The authentication popup was closed before completing the sign-in process.',

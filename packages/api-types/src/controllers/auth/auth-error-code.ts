@@ -3,4 +3,5 @@ export type AuthErrorCode =
   | 'UserAlreadyRegistered'
   | 'UsernameUnavailable'
   | 'InvalidCredentials'
+  | 'WeakPassword'
   | 'Unknown'

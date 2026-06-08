@@ -1,6 +1,8 @@
 import {
   LoginCommand,
   LoginResult,
+  PasswordStrengthCommand,
+  PasswordStrengthResult,
   RegisterCommand,
   RegisterFirebaseCommand,
   RegisterFirebaseResponse,
@@ -49,6 +51,14 @@ export class AuthApiClient extends BaseApiClient<'auth'> {
   /** Registers a user with credentials */
   register(command: RegisterCommand): Promise<RegisterResult> {
     return this.post('register', command)
+  }
+
+  /** Evaluates the strength of a password (signed with the shared anti-abuse key). */
+  passwordStrength(
+    command: PasswordStrengthCommand,
+    signal?: AbortSignal
+  ): Promise<PasswordStrengthResult> {
+    return this.post('password-strength', command, { signal })
   }
 
   /** Deletes the current user session, effectively logging out the user. */

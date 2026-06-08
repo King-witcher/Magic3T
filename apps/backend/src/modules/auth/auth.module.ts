@@ -7,6 +7,7 @@ import { FirebaseModule } from '@/infra/firebase'
 import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
 import { AuthSessionService } from './auth-session.service'
+import { PasswordService } from './password.service'
 
 @Global()
 @Module({
@@ -24,7 +25,7 @@ import { AuthSessionService } from './auth-session.service'
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, AuthSessionService],
+  providers: [AuthService, AuthSessionService, PasswordService],
   exports: [AuthSessionService],
 })
 export class AuthModule {}

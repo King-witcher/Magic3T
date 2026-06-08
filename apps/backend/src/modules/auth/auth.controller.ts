@@ -1,6 +1,8 @@
 import {
   LoginCommand,
   LoginResult,
+  PasswordStrengthCommand,
+  PasswordStrengthResult,
   RegisterCommand,
   RegisterFirebaseCommand,
   RegisterFirebaseResponse,
@@ -13,18 +15,23 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@n
 import { ApiOperation } from '@nestjs/swagger'
 import { Throttle } from '@nestjs/throttler'
 import z from 'zod'
+import { ZodBodyValidationPipe } from '@/common'
 import { BodySchema } from '@/common/decorators/body-schema.decorator'
 import { ResponseSchema } from '@/common/decorators/response-schema.decorator'
 import { NICKNAME_SCHEMA } from '@/shared/validation'
-import { PASSWORD_SCHEMA } from '@/shared/validation/password'
+import { PASSWORD_SCHEMA, PASSWORD_STRENGTH_SCHEMA } from '@/shared/validation/password'
 import { USERNAME_SCHEMA } from '@/shared/validation/username'
 import { AuthGuard } from './auth.guard'
 import { AuthService } from './auth.service'
 import { SessionId, UserId } from './decorators'
+import { PasswordService } from './password.service'
 
 @Controller('auth')
 export class AuthController {
-  constructor(private service: AuthService) {}
+  constructor(
+    private service: AuthService,
+    private passwordService: PasswordService
+  ) {}
 
   /**
    * Signs in a user using a Firebase token.
@@ -163,9 +170,60 @@ export class AuthController {
       metadata: z.any().optional(),
     }),
   })
+  @ResponseSchema({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'The password is too weak.',
+    schema: z.object({
+      errorCode: z.literal('WeakPassword'),
+      metadata: z.any().optional(),
+    }),
+  })
   @Throttle({ medium: { limit: 10 }, long: { limit: 30 } })
   async register(@Body() body: RegisterCommand): Promise<RegisterResult> {
     return this.service.register(body.nickname, body.username, body.password)
+  }
+
+  @Post('password-strength')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Evaluate password strength',
+    description:
+      'Evaluates a password (penalizing the provided user inputs) and returns its strength.',
+  })
+  @BodySchema({
+    description: 'The password, the user inputs to penalize, and the anti-abuse signature.',
+    schema: PASSWORD_STRENGTH_SCHEMA,
+  })
+  @ResponseSchema({
+    status: HttpStatus.OK,
+    description: 'The computed password strength.',
+    schema: z.object({
+      score: z
+        .number()
+        .int()
+        .min(0)
+        .max(4)
+        .describe('password score, 0 (weakest) to 4 (strongest)'),
+      acceptable: z.boolean().describe('Whether the score meets the minimum required for sign-up'),
+      feedback: z.object({
+        warning: z.string(),
+        suggestions: z.array(z.string()),
+      }),
+    }),
+  })
+  @ResponseSchema({
+    status: HttpStatus.FORBIDDEN,
+    description: 'The request signature is missing or invalid.',
+    schema: z.object({
+      errorCode: z.literal('InvalidSignature'),
+      metadata: z.any().optional(),
+    }),
+  })
+  @Throttle({ short: { limit: 10 }, medium: { limit: 120 } })
+  async passwordStrength(
+    @Body(new ZodBodyValidationPipe(PASSWORD_STRENGTH_SCHEMA)) body: PasswordStrengthCommand
+  ): Promise<PasswordStrengthResult> {
+    return this.passwordService.checkStrength(body)
   }
 
   @Post('login')
