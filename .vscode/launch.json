@@ -20,7 +20,7 @@
         "hidden": true
       },
       "serverReadyAction": {
-        "action": "debugWithEdge",
+        "action": "debugWithChrome",
         "pattern": "Local:\\s+http://localhost:(\\d+)",
         "uriFormat": "http://localhost:%s",
         "webRoot": "${workspaceFolder}/apps/frontend",

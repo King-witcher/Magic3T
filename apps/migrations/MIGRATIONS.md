@@ -55,6 +55,8 @@ As migrações são ordenadas lexicograficamente por nome de diretório, o que p
 | `npm run migrate:production` | `packages/migrations` | Aplica migrações pendentes (usa variáveis de ambiente do sistema) |
 | `npm run migrate` | raiz do monorepo | Atalho para `migrate` do workspace |
 | `npm run migrate:production` | raiz do monorepo | Atalho para `migrate:production` do workspace |
+| `npm run seed:dev` | `apps/migrations` | Popula o banco local com dados de desenvolvimento (usa `.env` local) |
+| `npm run seed:dev` | raiz do monorepo | Atalho para `seed:dev` do workspace |
 
 ### Variáveis de ambiente
 
@@ -92,6 +94,38 @@ CREATE TABLE IF NOT EXISTS _migrations (
     rolled_back_at TIMESTAMP WITH TIME ZONE
 );
 ```
+
+---
+
+## Seed de desenvolvimento (`seed:dev`)
+
+Popula o banco **local** com dados realistas para testar a aplicação em desenvolvimento. Rode as migrações antes (`npm run migrate`) e então:
+
+```bash
+npm run seed:dev            # da raiz do monorepo
+npm run seed:dev            # de dentro de apps/migrations
+```
+
+O script é **idempotente**: limpa as tabelas semeáveis (`TRUNCATE ... RESTART IDENTITY CASCADE`) e repopula tudo dentro de uma única transação. A tabela `icon` é preservada (`ON CONFLICT DO NOTHING`).
+
+### O que é gerado
+
+- **Usuários** (~64): jogadores com ranks variados cobrindo todas as ligas (Bronze → Challenger) e alguns provisórios, além de contas especiais e bots.
+- **Partidas** (~1100) com seus eventos (escolhas/desistência/timeout) — vencedor sempre consistente com os eventos.
+- **Snapshots de rating** (~2 por partida): o histórico de rank de cada jogador ao longo dos últimos ~60 dias. Cada partida referencia o snapshot anterior de cada lado (`order_old_rating` / `chaos_old_rating`).
+- **Credenciais** de login para todas as contas humanas.
+
+As partidas usam a mesma matemática de Elo do backend (`RatingService`): o MMR é atualizado a cada partida e o rank é derivado do MMR (caminho `getRankFromLegacyMmr`).
+
+### Logins
+
+Todas as contas usam a senha **`asdf`**:
+
+| Usuário | Senha | Role |
+|---------|-------|------|
+| `admin` | `asdf` | `superuser` |
+| `mod` | `asdf` | `admin` |
+| qualquer nickname de jogador (em minúsculas) | `asdf` | `player` |
 
 ---
 
