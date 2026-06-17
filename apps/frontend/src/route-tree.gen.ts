@@ -27,6 +27,7 @@ import { Route as AuthGuardAdmin_guardedRouteImport } from './routes/_auth-guard
 import { Route as AuthGuardMeRouteRouteImport } from './routes/_auth-guard/me/route'
 import { Route as UsersIdUserIdRouteImport } from './routes/users/id/$userId'
 import { Route as AuthGuardAdmin_guardedAdminRouteImport } from './routes/_auth-guard/_admin_guarded/admin'
+import { Route as AuthGuardAdmin_guardedAdminUsersUserIdRouteImport } from './routes/_auth-guard/_admin_guarded/admin_.users.$userId'
 
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
@@ -116,6 +117,12 @@ const AuthGuardAdmin_guardedAdminRoute =
     path: '/admin',
     getParentRoute: () => AuthGuardAdmin_guardedRoute,
   } as any)
+const AuthGuardAdmin_guardedAdminUsersUserIdRoute =
+  AuthGuardAdmin_guardedAdminUsersUserIdRouteImport.update({
+    id: '/admin_/users/$userId',
+    path: '/admin/users/$userId',
+    getParentRoute: () => AuthGuardAdmin_guardedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/playground': typeof PlaygroundRouteRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/users/$nickname': typeof UsersNicknameRoute
   '/admin': typeof AuthGuardAdmin_guardedAdminRoute
   '/users/id/$userId': typeof UsersIdUserIdRoute
+  '/admin/users/$userId': typeof AuthGuardAdmin_guardedAdminUsersUserIdRoute
 }
 export interface FileRoutesByTo {
   '/playground': typeof PlaygroundRouteRoute
@@ -150,6 +158,7 @@ export interface FileRoutesByTo {
   '/users/$nickname': typeof UsersNicknameRoute
   '/admin': typeof AuthGuardAdmin_guardedAdminRoute
   '/users/id/$userId': typeof UsersIdUserIdRoute
+  '/admin/users/$userId': typeof AuthGuardAdmin_guardedAdminUsersUserIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -171,6 +180,7 @@ export interface FileRoutesById {
   '/_auth-guard/': typeof AuthGuardIndexRoute
   '/_auth-guard/_admin_guarded/admin': typeof AuthGuardAdmin_guardedAdminRoute
   '/users/id/$userId': typeof UsersIdUserIdRoute
+  '/_auth-guard/_admin_guarded/admin_/users/$userId': typeof AuthGuardAdmin_guardedAdminUsersUserIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/users/$nickname'
     | '/admin'
     | '/users/id/$userId'
+    | '/admin/users/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/playground'
@@ -207,6 +218,7 @@ export interface FileRouteTypes {
     | '/users/$nickname'
     | '/admin'
     | '/users/id/$userId'
+    | '/admin/users/$userId'
   id:
     | '__root__'
     | '/playground'
@@ -227,6 +239,7 @@ export interface FileRouteTypes {
     | '/_auth-guard/'
     | '/_auth-guard/_admin_guarded/admin'
     | '/users/id/$userId'
+    | '/_auth-guard/_admin_guarded/admin_/users/$userId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -371,6 +384,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthGuardAdmin_guardedAdminRouteImport
       parentRoute: typeof AuthGuardAdmin_guardedRoute
     }
+    '/_auth-guard/_admin_guarded/admin_/users/$userId': {
+      id: '/_auth-guard/_admin_guarded/admin_/users/$userId'
+      path: '/admin/users/$userId'
+      fullPath: '/admin/users/$userId'
+      preLoaderRoute: typeof AuthGuardAdmin_guardedAdminUsersUserIdRouteImport
+      parentRoute: typeof AuthGuardAdmin_guardedRoute
+    }
   }
 }
 
@@ -388,11 +408,14 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface AuthGuardAdmin_guardedRouteChildren {
   AuthGuardAdmin_guardedAdminRoute: typeof AuthGuardAdmin_guardedAdminRoute
+  AuthGuardAdmin_guardedAdminUsersUserIdRoute: typeof AuthGuardAdmin_guardedAdminUsersUserIdRoute
 }
 
 const AuthGuardAdmin_guardedRouteChildren: AuthGuardAdmin_guardedRouteChildren =
   {
     AuthGuardAdmin_guardedAdminRoute: AuthGuardAdmin_guardedAdminRoute,
+    AuthGuardAdmin_guardedAdminUsersUserIdRoute:
+      AuthGuardAdmin_guardedAdminUsersUserIdRoute,
   }
 
 const AuthGuardAdmin_guardedRouteWithChildren =

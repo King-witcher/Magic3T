@@ -1,9 +1,9 @@
-import { randomUUID } from 'node:crypto'
 import bcrypt from 'bcrypt'
 import type { PoolClient } from 'pg'
 import { close, transaction } from './utils/db'
 import { type GameEvent, generateGame, type Team } from './utils/seed-game'
 import { bulkInsert, pick, randFloat, randInt, uuidV7 } from './utils/seed-helpers'
+import { fetchRiotIcons, type IconRow } from './utils/seed-icons'
 import {
   getExpectedResult,
   INITIAL_K_FACTOR,
@@ -32,18 +32,12 @@ const WINDOW_DAYS = 60
 const DEV_PASSWORD = 'asdf'
 const BCRYPT_ROUNDS = 12
 
-/** Valid DigitalDragon profile-icon ids to seed (getIconUrl maps id -> image). */
-const ICON_IDS = Array.from({ length: 50 }, (_, i) => i) // 0..49 (29 is the default)
-const ICON_RARITIES = [
-  'common',
-  'rare',
-  'epic',
-  'legendary',
-  'mythic',
-  'ultimate',
-  'exalted',
-  'transcendent',
-] as const
+/**
+ * Icons 0..29 are granted to every account for free (see `BASE_ICONS` in the
+ * backend's user.service), so they are never stored in `user_icon`. Only icons
+ * at or above this id are "owned" rows worth seeding.
+ */
+const FIRST_NON_FREE_ICON = 30
 
 // ---------------------------------------------------------------------------
 // In-memory simulation model
@@ -178,11 +172,22 @@ function makeNicknames(count: number, taken: Set<string>): string[] {
 // Build the population
 // ---------------------------------------------------------------------------
 
-function randomIcons(): { profile: number; owned: number[] } {
-  const profile = pick(ICON_IDS)
-  const owned = new Set<number>([profile])
-  const extra = randInt(2, 7)
-  while (owned.size < extra + 1) owned.add(pick(ICON_IDS))
+/**
+ * Picks a random selection of icons for one account.
+ *
+ * `owned` holds only *non-free* icons (id >= 30) — the ones actually stored in
+ * `user_icon`. The free icons 0..29 are implicitly owned by everyone, so the
+ * profile icon is drawn from the free pool *plus* whatever non-free icons the
+ * account happens to own.
+ */
+function randomIcons(nonFreeIds: number[]): { profile: number; owned: number[] } {
+  const owned = new Set<number>()
+  const extra = Math.min(randInt(2, 7), nonFreeIds.length)
+  while (owned.size < extra) owned.add(pick(nonFreeIds))
+
+  const freeIds = Array.from({ length: FIRST_NON_FREE_ICON }, (_, i) => i) // 0..29
+  const profilePool = [...freeIds, ...owned]
+  const profile = pick(profilePool)
   return { profile, owned: [...owned] }
 }
 
@@ -198,7 +203,10 @@ function freshRating(createdAt: Date, startMmr: number): RatingFields {
   }
 }
 
-function buildPopulation(now: number): { users: SimUser[]; players: SimUser[] } {
+function buildPopulation(
+  now: number,
+  nonFreeIconIds: number[]
+): { users: SimUser[]; players: SimUser[] } {
   const windowStart = now - WINDOW_DAYS * 86_400_000
   const takenSlugs = new Set<string>()
   const users: SimUser[] = []
@@ -209,7 +217,7 @@ function buildPopulation(now: number): { users: SimUser[]; players: SimUser[] } 
     opts: { latent: number; username: string | null; maxGames: number }
   ): SimUser => {
     const createdAt = new Date(windowStart - randInt(1, 25) * 86_400_000)
-    const { profile, owned } = randomIcons()
+    const { profile, owned } = randomIcons(nonFreeIconIds)
     return {
       nickname,
       slug: nickname.toLowerCase(),
@@ -409,6 +417,7 @@ async function persist(
   users: SimUser[],
   snapshots: SimSnapshot[],
   matches: SimMatch[],
+  icons: IconRow[],
   passwordDigest: string
 ): Promise<void> {
   // 1. Wipe seedable tables (CASCADE clears matches, snapshots, credentials...).
@@ -417,19 +426,19 @@ async function persist(
        user_icon, user_identity, legacy_user_identity, "user" RESTART IDENTITY CASCADE`
   )
 
-  // 2. Icons (preserve any real icon sync via ON CONFLICT DO NOTHING).
+  // 2. Icons — real catalogue fetched from Riot, same shape as syncIcons writes.
   await bulkInsert(
     client,
     'icon',
     ['id', 'title', 'description', 'year_released', 'content_id', 'is_legacy', 'rarity'],
-    ICON_IDS.map((id, i) => ({
-      id,
-      title: `Summoner Icon ${id}`,
-      description: null,
-      year_released: null,
-      content_id: randomUUID(),
-      is_legacy: false,
-      rarity: ICON_RARITIES[i % ICON_RARITIES.length],
+    icons.map((icon) => ({
+      id: icon.id,
+      title: icon.title,
+      description: icon.description,
+      year_released: icon.year_released,
+      content_id: icon.content_id,
+      is_legacy: icon.is_legacy,
+      rarity: icon.rarity,
     })),
     { conflict: 'ON CONFLICT (id) DO NOTHING' }
   )
@@ -578,7 +587,8 @@ async function persist(
     }))
   )
 
-  // 8. Owned icons (so the profile icon grid / store have data).
+  // 8. Owned icons — only non-free icons (id >= 30) are stored; everyone gets
+  //    0..29 for free, so those are never rows in `user_icon` (see randomIcons).
   const iconRows = users.flatMap((u) =>
     u.ownedIcons.map((iconId) => ({
       user_id: u.id,
@@ -626,7 +636,12 @@ async function main(): Promise<number> {
     console.info('🌱 Seeding development data...')
     const now = Date.now()
 
-    const { users, players } = buildPopulation(now)
+    console.info('🎨 Fetching summoner icons from Riot (Community Dragon)...')
+    const icons = await fetchRiotIcons()
+    const nonFreeIconIds = icons.map((icon) => icon.id).filter((id) => id >= FIRST_NON_FREE_ICON)
+    console.info(`🎨 Loaded ${icons.length} icons (${nonFreeIconIds.length} non-free).`)
+
+    const { users, players } = buildPopulation(now, nonFreeIconIds)
     console.info(`👥 Built ${users.length} users (${players.length} active in the ranked pool).`)
 
     const { matches, snapshots } = simulate(players, now)
@@ -635,7 +650,7 @@ async function main(): Promise<number> {
     console.info('🔐 Hashing dev password...')
     const passwordDigest = await bcrypt.hash(DEV_PASSWORD, BCRYPT_ROUNDS)
 
-    await transaction((client) => persist(client, users, snapshots, matches, passwordDigest))
+    await transaction((client) => persist(client, users, snapshots, matches, icons, passwordDigest))
 
     console.info('✅ Seed complete.')
     reportDistribution(players)

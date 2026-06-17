@@ -12,7 +12,7 @@ import { ConfigRepository, UserDocumentRepository } from '@/infra/firestore'
 import { RatingService } from '@/modules/rating'
 import { DatabaseError } from '@/shared/database/database-error'
 import { IDbClient } from '@/shared/database/db-client'
-import { INSERT_INTO, UPDATE } from '@/shared/database/pg-chain'
+import { INSERT_INTO, PgChain, chain as raw, SELECT, UPDATE } from '@/shared/database/pg-chain'
 import { sql } from '@/shared/database/sql'
 import { DatabaseService } from '../database.service'
 import { UserRepositoryError } from './user-repository-error'
@@ -33,6 +33,33 @@ type RatingUpdateFields = Pick<
   | 'rank_matches'
   | 'rank_date'
 >
+
+/** A user row joined with their (optional) legacy e-mail, used by the admin panel. */
+export type AdminUserRow = UserRow & { email: string | null }
+
+/** A keyset cursor: the sort value and id of the last item from the previous page. */
+export type AdminListCursor = { sortValue: string | number; id: string }
+
+export type AdminListUsersParams = {
+  search?: string
+  sort: 'nickname' | 'createdAt' | 'elo'
+  order: 'asc' | 'desc'
+  limit: number
+  cursor?: AdminListCursor
+  /** When true, also runs a COUNT for the total number of matches (first page only). */
+  withTotal: boolean
+}
+
+/**
+ * Whitelist mapping the public sort keys to trusted, raw SQL fragments: the column to sort by
+ * and the type the cursor value is cast to in the keyset predicate. They are built as `PgChain`
+ * fragments so the identifiers are inlined as raw SQL (only the values are bound as parameters).
+ */
+const ADMIN_SORT_FRAGMENTS = {
+  nickname: { column: () => raw`u.profile_nickname_slug`, cast: () => raw`text` },
+  createdAt: { column: () => raw`u.created_at`, cast: () => raw`timestamptz` },
+  elo: { column: () => raw`u.mmr_score`, cast: () => raw`real` },
+} as const
 
 @Injectable()
 export class UserRepository {
@@ -352,5 +379,92 @@ export class UserRepository {
         [row.id, row],
       ])
     )
+  }
+
+  /**
+   * Lists users for the admin panel, with optional free-text search (nickname or UUID) and
+   * keyset (cursor) pagination over a whitelisted sort column. Returns up to `params.limit`
+   * rows plus the total match count (only when `params.withTotal` is set).
+   */
+  async adminListUsers(
+    params: AdminListUsersParams
+  ): Promise<{ rows: AdminUserRow[]; total: number | null }> {
+    const fragments = ADMIN_SORT_FRAGMENTS[params.sort]
+    const column = fragments.column()
+    const cast = fragments.cast()
+    // The id tiebreaker follows the same direction as the primary sort, making the (sort, id)
+    // pair a total order. Direction and comparison are raw fragments, never bound parameters.
+    const direction = params.order === 'asc' ? raw`ASC` : raw`DESC`
+    const comparison = params.order === 'asc' ? raw`>` : raw`<`
+
+    const search = params.search?.trim()
+    const cursor = params.cursor
+
+    // Conditional fragment for the free-text filter; PgChain binds the values as parameters.
+    const applySearch = (query: PgChain) =>
+      query.AND`(u.profile_nickname ILIKE ${`%${search}%`} OR u.id::text ILIKE ${`${search}%`})`
+
+    let total: number | null = null
+    if (params.withTotal) {
+      const countQuery = SELECT`COUNT(*)::int AS count`.FROM`"user" u`.WHERE`TRUE`.if(
+        !!search,
+        applySearch
+      )
+      const [countRow] = await this.databaseService.query<{ count: number }>({
+        text: countQuery.text,
+        values: countQuery.values,
+      })
+      total = countRow?.count ?? 0
+    }
+
+    const rows = await this.databaseService.query<AdminUserRow>(
+      SELECT`u.*, lui.email`.FROM`"user" u`.LEFT_JOIN`legacy_user_identity lui`
+        .ON`lui.user_id = u.id`.WHERE`TRUE`
+        .if(!!search, applySearch)
+        // Keyset predicate: rows strictly "after" the cursor in the (sort, id) ordering.
+        .if(
+          !!cursor,
+          (query) =>
+            query.AND`(${column} ${comparison} ${cursor?.sortValue}::${cast} OR (${column} = ${cursor?.sortValue}::${cast} AND u.id ${comparison} ${cursor?.id}::uuid))`
+        ).ORDER_BY`${column} ${direction}, u.id ${direction}`.LIMIT`${params.limit}`
+    )
+
+    return { rows, total }
+  }
+
+  /** Gets a single user (with their optional legacy e-mail) for the admin detail screen. */
+  async adminGetUserById(id: string): Promise<AdminUserRow | null> {
+    const [row] = await this.databaseService.query<AdminUserRow>(sql`
+      SELECT u.*, lui.email
+      FROM "user" u
+      LEFT JOIN legacy_user_identity lui ON lui.user_id = u.id
+      WHERE u.id = ${id}
+    `)
+    return row ?? null
+  }
+
+  /**
+   * Applies a partial update to a user from the admin panel.
+   * Returns false when no user matched the given id.
+   *
+   * @throws UserRepositoryError('NicknameAlreadyTaken') on a unique nickname collision.
+   */
+  async adminUpdateUser(id: string, fields: Partial<UserRow>): Promise<boolean> {
+    const chain = UPDATE`"user"`.SET(fields).WHERE`id = ${id}`.RETURNING`id`
+    try {
+      const rows = await this.databaseService.query<{ id: string }>({
+        text: chain.text,
+        values: chain.values,
+      })
+      return rows.length > 0
+    } catch (error) {
+      if (
+        error instanceof DatabaseError &&
+        error.cause.constraint === 'user_profile_nickname_slug_key'
+      ) {
+        throw new UserRepositoryError('NicknameAlreadyTaken')
+      }
+      throw error
+    }
   }
 }

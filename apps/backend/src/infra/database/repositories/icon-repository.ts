@@ -84,6 +84,13 @@ export class IconRepository {
     return result
   }
 
+  /** Lists every icon, ordered chronologically by release year (unknown years last). */
+  async listAllOrderedByRelease(): Promise<IconRow[]> {
+    return this.databaseService.query<IconRow>(
+      'SELECT * FROM icon ORDER BY year_released ASC NULLS LAST, id ASC'
+    )
+  }
+
   @Cron('0 5 * * 3')
   async syncIcons() {
     this.logger.log('Starting icon repopulation process...')
