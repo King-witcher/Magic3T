@@ -83,7 +83,15 @@ class Parser {
     // Parses unquoted words
     while (!this.halted()) {
       const char = this.peek()
-      if (char === ' ' || char === '\t' || char === '\n' || char === ';') break
+      if (
+        char === ' ' ||
+        char === '\t' ||
+        char === '\n' ||
+        char === ';' ||
+        char === '"' ||
+        char === "'"
+      )
+        break
       if (char === '\\') {
         this.bump()
         if (this.halted()) throw new Error('unterminated escape sequence')

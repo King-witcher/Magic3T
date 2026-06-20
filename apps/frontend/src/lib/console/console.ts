@@ -41,6 +41,7 @@ export class Console {
           const _result = await operation()
         } catch (e) {
           console.error(e)
+          Console.log(e instanceof Error ? e.message : String(e))
         }
       }
     }

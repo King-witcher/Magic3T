@@ -47,6 +47,11 @@ describe(parseLines, () => {
     expect(result).toEqual([['command', 'arg1', 'arg2']])
   })
 
+  test('quotes separate words even with no spaces', () => {
+    const result = parseLines('command"arg with spaces"\'another arg\'')
+    expect(result).toEqual([['command', 'arg with spaces', 'another arg']])
+  })
+
   describe('comments', () => {
     test('ignores single-line comments', () => {
       const result = parseLines('// This is a comment\ncommand arg1 arg2')
