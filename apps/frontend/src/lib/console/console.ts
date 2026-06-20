@@ -3,6 +3,7 @@ import { Observer } from '../observable'
 import { Cmd, CmdCtxConsole, DEFAULT_CMDS } from './command'
 import { CVar, cvars } from './cvar'
 import { ExposedEmitter } from './exposed-emitter'
+import { parseLines } from './parser'
 
 const BUFFER_SIZE = 128
 
@@ -10,11 +11,7 @@ interface ConsoleEventsMap {
   changeBuffer: () => void
 }
 
-export type CommandHandler = (args: string) => void | Promise<void>
-
-export type ConsoleResult<T> = Result<T, string>
-
-type Operation = () => ConsoleResult<[]> | Promise<ConsoleResult<[]>>
+export type CommandHandler = (args: string[]) => void | Promise<void>
 
 // We use static members for commands and cvars because we need the console to be globally available, so that the http client can get it's auth tokens from the console and the console can use the http client.
 export class Console {
@@ -22,7 +19,7 @@ export class Console {
   private static cmdsMap: Map<string, Cmd>
 
   // private static cmds: Record<string, CommandHandler> = { ...initialCmds }
-  private static queue: Channel<Operation> = new Channel()
+  private static queue: Channel<() => void | Promise<void>> = new Channel()
   private static emitter = new ExposedEmitter()
 
   private static context: CmdCtxConsole = {
@@ -63,41 +60,81 @@ export class Console {
     Console.emitter.publicEmit('changeBuffer')
   }
 
-  public static async exec(line: string) {
-    const { cmd: cmdName, args } = Console.parse(line)
-    if (!cmdName) return
-    const command = Console.cmdsMap.get(Console.slug(cmdName))
+  public static async exec(text: string) {
+    if (!text) return
 
     await Console.queue.send(async () => {
-      // If the command is not a registered command, check if it's a cvar
-      if (!command) {
-        const cvar = Console.getCvarSafe(cmdName)
-        if (!cvar) {
-          Console.log(`Unknown command '${cmdName}'`)
-          return Err(`Unknown command '${cmdName}'`)
-        }
+      const lines = parseLines(text)
+      for (const words of lines) {
+        if (words.length === 0) continue
 
-        if (args.length > 0) {
-          try {
-            cvars.set(cmdName, args[0])
-          } catch (e) {
-            Console.log(e instanceof Error ? e.message : String(e))
+        const [command, ...args] = words
+
+        const commandObj = Console.cmdsMap.get(Console.slug(command))
+
+        // If the command does not exist, check if it's a cvar
+        if (!commandObj) {
+          const cvar = Console.getCvarSafe(command)
+          if (!cvar) {
+            Console.log(`Unknown command '${command}'`)
+            return
           }
-        } else {
-          Console.inspectCvar(cvar)
+
+          if (args.length > 0) {
+            try {
+              cvars.set(command, args[0])
+            } catch (e) {
+              Console.log(e instanceof Error ? e.message : String(e))
+            }
+          } else {
+            Console.inspectCvar(cvar)
+          }
+          continue
         }
-
-        return Ok([])
+        try {
+          await commandObj.handler({
+            args,
+            console: Console.context,
+          })
+        } catch (e) {
+          Console.log(e instanceof Error ? e.message : String(e))
+        }
       }
-
-      // If the command is a registered command, execute it
-      const _result = await command.handler({
-        args,
-        console: Console.context,
-      })
-
-      return Ok([])
     })
+
+    // if (!cmdName) return
+    // const command = Console.cmdsMap.get(Console.slug(cmdName))
+
+    // await Console.queue.send(async () => {
+    //   // If the command is not a registered command, check if it's a cvar
+    //   if (!command) {
+    //     const cvar = Console.getCvarSafe(cmdName)
+    //     if (!cvar) {
+    //       Console.log(`Unknown command '${cmdName}'`)
+    //       return Err(`Unknown command '${cmdName}'`)
+    //     }
+
+    //     if (args.length > 0) {
+    //       try {
+    //         cvars.set(cmdName, args[0])
+    //       } catch (e) {
+    //         Console.log(e instanceof Error ? e.message : String(e))
+    //       }
+    //     } else {
+    //       Console.inspectCvar(cvar)
+    //     }
+
+    //     return Ok([])
+    //   }
+
+    //   // If the command is a registered command, execute it
+    //   const _result = await command.handler({
+    //     args,
+    //     console: Console.context,
+    //   })
+
+    //   return Ok([])
+    // })
   }
 
   public static addCommand(cmd: Cmd): () => void {
@@ -140,81 +177,6 @@ export class Console {
       return cvars.getCvar(id)
     } catch {
       return null
-    }
-  }
-
-  private static parse(line: string): { cmd: string; args: string[] } {
-    const args: string[] = []
-    let doubleQuotes = false
-    let singleQuotes = false
-    let escaping = false
-    let currentArg = ''
-
-    function push() {
-      if (currentArg.length > 0) {
-        args.push(currentArg)
-        currentArg = ''
-      }
-    }
-
-    for (const char of line) {
-      if (escaping) {
-        currentArg += char
-        escaping = false
-        continue
-      }
-
-      if (char === '\\') {
-        escaping = true
-        continue
-      }
-
-      if (singleQuotes) {
-        if (char === "'") {
-          args.push(currentArg)
-          currentArg = ''
-          singleQuotes = false
-          continue
-        }
-        currentArg += char
-        continue
-      }
-
-      if (doubleQuotes) {
-        if (char === '"') {
-          args.push(currentArg)
-          currentArg = ''
-          doubleQuotes = false
-          continue
-        }
-        currentArg += char
-        continue
-      }
-
-      if (char === '"') {
-        push()
-        doubleQuotes = true
-        continue
-      }
-
-      if (char === "'") {
-        push()
-        singleQuotes = true
-        continue
-      }
-
-      if (char === ' ') {
-        push()
-        continue
-      }
-
-      currentArg += char
-    }
-    push()
-
-    return {
-      cmd: args.shift() ?? '',
-      args,
     }
   }
 }

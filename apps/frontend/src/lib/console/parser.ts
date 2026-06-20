@@ -24,25 +24,25 @@ class Parser {
   }
 
   parseLine(): string[] {
-    const args: string[] = []
+    const words: string[] = []
 
     while (!this.halted()) {
       this.skipTrivia()
-      if (this.halted()) return args
+      if (this.halted()) return words
       if (this.peek() === '\n' || this.peek() === ';') {
         this.bump()
-        return args
+        return words
       }
-      args.push(this.parseArg())
+      words.push(this.parseWord())
     }
 
-    return args
+    return words
   }
 
-  parseArg(): string {
-    let arg = ''
+  parseWord(): string {
+    let word = ''
     const maybeQuote = this.peek()
-    // Parses quoted args
+    // Parses quoted words
     if (maybeQuote === '"' || maybeQuote === "'") {
       this.bump()
       for (;;) {
@@ -59,15 +59,15 @@ class Parser {
             case '"':
             case "'":
             case '\\':
-              arg += nextChar
+              word += nextChar
               continue
 
             case 'n':
-              arg += '\n'
+              word += '\n'
               continue
 
             case 't':
-              arg += '\t'
+              word += '\t'
               continue
 
             default:
@@ -75,12 +75,12 @@ class Parser {
           }
         }
 
-        arg += char
+        word += char
       }
-      return arg
+      return word
     }
 
-    // Parses unquoted args
+    // Parses unquoted words
     while (!this.halted()) {
       const char = this.peek()
       if (char === ' ' || char === '\t' || char === '\n' || char === ';') break
@@ -93,23 +93,23 @@ class Parser {
           case '"':
           case "'":
           case '\\':
-            arg += nextChar
+            word += nextChar
             break
           case 'n':
-            arg += '\n'
+            word += '\n'
             break
           case 't':
-            arg += '\t'
+            word += '\t'
             break
           default:
             throw new Error(`invalid escape sequence \\${nextChar}`)
         }
         continue
       }
-      arg += this.bump()
+      word += this.bump()
     }
 
-    return arg
+    return word
   }
 
   peek() {
@@ -145,26 +145,42 @@ class Parser {
             case '/': {
               this.pos += 2
 
-              while (!this.halted() && this.peek() !== '\n') this.bump()
+              this.skipLine()
               break
             }
 
             // Skips multi-line comments
             case '*': {
-              this.pos += 2
+              this.skipMultiLineComment()
+              break
+            }
 
-              while (!this.halted()) {
-                if (this.bump() === '*' && this.peek() === '/') {
-                  this.bump()
-                  break
-                }
-              }
+            // Not trivia
+            default: {
+              return
             }
           }
           break
         }
         default:
           return
+      }
+    }
+  }
+
+  skipLine() {
+    while (!this.halted() && this.peek() !== '\n') {
+      this.bump()
+    }
+  }
+
+  skipMultiLineComment() {
+    this.pos += 2
+
+    while (!this.halted()) {
+      if (this.bump() === '*' && this.peek() === '/') {
+        this.bump()
+        break
       }
     }
   }

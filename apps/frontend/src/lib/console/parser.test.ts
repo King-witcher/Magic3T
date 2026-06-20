@@ -64,5 +64,10 @@ describe(parseLines, () => {
       )
       expect(result).toEqual([[], ['command', 'arg1', 'arg2']])
     })
+
+    test('does not stall on words started with /', () => {
+      const result = parseLines('/command /arg1 arg2')
+      expect(result).toEqual([['/command', '/arg1', 'arg2']])
+    })
   })
 })
