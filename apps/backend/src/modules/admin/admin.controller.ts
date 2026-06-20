@@ -21,7 +21,6 @@ import { AdminUserService } from './admin-user.service'
 @ApiBearerAuth()
 export class AdminController {
   constructor(
-    // private readonly userRepository: UserRepository,
     private readonly iconRepository: IconRepository,
     private readonly adminUserService: AdminUserService
   ) {}
@@ -34,15 +33,6 @@ export class AdminController {
   async syncIcons() {
     await this.iconRepository.syncIcons()
   }
-
-  // @ApiOperation({
-  //   summary: 'Import users from Firebase',
-  //   description: 'Imports user data from Firebase into the local database.',
-  // })
-  // @Post('import-users')
-  // async importUsers() {
-  //   await this.userRepository.importFromFirebase()
-  // }
 
   @ApiOperation({
     summary: 'List users',

@@ -1,14 +1,6 @@
-import {
-  IconRow,
-  LeagueEnum,
-  UserDocumentRole,
-  UserRoleEnum,
-  UserRow,
-} from '@magic3t/database-types'
-import { Injectable, Logger } from '@nestjs/common'
-import { UserRecord } from 'firebase-admin/auth'
-import { FirebaseAuthService } from '@/infra/firebase'
-import { ConfigRepository, UserDocumentRepository } from '@/infra/firestore'
+import { IconRow, UserRow } from '@magic3t/database-types'
+import { Injectable } from '@nestjs/common'
+import { ConfigRepository } from '@/infra/firestore'
 import { RatingService } from '@/modules/rating'
 import { DatabaseError } from '@/shared/database/database-error'
 import { IDbClient } from '@/shared/database/db-client'
@@ -16,12 +8,6 @@ import { INSERT_INTO, PgChain, chain as raw, SELECT, UPDATE } from '@/shared/dat
 import { sql } from '@/shared/database/sql'
 import { DatabaseService } from '../database.service'
 import { UserRepositoryError } from './user-repository-error'
-
-const roleMap: Record<UserDocumentRole, UserRoleEnum> = {
-  player: 'player',
-  creator: 'superuser',
-  bot: 'bot',
-}
 
 type RatingUpdateFields = Pick<
   UserRow,
@@ -63,100 +49,11 @@ const ADMIN_SORT_FRAGMENTS = {
 
 @Injectable()
 export class UserRepository {
-  private readonly logger = new Logger(UserRepository.name, { timestamp: true })
-
   constructor(
     private readonly databaseService: DatabaseService,
-    private readonly userDocumentRepository: UserDocumentRepository,
-    private readonly firebaseAuthService: FirebaseAuthService,
     private readonly configRepository: ConfigRepository,
     private readonly ratingService: RatingService
   ) {}
-
-  /** Imports users and their identities from Firebase Auth and Firestore */
-  async importFromFirebase() {
-    const [identities, allUsers] = await Promise.all([
-      this.firebaseAuthService.listFirebaseAccounts().then(([identities]) => {
-        this.logger.log(`Fetched ${identities.length} identities from Firebase Auth`)
-        const map = new Map(identities.map((identity) => [identity.uid, identity]))
-        return map
-      }),
-      this.userDocumentRepository.getAll().then((items) => {
-        this.logger.log(`Fetched ${items.length} user documents from Firestore`)
-        return items
-      }),
-    ])
-
-    const mappedUsers = allUsers.filter(
-      (user) => identities.has(user.id) || user.data.role === 'bot'
-    )
-
-    const userRows = mappedUsers.map((user): [Partial<UserRow>, UserRecord | null] => {
-      const summoner_icon =
-        user.data.summoner_icon >= 59 && user.data.summoner_icon <= 78
-          ? 29
-          : user.data.summoner_icon
-
-      const identity = identities.get(user.id)
-
-      const { rank_league, rank_division, rank_lp } = this.ratingService.getRankFromLegacyMmr(
-        user.data.elo.score,
-        user.data.elo.matches
-      )
-
-      return [
-        {
-          role: roleMap[user.data.role],
-          profile_nickname: user.data.identification.nickname,
-          profile_nickname_slug: user.data.identification.unique_id,
-          profile_icon: summoner_icon,
-          profile_nickname_date: user.data.identification.last_changed ?? new Date(),
-
-          mmr_score: user.data.elo.score,
-          mmr_k_factor: user.data.elo.k,
-
-          rank_league: rank_league as LeagueEnum | null,
-          rank_division,
-          rank_lp,
-          rank_matches: user.data.elo.matches,
-
-          stats_victories: user.data.stats.wins,
-          stats_draws: user.data.stats.draws,
-          stats_defeats: user.data.stats.defeats,
-          created_at: identity ? new Date(identity.metadata.creationTime) : new Date(),
-        },
-        identity ?? null,
-      ]
-    })
-
-    await this.databaseService.transaction(async (client) => {
-      for (const [user, identity] of userRows) {
-        this.logger.verbose(`Creating user ${user.profile_nickname}...`)
-        const createUserChain = INSERT_INTO('"user"', user).RETURNING`id`
-        const [row] = await client.query<{ id: number }>({
-          name: 'create_user',
-          text: createUserChain.text,
-          values: createUserChain.values,
-        })
-
-        if (identity) {
-          this.logger.verbose(`Creating legacy identity for user ${user.profile_nickname}...`)
-          const identityChain = INSERT_INTO('legacy_user_identity', {
-            user_id: row.id,
-            firebase_id: identity.uid,
-            email: identity.email,
-          })
-          await client.query({
-            name: 'create_user_identity',
-            text: identityChain.text,
-            values: identityChain.values,
-          })
-        }
-      }
-    })
-
-    this.logger.log(`Successfully imported ${userRows.length} users from Firebase`)
-  }
 
   /** Finds a user by their Firebase ID. */
   async getByFirebaseId(firebaseId: string): Promise<UserRow | null> {

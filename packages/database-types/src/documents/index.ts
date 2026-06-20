@@ -1,6 +1,4 @@
 export * from './config'
 export * from './crash-report-row'
 export * from './icon-assignment-row'
-export * from './match-document'
-export * from './user-document'
 export * from './with-id'

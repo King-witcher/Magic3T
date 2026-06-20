@@ -2,12 +2,12 @@ import { Global, Module } from '@nestjs/common'
 import { FirebaseModule } from '@/infra/firebase'
 import { FirestoreService } from './firestore.service'
 
-import { ConfigRepository, CrashReportsRepository, UserDocumentRepository } from './repositories'
+import { ConfigRepository, CrashReportsRepository } from './repositories'
 
 @Global()
 @Module({
   imports: [FirebaseModule],
-  providers: [FirestoreService, UserDocumentRepository, ConfigRepository, CrashReportsRepository],
-  exports: [FirestoreService, UserDocumentRepository, ConfigRepository, CrashReportsRepository],
+  providers: [FirestoreService, ConfigRepository, CrashReportsRepository],
+  exports: [FirestoreService, ConfigRepository, CrashReportsRepository],
 })
 export class FirestoreModule {}
