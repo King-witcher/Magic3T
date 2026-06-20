@@ -1,7 +1,7 @@
 import { Choice } from '@magic3t/common-types'
 import { ComponentProps, useCallback, useMemo } from 'react'
 import { Panel } from '@/components/atoms'
-import { Console, SystemCvars } from '@/lib/console'
+import { cvars, SystemCvarId } from '@/lib/console'
 import { cn } from '@/lib/utils'
 import { getTriple } from '@/utils/find-triple'
 import { NumberCell } from './number-cell'
@@ -28,7 +28,7 @@ export function GameBoard({
   className,
   ...props
 }: GameBoardProps) {
-  const magicSquare = Console.useCvarBoolean(SystemCvars.Ui3TMode)
+  const magicSquare = cvars.useBool(SystemCvarId.Ui3TMode)
   const numbers = magicSquare ? magicSquareNumbers : normalNumbers
 
   const allyChoicesSet = useMemo(() => new Set(allyChoices), [allyChoices])

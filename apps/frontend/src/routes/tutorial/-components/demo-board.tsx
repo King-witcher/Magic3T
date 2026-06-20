@@ -1,5 +1,5 @@
 import { Choice } from '@magic3t/common-types'
-import { Console, SystemCvars } from '@/lib/console'
+import { cvars, SystemCvarId } from '@/lib/console'
 import { cn } from '@/utils/utils'
 import { CellState, DemoCell } from './demo-cell'
 
@@ -14,9 +14,7 @@ type Props = {
 }
 
 export function DemoBoard({ boardState, size = 'md' }: Props) {
-  const values = Console.useCvarBoolean(SystemCvars.Ui3TMode)
-    ? MAGIC_SQUARE_NUMBERS
-    : SEQUENCE_NUMBERS
+  const values = cvars.useBool(SystemCvarId.Ui3TMode) ? MAGIC_SQUARE_NUMBERS : SEQUENCE_NUMBERS
 
   const gapClass = size === 'sm' ? 'gap-1.5' : 'gap-2'
   return (

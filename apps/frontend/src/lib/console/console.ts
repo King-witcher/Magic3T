@@ -1,14 +1,12 @@
-import { useSyncExternalStore } from 'react'
 import { Channel } from '../channel'
 import { Observer } from '../observable'
-import { Cmd, ConsoleContext, INITIAL_CMDS } from './commands'
-import { CVar, CVarValue, INITIAL_CVARS } from './cvars'
-import { PublicEmitter } from './emitter'
+import { Cmd, CmdCtxConsole, DEFAULT_CMDS } from './command'
+import { CVar, cvars } from './cvar'
+import { ExposedEmitter } from './exposed-emitter'
 
 const BUFFER_SIZE = 128
 
 interface ConsoleEventsMap {
-  changeCvar: (cvar: string) => void
   changeBuffer: () => void
 }
 
@@ -17,31 +15,28 @@ export type CommandHandler = (args: string) => void | Promise<void>
 export type ConsoleResult<T> = Result<T, string>
 
 type Operation = () => ConsoleResult<[]> | Promise<ConsoleResult<[]>>
+
+// We use static members for commands and cvars because we need the console to be globally available, so that the http client can get it's auth tokens from the console and the console can use the http client.
 export class Console {
   public static lines: string[] = []
-  private static cvarsMap: Map<string, CVar> = new Map(
-    INITIAL_CVARS.map((cvar) => [cvar.name, cvar])
-  )
-  private static cmdsMap: Map<string, Cmd> = new Map(INITIAL_CMDS.map((cmd) => [cmd.name, cmd]))
+  private static cmdsMap: Map<string, Cmd>
 
   // private static cmds: Record<string, CommandHandler> = { ...initialCmds }
   private static queue: Channel<Operation> = new Channel()
-  private static emitter = new PublicEmitter()
+  private static emitter = new ExposedEmitter()
 
-  private static context: ConsoleContext = {
+  private static context: CmdCtxConsole = {
     print: Console.log,
     clear: Console.clear,
     execCmd: () => Promise.reject('Not implemented'),
-    getCvar: (name: string) => Console.cvarsMap.get(name) ?? null,
-    getCvarString: Console.getCvarString,
-    getCvarNumber: Console.getCvarNumber,
-    getCvarBoolean: Console.getCvarBoolean,
     listCmds: () => Array.from(Console.cmdsMap.values()),
-    listCvars: () => Array.from(Console.cvarsMap.values()),
-    setCvar: Console.setInner,
   }
 
   static {
+    // Populate cmdsMap
+    Console.cmdsMap = new Map(DEFAULT_CMDS.map((cmd) => [cmd.name, cmd]))
+
+    // Command ingestor loop
     async function operationLoop() {
       for (;;) {
         const operation = await Console.queue.receive()
@@ -56,108 +51,11 @@ export class Console {
     operationLoop()
   }
 
-  /** @deprecated */
-  public static getCvarValue(name: string): CVarValue | null {
-    return Console.cvarsMap.get(name)?.value ?? null
-  }
-
-  /**
-   * Gets the value of a string CVar.
-   *
-   * @throws Error if the CVar does not exist or is not of type string.
-   */
-  public static getCvarString(name: string): string {
-    const cvar = Console.cvarsMap.get(name)
-    if (!cvar) throw new Error(`CVar '${name}' does not exist`)
-    if (cvar.type !== 'string') throw new Error(`CVar '${name}' is not of type string`)
-    return cvar.value
-  }
-
-  /**
-   * Gets the value of a number CVar.
-   *
-   * @throws Error if the CVar does not exist or is not of type number.
-   */
-  public static getCvarNumber(name: string): number {
-    const cvar = Console.cvarsMap.get(name)
-    if (!cvar) throw new Error(`CVar '${name}' does not exist`)
-    if (cvar.type !== 'number') throw new Error(`CVar '${name}' is not of type number`)
-    return cvar.value
-  }
-
-  /**
-   * Gets the value of a boolean CVar.
-   *
-   * @throws Error if the CVar does not exist or is not of type boolean.
-   */
-  public static getCvarBoolean(name: string): boolean {
-    const cvar = Console.cvarsMap.get(name)
-    if (!cvar) throw new Error(`CVar '${name}' does not exist`)
-    if (cvar.type !== 'boolean') throw new Error(`CVar '${name}' is not of type boolean`)
-    return cvar.value
-  }
-
-  public static useCvar(cvar: string): CVarValue | null {
-    return useSyncExternalStore(
-      (callback) => {
-        return Console.on('changeCvar', (changedCvar) => {
-          if (changedCvar === cvar) {
-            callback()
-          }
-        })
-      },
-      () => Console.cvarsMap.get(cvar)?.value ?? null
-    )
-  }
-
-  public static useCvarString(cvar: string): string {
-    return useSyncExternalStore(
-      (callback) => {
-        return Console.on('changeCvar', (changedCvar) => {
-          if (changedCvar === cvar) {
-            callback()
-          }
-        })
-      },
-      () => Console.getCvarString(cvar)
-    )
-  }
-
-  public static useCvarNumber(cvar: string): number {
-    return useSyncExternalStore(
-      (callback) => {
-        return Console.on('changeCvar', (changedCvar) => {
-          if (changedCvar === cvar) {
-            callback()
-          }
-        })
-      },
-      () => Console.getCvarNumber(cvar)
-    )
-  }
-
-  public static useCvarBoolean(cvar: string): boolean {
-    return useSyncExternalStore(
-      (callback) => {
-        return Console.on('changeCvar', (changedCvar) => {
-          if (changedCvar === cvar) {
-            callback()
-          }
-        })
-      },
-      () => Console.getCvarBoolean(cvar)
-    )
-  }
-
   public static log(message?: string) {
     console.log(message)
     Console.lines = [...Console.lines, message ?? '']
     if (Console.lines.length > BUFFER_SIZE) Console.lines.shift()
     Console.emitter.publicEmit('changeBuffer')
-  }
-
-  public static set(cvar: string, valueString: string) {
-    Console.queue.send(() => Console.setInner(cvar, valueString))
   }
 
   public static clear() {
@@ -173,14 +71,18 @@ export class Console {
     await Console.queue.send(async () => {
       // If the command is not a registered command, check if it's a cvar
       if (!command) {
-        const cvar = Console.cvarsMap.get(cmdName)
+        const cvar = Console.getCvarSafe(cmdName)
         if (!cvar) {
           Console.log(`Unknown command '${cmdName}'`)
           return Err(`Unknown command '${cmdName}'`)
         }
 
         if (args.length > 0) {
-          Console.set(cmdName, args[0])
+          try {
+            cvars.set(cmdName, args[0])
+          } catch (e) {
+            Console.log(e instanceof Error ? e.message : String(e))
+          }
         } else {
           Console.inspectCvar(cvar)
         }
@@ -223,7 +125,7 @@ export class Console {
   }
 
   private static inspectCvar(cvar: CVar) {
-    const str = `${cvar.name} = ${JSON.stringify(cvar.value)} (default: ${JSON.stringify(cvar.default)})`
+    const str = `${cvar.id} = ${JSON.stringify(cvar.value)} (default: ${JSON.stringify(cvar.default)})`
     Console.log(str)
     Console.log(cvar.description)
   }
@@ -231,53 +133,14 @@ export class Console {
   private static slug(name: string): string {
     return name.toLowerCase()
   }
-  private static setInner(cvar: string, valueString: string): ConsoleResult<[]> {
-    const cvarObj = Console.cvarsMap.get(cvar)
 
-    if (!cvarObj) {
-      return Err(`CVar '${cvar}' does not exist`)
+  /** Looks up a cvar, returning null instead of throwing for invalid ids. */
+  private static getCvarSafe(id: string): Readonly<CVar> | null {
+    try {
+      return cvars.getCvar(id)
+    } catch {
+      return null
     }
-
-    if (cvarObj.readonly) {
-      return Err(`CVar '${cvar}' is read-only`)
-    }
-
-    switch (cvarObj.type) {
-      case 'string': {
-        cvarObj.value = valueString
-        break
-      }
-
-      case 'number': {
-        const num = Number(valueString)
-        if (Number.isNaN(num)) {
-          return Err(`CVar '${cvar}' requires a numeric value`)
-        }
-        if (cvarObj.integer && !Number.isInteger(num)) {
-          return Err(`CVar '${cvar}' requires an integer value`)
-        }
-        if (num < cvarObj.min || num > cvarObj.max) {
-          return Err(`CVar '${cvar}' requires a value between ${cvarObj.min} and ${cvarObj.max}`)
-        }
-
-        cvarObj.value = num
-        break
-      }
-
-      case 'boolean': {
-        if (valueString === '1' || valueString.toLowerCase() === 'true') {
-          cvarObj.value = true
-          break
-        }
-        if (valueString === '0' || valueString.toLowerCase() === 'false') {
-          cvarObj.value = false
-          break
-        }
-        return Err(`CVar '${cvar}' requires a boolean value (0/1 or true/false)`)
-      }
-    }
-    Console.emitter.publicEmit('changeCvar', cvar)
-    return Ok([])
   }
 
   private static parse(line: string): { cmd: string; args: string[] } {

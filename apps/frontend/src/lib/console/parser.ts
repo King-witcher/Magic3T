@@ -1,74 +1,171 @@
-export function parse(line: string): { command: string; args: string[] } {
-  const args: string[] = []
-  let doubleQuotes = false
-  let singleQuotes = false
-  let escaping = false
-  let currentArg = ''
+export type CommandLine = string[]
+export type ParseResult = CommandLine[]
 
-  function push() {
-    if (currentArg.length > 0) {
-      args.push(currentArg)
-      currentArg = ''
-    }
+export function parseLines(line: string): string[][] {
+  return new Parser(line).run()
+}
+
+class Parser {
+  source: string
+  pos: number
+  lines: string[][]
+
+  constructor(source: string) {
+    this.source = source
+    this.pos = 0
+    this.lines = []
   }
 
-  for (const char of line) {
-    if (escaping) {
-      currentArg += char
-      escaping = false
-      continue
+  run(): ParseResult {
+    while (!this.halted()) {
+      this.lines.push(this.parseLine())
     }
-
-    if (char === '\\') {
-      escaping = true
-      continue
-    }
-
-    if (singleQuotes) {
-      if (char === "'") {
-        args.push(currentArg)
-        currentArg = ''
-        singleQuotes = false
-        continue
-      }
-      currentArg += char
-      continue
-    }
-
-    if (doubleQuotes) {
-      if (char === '"') {
-        args.push(currentArg)
-        currentArg = ''
-        doubleQuotes = false
-        continue
-      }
-      currentArg += char
-      continue
-    }
-
-    if (char === '"') {
-      push()
-      doubleQuotes = true
-      continue
-    }
-
-    if (char === "'") {
-      push()
-      singleQuotes = true
-      continue
-    }
-
-    if (char === ' ') {
-      push()
-      continue
-    }
-
-    currentArg += char
+    return this.lines
   }
-  push()
 
-  return {
-    command: args.shift() ?? '',
-    args,
+  parseLine(): string[] {
+    const args: string[] = []
+
+    while (!this.halted()) {
+      this.skipTrivia()
+      if (this.halted()) return args
+      if (this.peek() === '\n' || this.peek() === ';') {
+        this.bump()
+        return args
+      }
+      args.push(this.parseArg())
+    }
+
+    return args
+  }
+
+  parseArg(): string {
+    let arg = ''
+    const maybeQuote = this.peek()
+    // Parses quoted args
+    if (maybeQuote === '"' || maybeQuote === "'") {
+      this.bump()
+      for (;;) {
+        if (this.halted()) throw new Error('unterminated quoted string')
+
+        const char = this.bump()
+        if (char === maybeQuote) break
+
+        // Parses escaped characters
+        if (char === '\\') {
+          if (this.halted()) throw new Error('unterminated quoted string')
+          const nextChar = this.bump()
+          switch (nextChar) {
+            case '"':
+            case "'":
+            case '\\':
+              arg += nextChar
+              continue
+
+            case 'n':
+              arg += '\n'
+              continue
+
+            case 't':
+              arg += '\t'
+              continue
+
+            default:
+              throw new Error(`invalid escape sequence \\${nextChar}`)
+          }
+        }
+
+        arg += char
+      }
+      return arg
+    }
+
+    // Parses unquoted args
+    while (!this.halted()) {
+      const char = this.peek()
+      if (char === ' ' || char === '\t' || char === '\n' || char === ';') break
+      if (char === '\\') {
+        this.bump()
+        if (this.halted()) throw new Error('unterminated escape sequence')
+
+        const nextChar = this.bump()
+        switch (nextChar) {
+          case '"':
+          case "'":
+          case '\\':
+            arg += nextChar
+            break
+          case 'n':
+            arg += '\n'
+            break
+          case 't':
+            arg += '\t'
+            break
+          default:
+            throw new Error(`invalid escape sequence \\${nextChar}`)
+        }
+        continue
+      }
+      arg += this.bump()
+    }
+
+    return arg
+  }
+
+  peek() {
+    return this.source[this.pos]
+  }
+
+  peekAt(offset: number) {
+    return this.source[this.pos + offset]
+  }
+
+  bump() {
+    return this.source[this.pos++]
+  }
+
+  halted() {
+    return this.pos >= this.source.length
+  }
+
+  skipTrivia() {
+    while (!this.halted()) {
+      switch (this.peek()) {
+        // Skips whitespace
+        case ' ':
+        case '\t': {
+          this.bump()
+          break
+        }
+        // Skips comments
+        case '/': {
+          const nextChar = this.peekAt(1)
+          switch (nextChar) {
+            // Skips single-line comments
+            case '/': {
+              this.pos += 2
+
+              while (!this.halted() && this.peek() !== '\n') this.bump()
+              break
+            }
+
+            // Skips multi-line comments
+            case '*': {
+              this.pos += 2
+
+              while (!this.halted()) {
+                if (this.bump() === '*' && this.peek() === '/') {
+                  this.bump()
+                  break
+                }
+              }
+            }
+          }
+          break
+        }
+        default:
+          return
+      }
+    }
   }
 }

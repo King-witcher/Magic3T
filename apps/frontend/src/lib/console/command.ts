@@ -1,38 +1,32 @@
 import { io } from 'socket.io-client'
 import { apiClient } from '@/services/clients/api-client'
-import { CVar, SystemCvars } from './cvars'
+import { cvars, SystemCvarId } from './cvar'
 
-export type ConsoleContext = Readonly<{
+export type CmdCtxConsole = Readonly<{
   print: (message: string) => void
   clear: () => void
-  getCvar: (cvar: string) => CVar | null
-  getCvarBoolean: (cvar: string) => boolean
-  getCvarNumber: (cvar: string) => number
-  getCvarString: (cvar: string) => string
-  setCvar: (cvar: string, valueString: string) => Result<[], string>
   listCmds: () => Cmd[]
-  listCvars: () => CVar[]
-  execCmd: (line: string, ctx?: CmdContext) => Promise<number>
+  execCmd: (line: string, ctx?: CmdCtx) => Promise<number>
 }>
 
-export type CmdContext = {
+export type CmdCtx = {
   args: string[]
-  console: ConsoleContext
+  console: CmdCtxConsole
 }
 
 export type Cmd = {
   name: string
   description: string
-  handler: (ctx: CmdContext) => Promise<number>
+  handler: (ctx: CmdCtx) => Promise<number>
 }
 
-export const INITIAL_CMDS: Cmd[] = [
+export const DEFAULT_CMDS: Cmd[] = [
   {
     name: '3tmode',
     description: 'Enables magic square number arrangement',
-    async handler({ console }: CmdContext) {
-      const enabled = console.getCvarBoolean(SystemCvars.Ui3TMode)
-      console.setCvar(SystemCvars.Ui3TMode, enabled ? '0' : '1')
+    async handler({ console }: CmdCtx) {
+      const enabled = cvars.getBool(SystemCvarId.Ui3TMode)
+      cvars.set(SystemCvarId.Ui3TMode, enabled ? '0' : '1')
       console.print(`3tmode ${enabled ? 'OFF' : 'ON'}`)
       return 0
     },
@@ -40,7 +34,7 @@ export const INITIAL_CMDS: Cmd[] = [
   {
     name: 'clear',
     description: 'Clears the console buffer',
-    async handler({ console }: CmdContext) {
+    async handler({ console }: CmdCtx) {
       console.clear()
       return 0
     },
@@ -48,7 +42,7 @@ export const INITIAL_CMDS: Cmd[] = [
   {
     name: 'cmdlist',
     description: 'Lists all available commands',
-    async handler({ console }: CmdContext) {
+    async handler({ console }: CmdCtx) {
       const cmds = console.listCmds().sort((a, b) => a.name.localeCompare(b.name))
 
       for (const cmd of cmds) {
@@ -64,11 +58,11 @@ export const INITIAL_CMDS: Cmd[] = [
   {
     name: 'cvarlist',
     description: 'Lists all available cvars',
-    async handler({ console }: CmdContext) {
-      const cvars = console.listCvars().sort((a, b) => a.name.localeCompare(b.name))
+    async handler({ console }: CmdCtx) {
+      const list = cvars.list().sort((a, b) => a.id.localeCompare(b.id))
 
-      for (const cvar of cvars) {
-        let line = cvar.name
+      for (const cvar of list) {
+        let line = cvar.id
         line += ' '.repeat(Math.max(0, 20 - line.length))
         line += '= '
         line += JSON.stringify(cvar.value)
@@ -76,14 +70,14 @@ export const INITIAL_CMDS: Cmd[] = [
         line += `// ${cvar.description ?? 'No description'}`
         console.print(line)
       }
-      console.print(`Listed ${cvars.length} cvars`)
+      console.print(`Listed ${list.length} cvars`)
       return 0
     },
   },
   {
     name: 'delay',
     description: 'Delays execution for a specified number of milliseconds',
-    async handler({ args, console }: CmdContext) {
+    async handler({ args, console }: CmdCtx) {
       const ms = Number(args[0])
       if (Number.isNaN(ms) || ms < 0) {
         console.print('Usage: delay <ms>')
@@ -99,7 +93,7 @@ export const INITIAL_CMDS: Cmd[] = [
   {
     name: 'echo',
     description: 'Prints the provided arguments to the console',
-    async handler({ args, console }: CmdContext) {
+    async handler({ args, console }: CmdCtx) {
       console.print(args.join(' '))
       return 0
     },
@@ -107,10 +101,10 @@ export const INITIAL_CMDS: Cmd[] = [
   {
     name: 'resetcvars',
     description: 'Resets all cvars to their default values',
-    async handler({ console }: CmdContext) {
-      for (const cvar of console.listCvars()) {
+    async handler({ console }: CmdCtx) {
+      for (const cvar of cvars.list()) {
         if (cvar.readonly) continue
-        cvar.value = cvar.default
+        cvars.set(cvar.id, String(cvar.default))
       }
       console.print('All cvars have been reset to their default values')
       return 0
@@ -119,10 +113,10 @@ export const INITIAL_CMDS: Cmd[] = [
   {
     name: 'ping',
     description: 'Pings the server and returns the latency',
-    async handler({ console }: CmdContext) {
+    async handler({ console }: CmdCtx) {
       const http = await pingHttp()
       console.print(`HTTP: ${http}ms`)
-      const url = console.getCvar(SystemCvars.SvApiUrl)!.value as string
+      const url = cvars.get(SystemCvarId.SvApiUrl) as string
       const ws = await pingWs(url)
       console.print(`WS: ${ws}ms`)
       return 0
@@ -131,15 +125,17 @@ export const INITIAL_CMDS: Cmd[] = [
   {
     name: 'set',
     description: 'Sets the value of a cvar',
-    async handler({ args, console }: CmdContext) {
+    async handler({ args, console }: CmdCtx) {
       const cvarName = args[0]
       const value = args[1]
       if (!cvarName || !value) {
         console.print('Usage: set <cvar> <value>')
         return 1
       }
-      const result = console.setCvar(cvarName, value)
-      if (result.is_err()) {
+      try {
+        cvars.set(cvarName, value)
+      } catch (e) {
+        console.print(e instanceof Error ? e.message : String(e))
         return 1
       }
       return 0

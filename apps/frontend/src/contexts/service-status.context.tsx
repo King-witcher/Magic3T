@@ -1,7 +1,6 @@
 import { createContext, type ReactNode, useContext, useMemo } from 'react'
 import { useClientQuery } from '@/hooks/use-client-query'
-import { SystemCvars } from '@/lib/console'
-import { Console } from '@/lib/console/console'
+import { cvars, SystemCvarId } from '@/lib/console'
 import { apiClient } from '@/services/clients/api-client'
 
 export enum ServerStatus {
@@ -23,7 +22,7 @@ const ServiceStatusContext = createContext<ServiceStatusData>({
 })
 
 export function ServiceStatusProvider({ children }: Props) {
-  const pollRate = Console.useCvarNumber(SystemCvars.ClStatusPoll)
+  const pollRate = cvars.useNumber(SystemCvarId.ClStatusPoll)
   const statusQuery = useClientQuery(apiClient, 'getStatus', undefined, {
     refetchInterval: pollRate,
   })

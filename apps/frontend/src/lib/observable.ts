@@ -1,5 +1,5 @@
 // biome-ignore lint/suspicious/noExplicitAny: xD
-type EventsMap = Record<string | number, any>
+export type EventsMap = Record<string | number, any>
 
 type EventNames<Map extends EventsMap> = keyof Map
 
@@ -25,7 +25,7 @@ export interface IObservable<ObservableEventsMap extends EventsMap> {
   ): () => void
 }
 
-export abstract class Observable<ObservableEventsMap extends EventsMap>
+export class Observable<ObservableEventsMap extends EventsMap>
   implements IObservable<ObservableEventsMap>
 {
   private observers: ObserverMap<ObservableEventsMap> = {}

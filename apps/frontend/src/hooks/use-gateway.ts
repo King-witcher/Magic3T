@@ -2,7 +2,7 @@ import { EventNames, EventParams, EventsMap } from '@socket.io/component-emitter
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
 import { useAuth } from '@/contexts/auth/auth-context'
-import { Console, SystemCvars } from '@/lib/console'
+import { Console, cvars, SystemCvarId } from '@/lib/console'
 
 export type Gateway<ServerEvents extends EventsMap, ClientEvents extends EventsMap> = {
   readonly name: string
@@ -16,8 +16,8 @@ export function useGateway<ServerEvents extends EventsMap, ClientEvents extends 
 ): Gateway<ServerEvents, ClientEvents> {
   const [socket, setSocket] = useState<Socket<ServerEvents, ClientEvents> | null>(null)
   const auth = useAuth()
-  const apiurl = Console.useCvar(SystemCvars.SvApiUrl)
-  const logEnabled = Boolean(Console.useCvar(SystemCvars.SvLogWs))
+  const apiurl = cvars.useString(SystemCvarId.SvApiUrl)
+  const logEnabled = cvars.useBool(SystemCvarId.SvLogWs)
 
   useEffect(() => {
     if (!enabled) {

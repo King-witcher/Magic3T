@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { twMerge } from 'tailwind-merge'
 import Console1 from '@/assets/textures/console1.png'
 import Console2 from '@/assets/textures/console2.jpg'
-import { ConStyle, Console, SystemCvars } from '@/lib/console'
+import { ConStyle, Console, cvars, SystemCvarId } from '@/lib/console'
 import { ConsoleInput } from './console-input'
 import styles from './styles.module.css'
 
@@ -19,7 +19,7 @@ export function ConsoleTab() {
 
   const lines = useSyncExternalStore(subscribeToConsoleChanges, () => Console.lines)
 
-  let con_style = Console.useCvar(SystemCvars.ConStyle) as number
+  let con_style = cvars.useNumber(SystemCvarId.ConStyle)
   if (!consoleStyles.has(con_style)) con_style = ConStyle.Default
 
   function focusInput() {

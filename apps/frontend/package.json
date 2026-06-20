@@ -51,7 +51,8 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "globals": "^16.5.0",
     "typescript": "~5.9.3",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "vitest": "^3.2.4"
   },
   "name": "magic3t-frontend",
   "private": true,
@@ -61,7 +62,8 @@
     "dev": "vite",
     "lint": "biome check src --error-on-warnings --diagnostic-level=warn",
     "preview": "vite preview",
-    "stories": "ladle serve -h localhost --viteConfig .ladle/vite.config.ts"
+    "stories": "ladle serve -h localhost --viteConfig .ladle/vite.config.ts",
+    "test": "vitest"
   },
   "type": "module",
   "version": "0.0.0"

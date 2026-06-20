@@ -1,3 +1,3 @@
-export * from './commands'
+export * from './command'
 export * from './console'
-export * from './cvars'
+export * from './cvar'

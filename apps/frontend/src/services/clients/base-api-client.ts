@@ -1,6 +1,6 @@
 import { ApiNamespace } from '@magic3t/api-types'
 import { AUTH_SESSION_STORAGE_KEY } from '@/contexts/auth/auth-context'
-import { Console, SystemCvars } from '@/lib/console'
+import { Console, cvars, SystemCvarId } from '@/lib/console'
 import {
   BadRequestError,
   ClientError,
@@ -22,7 +22,7 @@ export class BaseApiClient<Namespace extends ApiNamespace = ApiNamespace> {
 
   private get apiUrl(): string {
     // This value is stored on a CVar for easy configuration during development and production.
-    return Console.getCvarString(SystemCvars.SvApiUrl)
+    return cvars.getString(SystemCvarId.SvApiUrl)
   }
 
   private get basePath(): string {
