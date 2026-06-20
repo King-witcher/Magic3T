@@ -102,40 +102,6 @@ export class Console {
         }
       }
     })
-
-    // if (!cmdName) return
-    // const command = Console.cmdsMap.get(Console.slug(cmdName))
-
-    // await Console.queue.send(async () => {
-    //   // If the command is not a registered command, check if it's a cvar
-    //   if (!command) {
-    //     const cvar = Console.getCvarSafe(cmdName)
-    //     if (!cvar) {
-    //       Console.log(`Unknown command '${cmdName}'`)
-    //       return Err(`Unknown command '${cmdName}'`)
-    //     }
-
-    //     if (args.length > 0) {
-    //       try {
-    //         cvars.set(cmdName, args[0])
-    //       } catch (e) {
-    //         Console.log(e instanceof Error ? e.message : String(e))
-    //       }
-    //     } else {
-    //       Console.inspectCvar(cvar)
-    //     }
-
-    //     return Ok([])
-    //   }
-
-    //   // If the command is a registered command, execute it
-    //   const _result = await command.handler({
-    //     args,
-    //     console: Console.context,
-    //   })
-
-    //   return Ok([])
-    // })
   }
 
   public static addCommand(cmd: Cmd): () => void {
