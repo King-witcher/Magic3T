@@ -152,6 +152,8 @@ class Parser {
         return '\n'
       case 't':
         return '\t'
+      case ' ':
+        return ' '
       default:
         throw this.error(`invalid escape sequence \\${nextChar}`, this.pos - 1)
     }
