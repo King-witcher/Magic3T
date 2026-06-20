@@ -4,7 +4,7 @@ export type ParseResult = CommandLine[]
 export class ParseError extends Error {
   constructor(
     message: string,
-    readonly pos: number,
+    readonly pos: number
   ) {
     super(message)
     this.name = 'ParseError'
@@ -16,19 +16,7 @@ export function parseLines(line: string): ParseResult {
 }
 
 class Parser {
-  private static readonly WORD_TERMINATORS = new Set([
-    ' ',
-    '\t',
-    '\n',
-    ';',
-    '"',
-    "'",
-  ])
-
-  private readonly source: string
-  private readonly lines: ParseResult
-  private pos: number
-
+  //#region public
   constructor(source: string) {
     this.source = source
     this.pos = 0
@@ -40,6 +28,30 @@ class Parser {
       this.lines.push(this.parseLine())
     }
     return this.lines
+  }
+  //#endregion
+
+  //#region private
+  private static readonly WORD_TERMINATORS = new Set([' ', '\t', '\n', ';', '"', "'"])
+
+  private readonly source: string
+  private readonly lines: ParseResult
+  private pos: number
+
+  private peek() {
+    return this.peekAt(0)
+  }
+
+  private peekAt(offset: number) {
+    return this.source[this.pos + offset]
+  }
+
+  private bump() {
+    return this.source[this.pos++]
+  }
+
+  private halted() {
+    return this.pos >= this.source.length
   }
 
   private parseLine(): CommandLine {
@@ -60,9 +72,7 @@ class Parser {
 
   private parseWord(): string {
     const char = this.peek()
-    return char === '"' || char === "'"
-      ? this.parseQuotedWord()
-      : this.parseBareWord()
+    return char === '"' || char === "'" ? this.parseQuotedWord() : this.parseBareWord()
   }
 
   private parseQuotedWord(): string {
@@ -72,14 +82,14 @@ class Parser {
     for (;;) {
       if (this.halted()) throw new ParseError('unterminated quoted string', this.pos)
 
-      const char = this.bump()
-      if (char === quote) break
-
+      const char = this.peekAt(0)
       if (char === '\\') {
         word += this.parseEscape()
         continue
       }
 
+      this.bump()
+      if (char === quote) break
       word += char
     }
 
@@ -94,7 +104,6 @@ class Parser {
       if (Parser.WORD_TERMINATORS.has(char)) break
 
       if (char === '\\') {
-        this.bump()
         word += this.parseEscape()
         continue
       }
@@ -107,6 +116,7 @@ class Parser {
 
   // Reads the character after a '\' (already consumed) and returns its value.
   private parseEscape(): string {
+    this.bump()
     if (this.halted()) throw new ParseError('unterminated escape sequence', this.pos)
 
     const nextChar = this.bump()
@@ -122,22 +132,6 @@ class Parser {
       default:
         throw new ParseError(`invalid escape sequence \\${nextChar}`, this.pos - 1)
     }
-  }
-
-  private peek() {
-    return this.peekAt(0)
-  }
-
-  private peekAt(offset: number) {
-    return this.source[this.pos + offset]
-  }
-
-  private bump() {
-    return this.source[this.pos++]
-  }
-
-  private halted() {
-    return this.pos >= this.source.length
   }
 
   private skipTrivia() {
@@ -196,4 +190,5 @@ class Parser {
       }
     }
   }
+  //#endregion
 }
