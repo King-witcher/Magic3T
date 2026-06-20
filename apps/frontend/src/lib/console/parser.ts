@@ -18,8 +18,8 @@ export class ParseError extends Error {
   }
 }
 
-export function parseLines(line: string): ParseResult {
-  return new Parser(line).run()
+export function parseText(text: string): ParseResult {
+  return new Parser(text).run()
 }
 
 class Parser {

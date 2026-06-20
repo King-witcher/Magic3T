@@ -3,7 +3,7 @@ import { Observer } from '../observable'
 import { Cmd, CmdCtxConsole, DEFAULT_CMDS } from './command'
 import { CVar, cvars } from './cvar'
 import { ExposedEmitter } from './exposed-emitter'
-import { ParseError, parseLines } from './parser'
+import { ParseError, parseText } from './parser'
 
 const BUFFER_SIZE = 128
 
@@ -107,7 +107,7 @@ class ConsoleClass {
   // synchronously within the caller, so it is safe to call from a command
   // handler (via context.execCmd) without deadlocking the queue.
   private async execLines(text: string): Promise<number> {
-    const lines = parseLines(text)
+    const lines = parseText(text)
     let code = 0
     for (const words of lines) {
       if (words.length === 0) continue
