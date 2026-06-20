@@ -6,7 +6,7 @@ export type CmdCtxConsole = Readonly<{
   print: (message: string) => void
   clear: () => void
   listCmds: () => Cmd[]
-  execCmd: (line: string, ctx?: CmdCtx) => Promise<number>
+  execCmd: (line: string, ctx?: CmdCtx) => Promise<void>
 }>
 
 export type CmdCtx = {

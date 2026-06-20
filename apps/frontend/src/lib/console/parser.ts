@@ -4,7 +4,14 @@ export type ParseResult = CommandLine[]
 export class ParseError extends Error {
   constructor(
     message: string,
-    readonly pos: number
+    /** Absolute offset into the source where the error occurred. */
+    readonly pos: number,
+    /** Zero-based index of the line containing `pos`. */
+    readonly line: number,
+    /** Zero-based column within that line. */
+    readonly column: number,
+    /** Full text of the offending line, for rendering a caret. */
+    readonly lineText: string
   ) {
     super(message)
     this.name = 'ParseError'
@@ -54,6 +61,22 @@ class Parser {
     return this.pos >= this.source.length
   }
 
+  // Builds a ParseError, computing line/column/lineText from an absolute offset.
+  private error(message: string, pos: number = this.pos): ParseError {
+    let line = 0
+    let lineStart = 0
+    for (let i = 0; i < pos && i < this.source.length; i++) {
+      if (this.source[i] === '\n') {
+        line++
+        lineStart = i + 1
+      }
+    }
+    const newline = this.source.indexOf('\n', lineStart)
+    const lineEnd = newline === -1 ? this.source.length : newline
+    const lineText = this.source.slice(lineStart, lineEnd)
+    return new ParseError(message, pos, line, pos - lineStart, lineText)
+  }
+
   private parseLine(): CommandLine {
     const words: string[] = []
 
@@ -80,7 +103,7 @@ class Parser {
     let word = ''
 
     for (;;) {
-      if (this.halted()) throw new ParseError('unterminated quoted string', this.pos)
+      if (this.halted()) throw this.error('unterminated quoted string')
 
       const char = this.peekAt(0)
       if (char === '\\') {
@@ -117,7 +140,7 @@ class Parser {
   // Reads the character after a '\' (already consumed) and returns its value.
   private parseEscape(): string {
     this.bump()
-    if (this.halted()) throw new ParseError('unterminated escape sequence', this.pos)
+    if (this.halted()) throw this.error('unterminated escape sequence')
 
     const nextChar = this.bump()
     switch (nextChar) {
@@ -130,7 +153,7 @@ class Parser {
       case 't':
         return '\t'
       default:
-        throw new ParseError(`invalid escape sequence \\${nextChar}`, this.pos - 1)
+        throw this.error(`invalid escape sequence \\${nextChar}`, this.pos - 1)
     }
   }
 
