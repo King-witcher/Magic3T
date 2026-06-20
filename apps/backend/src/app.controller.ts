@@ -2,12 +2,11 @@ import { CrashReportCommand, GetStatusResponse } from '@magic3t/api-types'
 import { CrashReportRow } from '@magic3t/database-types'
 
 import { Body, Controller, Get, Post, Redirect } from '@nestjs/common'
-import { ApiBody, ApiExcludeEndpoint, ApiOperation } from '@nestjs/swagger'
-import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
+import { ApiExcludeEndpoint, ApiOperation } from '@nestjs/swagger'
 import { Throttle } from '@nestjs/throttler'
 import { captureException, logger } from '@sentry/nestjs'
 import * as z from 'zod'
-import { respondError } from '@/common'
+import { BodySchema, respondError } from '@/common'
 import { CrashReportsRepository } from '@/infra'
 import { UserRepository } from './infra/database/repositories'
 
@@ -35,6 +34,10 @@ export class AppController {
     respondError('Teapot', 418, 'I am a teapot')
   }
 
+  @ApiOperation({
+    summary: 'Trigger a test error',
+    description: 'Captures a test exception in Sentry to verify error reporting is working.',
+  })
   @Get('error')
   error() {
     const error = new Error('Test error for Sentry')
@@ -58,17 +61,16 @@ export class AppController {
     summary: 'Report a crash',
     description: 'Endpoint to report crashes from the client.',
   })
-  @ApiBody({
-    schema: z.toJSONSchema(
-      z.object({
-        errorCode: z
-          .string()
-          .describe('Unique error code identifying the crash')
-          .default('auth/unknown-error'),
-        description: z.string().describe('Detailed description of the crash'),
-        metadata: z.optional(z.unknown()),
-      })
-    ) as SchemaObject,
+  @BodySchema({
+    description: 'The crash details reported by the client.',
+    schema: z.object({
+      errorCode: z
+        .string()
+        .describe('Unique error code identifying the crash')
+        .default('auth/unknown-error'),
+      description: z.string().describe('Detailed description of the crash'),
+      metadata: z.optional(z.unknown()).describe('Any extra context about the crash'),
+    }),
   })
   @Throttle({ medium: { limit: 5, ttl: 60 * 60 * 1000 } })
   @Post('crash-report')

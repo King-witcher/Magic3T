@@ -3,23 +3,24 @@ import {
   Controller,
   Get,
   HttpCode,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Post,
   Query,
   UseGuards,
 } from '@nestjs/common'
-import { ApiOperation, ApiResponse } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger'
 import { clamp } from 'lodash'
 import z from 'zod'
-import { respondError, ZodValidationPipe } from '@/common'
+import { ResponseSchema, respondError, ZodValidationPipe } from '@/common'
 import { AuthGuard } from '@/modules/auth/auth.guard'
 import { UserId } from '@/modules/auth/decorators/user-id.decorator'
 import { CurrentPerspective } from './decorators'
 import { MatchStore, Perspective } from './lib'
 import { MatchGuard } from './match.guard'
 import { MatchHistoryService } from './match-history.service'
-import { ListMatchesResultClass } from './swagger/list-matches'
+import { GET_MATCH_SCHEMA, LIST_MATCHES_SCHEMA } from './swagger/match-schemas'
 
 @Controller('match')
 export class MatchController {
@@ -31,9 +32,11 @@ export class MatchController {
   @Post(':matchId/forfeit')
   @ApiOperation({
     summary: 'Forfeit',
-    description: 'Forfeit the current match',
+    description:
+      'Forfeits (surrenders) the match the authenticated user is currently playing. The user is identified by their session, so the path parameter is ignored. Fails if the user is not in an active match.',
   })
-  @HttpCode(200)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
   @UseGuards(MatchGuard)
   handleForfeit(@CurrentPerspective() matchAdapter: Perspective) {
     matchAdapter.surrender()
@@ -41,7 +44,7 @@ export class MatchController {
 
   @ApiOperation({
     summary: 'Get state',
-    description: 'Get the state of the current match',
+    description: 'Gets the state of the current match. Not implemented yet.',
   })
   @Get('state')
   getState() {
@@ -49,6 +52,20 @@ export class MatchController {
   }
 
   @Get('current')
+  @ApiOperation({
+    summary: 'Get current match',
+    description:
+      'Returns the identifier of the match the authenticated user is currently playing. Responds with 404 if the user has no active match.',
+  })
+  @ApiBearerAuth()
+  @ResponseSchema({
+    description: 'The user has no active match.',
+    schema: z.object({
+      errorCode: z.literal('no-active-match'),
+      metadata: z.string(),
+    }),
+    status: HttpStatus.NOT_FOUND,
+  })
   @UseGuards(AuthGuard)
   handleCurrentMatch(@UserId() userId: string) {
     const perspective = this.matchBank.getPerspective(userId)
@@ -60,6 +77,15 @@ export class MatchController {
   }
 
   @Get('me/am-active')
+  @ApiOperation({
+    summary: 'Check for an active match',
+    description: 'Returns whether the authenticated user is currently playing a match.',
+  })
+  @ApiBearerAuth()
+  @ResponseSchema({
+    description: 'True if the user is in an active match, false otherwise.',
+    schema: z.boolean().describe('Whether the user is currently in an active match'),
+  })
   @UseGuards(AuthGuard)
   handleActiveMatch(@UserId() userId: string) {
     const perspective = this.matchBank.getPerspective(userId)
@@ -70,7 +96,20 @@ export class MatchController {
   @Get(':uuid')
   @ApiOperation({
     summary: 'Get match by ID',
-    description: 'Get a specific match by its ID',
+    description: 'Returns the full detail of a single match, including every event, by its UUID.',
+  })
+  @ApiParam({ name: 'uuid', description: 'The UUID of the match to fetch', format: 'uuid' })
+  @ResponseSchema({
+    description: 'The full match detail.',
+    schema: GET_MATCH_SCHEMA,
+  })
+  @ResponseSchema({
+    description: 'No match exists with the given UUID.',
+    schema: z.object({
+      errorCode: z.literal('match-not-found'),
+      metadata: z.string(),
+    }),
+    status: HttpStatus.NOT_FOUND,
   })
   async getMatchById(
     @Param('uuid', new ZodValidationPipe(z.uuid())) uuid: string
@@ -83,10 +122,23 @@ export class MatchController {
   @Get('user/:uuid')
   @ApiOperation({
     summary: 'Get recent matches',
-    description: 'Get the most recent matches played by a user, sorted by date',
+    description:
+      'Returns the most recent matches played by a user, sorted by date (most recent first).',
   })
-  @ApiResponse({
-    type: [ListMatchesResultClass],
+  @ApiParam({
+    name: 'uuid',
+    description: 'The UUID of the user whose matches to list',
+    format: 'uuid',
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Maximum number of matches to return. Clamped to the range 0-50.',
+    required: true,
+    schema: { type: 'integer', minimum: 0, maximum: 50 },
+  })
+  @ResponseSchema({
+    description: "A page of the user's recent matches.",
+    schema: LIST_MATCHES_SCHEMA,
   })
   async getMatchesByUser(
     @Query('limit', ParseIntPipe) limit: number,
