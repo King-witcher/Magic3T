@@ -3,7 +3,7 @@ import { Observer } from '../observable'
 import { Cmd, CmdCtxConsole, DEFAULT_CMDS } from './command'
 import { CVar, cvars } from './cvar'
 import { ExposedEmitter } from './exposed-emitter'
-import { parseLines } from './parser'
+import { ParseError, parseLines } from './parser'
 
 const BUFFER_SIZE = 128
 
@@ -41,7 +41,11 @@ export class Console {
           const _result = await operation()
         } catch (e) {
           console.error(e)
-          Console.log(e instanceof Error ? e.message : String(e))
+          if (e instanceof ParseError) {
+            const pointer = `${' '.repeat(e.pos)}^`
+            Console.log(pointer)
+            Console.log(`Parse error: ${e.message}.`)
+          } else Console.log(e instanceof Error ? e.message : String(e))
         }
       }
     }
