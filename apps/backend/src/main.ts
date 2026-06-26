@@ -28,9 +28,6 @@ async function bootstrap() {
     })
   )
 
-  // Enable class validator globally
-  app.useGlobalPipes(new ValidationPipe())
-
   // Enable CORS
   app.enableCors({
     origin: CORS_ALLOWED_ORIGINS,
