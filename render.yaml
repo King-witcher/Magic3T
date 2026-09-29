@@ -16,7 +16,11 @@ services:
         value: https://api.magic3t.com.br
 
       # Firebase
-      - key: FIREBASE_ADMIN_CREDENTIALS
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
         sync: false
       - key: FIRESTORE_DB
         value: "production"

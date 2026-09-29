@@ -5,6 +5,26 @@
       "name": "Backend",
       "request": "launch",
       "type": "node-terminal",
+      "presentation": {
+        "hidden": true
+      },
+    },
+    {
+      "command": "npm run dev --workspace=apps/backend",
+      "name": "Backend (Docker)",
+      "request": "launch",
+      "type": "node-terminal",
+      "preLaunchTask": "infra: up",
+      "postDebugTask": "infra: down",
+      "presentation": {
+        "hidden": true
+      },
+    },
+    {
+      "command": "npm run dev --workspace=apps/backend",
+      "name": "Backend",
+      "request": "launch",
+      "type": "node-terminal",
       "preLaunchTask": "infra: up",
       "postDebugTask": "infra: down",
       "presentation": {
@@ -60,7 +80,11 @@
     {
       "name": "Magic3T",
       "configurations": ["Backend", "Frontend (Dev)"],
-    }
+    },
+    {
+      "name": "Magic3T (Docker)",
+      "configurations": ["Backend (Docker)", "Frontend (Dev)"],
+    },
   ],
   "version": "0.2.0"
 }

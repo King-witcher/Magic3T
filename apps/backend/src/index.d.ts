@@ -13,7 +13,9 @@ declare global {
 
   namespace NodeJS {
     interface ProcessEnv {
-      FIREBASE_ADMIN_CREDENTIALS: string
+      FIREBASE_CLIENT_EMAIL: string
+      FIREBASE_PRIVATE_KEY: string
+      FIREBASE_PROJECT_ID: string
       FIRESTORE_DB: string
       HEARTBEAT_RATE: string
       MAGIC3T_BACKEND_URL: string

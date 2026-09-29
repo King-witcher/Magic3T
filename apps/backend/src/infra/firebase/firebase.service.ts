@@ -24,12 +24,15 @@ export class FirebaseService {
   }
 
   getCredentials(): ServiceAccount {
-    try {
-      if (!process.env.FIREBASE_ADMIN_CREDENTIALS)
-        unexpected('Firebase Admin credentials not found on environment')
-      return JSON.parse(Buffer.from(process.env.FIREBASE_ADMIN_CREDENTIALS, 'base64').toString())
-    } catch (e) {
-      unexpected('Failed to parse Firebase Admin credentials from environment', e)
+    const { FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY } = process.env
+    if (!FIREBASE_PROJECT_ID || !FIREBASE_CLIENT_EMAIL || !FIREBASE_PRIVATE_KEY)
+      unexpected('Firebase Admin credentials not found on environment')
+
+    return {
+      projectId: FIREBASE_PROJECT_ID,
+      clientEmail: FIREBASE_CLIENT_EMAIL,
+      // Env providers often store the PEM with escaped "\n" instead of real line breaks.
+      privateKey: FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
     }
   }
 }

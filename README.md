@@ -56,7 +56,7 @@ npm install
 - Provide the necessary environment variables by copying the `.env.example` file to `.env` and filling in the required values.
 
 > **Important environment variables:**
-> - Firebase admin credentials in the `FIREBASE_ADMIN_CREDENTIALS` environment variable in a base64 encoded JSON format
+> - Firebase admin credentials in the `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL` and `FIREBASE_PRIVATE_KEY` environment variables, taken from the service account JSON
 > - Sentry DSN in `SENTRY_DSN` (optional for development - if not provided, Sentry will be disabled)
 
 - To run the backend server locally, navigate to the `backend` directory and start the server:
