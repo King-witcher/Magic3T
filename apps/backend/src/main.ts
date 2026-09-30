@@ -5,8 +5,10 @@ import { Logger } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { apiReference } from '@scalar/nestjs-api-reference'
+import { captureException, flush } from '@sentry/nestjs'
 import helmet from 'helmet'
 import { AppModule } from './app.module'
+import { MigrationRunnerService } from './infra/migrations/migration-runner.service'
 import { CORS_ALLOWED_ORIGINS } from './shared/constants/cors'
 
 const PORT = process.env.PORT || 4000
@@ -50,6 +52,15 @@ async function bootstrap() {
       content: document,
     })
   )
+
+  try {
+    await app.get(MigrationRunnerService).run()
+  } catch (error) {
+    captureException(error)
+    logger.error('Runtime migrations failed. Aborting startup.', error)
+    await flush(2000)
+    process.exit(1)
+  }
 
   await app.listen(PORT)
 

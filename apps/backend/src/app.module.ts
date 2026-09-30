@@ -21,6 +21,8 @@ import { AppController } from './app.controller'
 import { AppGateway } from './app.gateway'
 import { HttpExceptionFilter } from './common/filters/http-exception.filter'
 import { InfrastructureModule } from './infra/infrastructure.module'
+import { MigrationModule } from './infra/migrations/migrations.module'
+import { RUNTIME_MIGRATIONS } from './migrations'
 import { AuthMiddleware } from './modules/auth/auth.middleware'
 import { HoneypotModule } from './modules/honeypot'
 
@@ -74,6 +76,7 @@ const MODULES: (
   AdminModule,
   AuthModule,
   HoneypotModule,
+  MigrationModule.register(RUNTIME_MIGRATIONS),
   QueueModule,
   RatingModule,
   UserModule,
