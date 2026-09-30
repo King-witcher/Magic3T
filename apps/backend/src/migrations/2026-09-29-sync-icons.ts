@@ -3,7 +3,7 @@ import { IconRepository } from '@/infra/database/repositories'
 import { IDbClient } from '@/shared/database'
 import { RuntimeMigration } from '../infra/migrations/runtime-migration'
 
-//** Syncs local database with Riot Games icons before first bootstrap */
+/** Syncs local database with Riot Games icons before first bootstrap */
 @Injectable()
 export class SyncIcons extends RuntimeMigration {
   name = '2026-09-29-sync-icons'
