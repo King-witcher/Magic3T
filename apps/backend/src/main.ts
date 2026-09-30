@@ -64,32 +64,8 @@ async function bootstrap() {
 
   await app.listen(PORT)
 
-  // Start self requests to keep the server awake
-  keepServerAlive()
-
   logger.log(`Max concurrency: ${navigator.hardwareConcurrency}`)
   logger.log(`Swagger available on ${BACKEND_URL}/api`)
-}
-
-// TODO: Move to a cron job
-function keepServerAlive() {
-  const backend_url = process.env.MAGIC3T_BACKEND_URL
-  if (!backend_url) {
-    // eslint-disable-next-line quotes
-    Logger.error("Backend url env var not found. Couldn't setup reup ticks.")
-    return
-  }
-
-  const reup_rate = Number.parseInt(process.env.HEARTBEAT_RATE || '0', 10)
-  if (!reup_rate) {
-    Logger.warn('Heartbeat requests are disabled.')
-    return
-  }
-  Logger.log('Heartbeat requests are enabled.')
-
-  setInterval(() => {
-    fetch(`${backend_url}/status`)
-  }, reup_rate)
 }
 
 bootstrap()
