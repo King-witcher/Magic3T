@@ -2,6 +2,7 @@ import { IconRarityEnum, IconRow } from '@magic3t/database-types'
 import { Injectable, Logger } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import z from 'zod'
+import { IDbClient } from '@/shared/database'
 import { INSERT_INTO } from '@/shared/database/pg-chain'
 import { DatabaseService } from '../database.service'
 
@@ -91,12 +92,13 @@ export class IconRepository {
     )
   }
 
+  /** Syncs icons in the database with Riot Games icons */
   @Cron('0 5 * * 3')
-  async syncIcons() {
+  async syncIcons(client: IDbClient = this.databaseService) {
     this.logger.log('Starting icon repopulation process...')
     const [riotIcons, dbIconIds] = await Promise.all([
       this.listAllRiotIcons(),
-      this.databaseService
+      client
         .query<IconRow>('SELECT * FROM icon')
         .then((rows) => new Set(rows.map((row) => row.id))),
     ])
