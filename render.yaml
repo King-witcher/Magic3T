@@ -42,6 +42,10 @@ services:
       - key: PG_PASSWORD
         sync: false
 
+      # Clusters to be kept alive, separated by commas
+      - key: KEEP_ALIVE_PG_CLUSTERS
+        sync: false
+
       # Redis
       - key: REDIS_HOST
         sync: false

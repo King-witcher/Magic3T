@@ -17,8 +17,8 @@ export class DatabaseService implements IDbClient {
       ssl: process.env.PG_SSL === 'true' ? { rejectUnauthorized: false } : false,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,
-      maxLifetimeSeconds: 60,
-      max: 20,
+      maxLifetimeSeconds: 30,
+      max: 30,
     })
   }
 

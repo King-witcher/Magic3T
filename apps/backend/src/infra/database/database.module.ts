@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import { DatabaseService } from './database.service'
+import { KeepAliveService } from './keep-alive.service'
 import {
   CredentialRepository,
   IconRepository,
@@ -18,6 +19,7 @@ import { UserRatingSnapshotRepository } from './repositories/user-rating-snapsho
     CredentialRepository,
     MatchRepository,
     UserRatingSnapshotRepository,
+    KeepAliveService,
   ],
   exports: [
     DatabaseService,
