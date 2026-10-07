@@ -29,7 +29,7 @@ declare global {
       QUEUE_STATUS_POLLING_RATE: number
       SENTRY_DSN: string
       VALKEY_HOST: string
-      KEEP_ALIVE_PG_CLUSTERS: string
+      KEEP_ALIVE_PG_CLUSTERS?: string
     }
   }
 }
