@@ -1,23 +1,31 @@
+import { CVar } from '../slib/cvar'
+
 export type SpawnOptions = {
   stdin?: ReadableStream
   stdout?: WritableStream
+  stderr?: WritableStream
   sig?: AbortSignal
 }
 
 export type Process = {
   pid: number
   exitCode: Promise<number>
-  kill: (reason?: string) => void
+}
+
+export type Sys = {
+  spawn: (process: string, args?: string[], opts?: SpawnOptions) => Process
+  getcvar: (key: string) => CVar | null
 }
 
 export type ProgramCtx = {
   pid: number
   env: Map<string, string>
   args: string[]
-  stdin: ReadableStream
-  stdout: WritableStream
+  stdin: ReadableStream<string>
+  stdout: WritableStream<string>
+  stderr: WritableStream<string>
   sig: AbortSignal
-  spawn: (process: string, args?: [], opts?: SpawnOptions) => Process
+  sys: Sys
 }
 
 export type Program = {

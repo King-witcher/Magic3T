@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { ExposedEmitter } from './exposed-emitter'
+import { ExposedEmitter } from '../defs/exposed-emitter'
 
 export type CVarValue = string | number | boolean
 
