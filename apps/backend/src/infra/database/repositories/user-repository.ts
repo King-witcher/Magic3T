@@ -55,7 +55,6 @@ export class UserRepository {
     private readonly ratingService: RatingService
   ) {}
 
-  /** Finds a user by their Firebase ID. */
   async getByFirebaseId(firebaseId: string): Promise<UserRow | null> {
     const [row] = await this.databaseService.query<UserRow>(sql`
       SELECT u.*
@@ -67,12 +66,10 @@ export class UserRepository {
     return row ?? null
   }
 
-  /** Slugifies a nickname. */
   slugify(nickname: string): string {
     return nickname.toLowerCase().replaceAll(' ', '')
   }
 
-  /** Creates a new user with the given nickname. */
   async createWithNickname(nickname: string, conn?: IDbClient): Promise<UserRow> {
     conn ??= this.databaseService
 
@@ -93,7 +90,6 @@ export class UserRepository {
     return created
   }
 
-  /** Gets a user by their ID. */
   async getById(id: string): Promise<UserRow | null> {
     const [row] = await this.databaseService.query<UserRow>(sql`
       SELECT *
@@ -103,7 +99,6 @@ export class UserRepository {
     return row ?? null
   }
 
-  /** Get a user by their nickname. */
   async getByNickname(nickname: string): Promise<UserRow | null> {
     const slug = this.slugify(nickname)
     const [row] = await this.databaseService.query<UserRow>(sql`
@@ -113,7 +108,6 @@ export class UserRepository {
     return row ?? null
   }
 
-  /** List all challengers. */
   async listChallengers(): Promise<UserRow[]> {
     const rows = await this.databaseService.query<UserRow>(sql`
       SELECT *
@@ -151,7 +145,6 @@ export class UserRepository {
     `)
   }
 
-  /** Updates a user's rating fields after a ranked match. */
   async updateRank(
     id: string,
     rating: Partial<RatingUpdateFields>,

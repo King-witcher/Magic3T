@@ -8,7 +8,6 @@ export type SqlScript = {
 
 export const MIGRATIONS_DIR = 'sql'
 
-/** Lists all migration names in the migrations directory */
 export async function listMigrationNames(): Promise<string[]> {
   const entries = await readdir(MIGRATIONS_DIR, {
     withFileTypes: true,
@@ -40,7 +39,6 @@ export async function getMigrationSql(
   }
 }
 
-/** Creates the migrations table if it doesn't exist */
 export async function createTableMigrationsIfNotExists() {
   await sql`
     CREATE TABLE IF NOT EXISTS _migration
@@ -53,7 +51,6 @@ export async function createTableMigrationsIfNotExists() {
   `
 }
 
-/** Lists all applied migrations */
 export async function listAppliedMigrations() {
   console.info('📋 Fetching applied migrations from the database...')
   const rows = await sql<{ name: string }>`

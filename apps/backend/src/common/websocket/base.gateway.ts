@@ -54,7 +54,6 @@ export class BaseGateway<
     }
   }
 
-  /** Send an event to a specific user in a namespace. */
   send<TEvent extends EventNames<TServer>>(
     uuid: string,
     event: TEvent,
@@ -64,7 +63,6 @@ export class BaseGateway<
     this.ioNamespace?.to(room).emit(event, ...data)
   }
 
-  /** Send an event to all users in a namespace. */
   broadcast<TEvent extends Parameters<Namespace<TClient, TServer>['emit']>[0]>(
     event: TEvent,
     ...data: EventParams<TServer, TEvent>

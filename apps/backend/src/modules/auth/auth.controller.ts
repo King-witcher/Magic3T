@@ -33,9 +33,6 @@ export class AuthController {
     private passwordService: PasswordService
   ) {}
 
-  /**
-   * Signs in a user using a Firebase token.
-   */
   @Post('firebase/login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

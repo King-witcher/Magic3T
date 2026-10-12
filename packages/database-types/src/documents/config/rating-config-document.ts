@@ -1,4 +1,3 @@
-/** Represents the configuration settings for the rating system */
 export interface RatingConfigDocument {
   /** The base rating in the game, which is assigned to every player at the beginning */
   initial_elo: number

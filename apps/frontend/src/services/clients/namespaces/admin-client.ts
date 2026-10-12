@@ -23,9 +23,6 @@ export class AdminApiClient extends BaseApiClient<'admin'> {
     })
   }
 
-  /**
-   * Gets the full information of a single user for the admin detail/edit screen.
-   */
   getUser(id: string, signal?: AbortSignal): Promise<Admin.AdminUserDetail> {
     return this.get<Admin.AdminUserDetail>(`users/${id}`, { signal })
   }

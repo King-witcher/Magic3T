@@ -6,16 +6,10 @@ export class ApiMatchClient extends BaseApiClient<'match'> {
     super('match')
   }
 
-  /**
-   * Gets a match by its ID.
-   */
   async getById(matchId: string, signal?: AbortSignal): Promise<Match.GetMatchResult> {
     return this.get<Match.GetMatchResult>(matchId, { signal })
   }
 
-  /**
-   * Gets the current match for the authenticated user.
-   */
   async getCurrentMatch(signal?: AbortSignal): Promise<{ id: string }> {
     return this.get<{ id: string }>('current', { signal })
   }
@@ -27,9 +21,6 @@ export class ApiMatchClient extends BaseApiClient<'match'> {
     return this.get<boolean>('me/am-active', { signal })
   }
 
-  /**
-   * Gets matches by user ID.
-   */
   async listUserMatches(
     args: { limit: number; userId: string },
     signal?: AbortSignal

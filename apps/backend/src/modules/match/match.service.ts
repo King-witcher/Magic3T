@@ -25,9 +25,6 @@ export class MatchService {
     private ratingService: RatingService
   ) {}
 
-  /**
-   * Create a new Player vs Bot match, returning the match id.
-   */
   async createPlayerVsBot(userId: string, botId: BotId): Promise<string> {
     const userProfilePromise = this.userRepository.getById(userId)
 
@@ -63,9 +60,6 @@ export class MatchService {
     return id
   }
 
-  /**
-   * Create a new Player vs Player match.
-   */
   async createPvPMatch(userId1: string, userId2: string) {
     const [profile1, profile2] = await Promise.all([
       this.getProfile(userId1),
@@ -92,9 +86,6 @@ export class MatchService {
     return id
   }
 
-  /**
-   * Returns the oponent user id for a given user id.
-   */
   getOpponent(userId: string): string | null {
     return this.matchBank.getOpponent(userId)
   }

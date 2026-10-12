@@ -14,16 +14,10 @@ export class ApiClient extends BaseApiClient<undefined> {
     super(undefined)
   }
 
-  /**
-   * Gets the status of the API.
-   */
   async getStatus(signal?: AbortSignal): Promise<GetStatusResponse> {
     return this.get<GetStatusResponse>('status', { signal })
   }
 
-  /**
-   * Reports a crash to the API.
-   */
   async reportCrash(data: CrashReportCommand): Promise<void> {
     await this.post('crash-report', data)
   }

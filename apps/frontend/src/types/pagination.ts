@@ -17,7 +17,6 @@ export type UsePaginatedReturnType<DataType> = {
 
   isLoading: boolean
 
-  /** Determines whether the content was fully loaded. */
   isAllDataLoaded: boolean
 
   /** Fetches one more page of content and appends it to the end of the current data array. */

@@ -27,28 +27,18 @@ export class AuthApiClient extends BaseApiClient<'auth'> {
     })
   }
 
-  /**
-   * Registers a user using a Firebase token, returning a session ID and user profile on success.
-   */
   registerFromFirebase(command: RegisterFirebaseCommand): Promise<RegisterFirebaseResponse> {
     return this.post('firebase/register', command)
   }
 
-  /**
-   * Signs in a user using a Firebase token, returning a session ID and user profile on success.
-   */
   signInFirebase(command: SignInFirebaseCommand): Promise<SignInFirebaseResponse> {
     return this.post('firebase/login', command)
   }
 
-  /**
-   * Logins a user with a username and password. Returns a session ID and user profile on success.
-   */
   login(command: LoginCommand): Promise<LoginResult> {
     return this.post('login', command)
   }
 
-  /** Registers a user with credentials */
   register(command: RegisterCommand): Promise<RegisterResult> {
     return this.post('register', command)
   }
@@ -61,7 +51,6 @@ export class AuthApiClient extends BaseApiClient<'auth'> {
     return this.post('password-strength', command, { signal })
   }
 
-  /** Deletes the current user session, effectively logging out the user. */
   logout(): Promise<void> {
     return this.post('logout', undefined)
   }

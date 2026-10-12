@@ -114,11 +114,6 @@ export class Match extends Observable<MatchClassEventsMap> {
     return !this.chaos.choices.includes(choice) && !this.order.choices.includes(choice)
   }
 
-  /**
-   * Checks if the specified team has a magic3t combination.
-   * @param team The team to check for magic3t
-   * @returns True if the team has a magic3t combination, false otherwise.
-   */
   private hasMagic3T(team: Team): boolean {
     const player = this[team]
 
@@ -207,9 +202,6 @@ export class Match extends Observable<MatchClassEventsMap> {
     this.emit(MatchClassEventType.Timeout, side, this.time)
   }
 
-  /**
-   * Finishes the match, setting the turn to null, pausing timers, and emitting the finish event.
-   */
   private finishMatch(winner: Team | null) {
     this.globalTime.pause()
     this.order.timer.pause()
