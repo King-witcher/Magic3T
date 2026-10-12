@@ -51,8 +51,8 @@ export class QueueService {
     }
   }
 
-  enqueue(userId: string, mode: 'casual' | 'ranked') {
-    this.enqueueInternal(userId, mode)
+  async enqueue(userId: string, mode: 'casual' | 'ranked') {
+    await this.enqueueInternal(userId, mode)
     const userQueueModes = this.getQueueModes(userId)
     this.websocketEmitterService.send(userId, 'queue', 'queueModes', userQueueModes)
   }

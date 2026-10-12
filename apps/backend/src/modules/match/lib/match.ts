@@ -98,7 +98,7 @@ export class Match extends Observable<MatchClassEventsMap> {
     if (this.winner !== null) return team === this.winner ? 1 : 0
     const playerTime = this.timelimit - this[team].timer.remaining
     const opponentTime = this.timelimit - this[opposite(team)].timer.remaining
-    return playerTime / (playerTime + opponentTime)
+    return opponentTime / (playerTime + opponentTime)
   }
 
   public start() {
