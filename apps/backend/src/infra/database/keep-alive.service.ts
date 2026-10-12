@@ -16,10 +16,15 @@ export class KeepAliveService {
     this.pools = connectionStrings.map((cs) => new Pool({ connectionString: cs }))
   }
 
-  @Cron('0 0 * * *')
+  @Cron('0 0 0 * * *')
   keepAlive() {
     this.logger.debug(`Keeping alive PostgreSQL clusters`)
-    Promise.all(this.pools.map((pool) => pool.query(sql`SELECT 1`))).catch((err) => {
+    Promise.all(
+      this.pools.map(async (pool, index) => {
+        this.logger.log(`Selecting 1 from host ${index + 1}`)
+        await pool.query(sql`SELECT 1`)
+      })
+    ).catch((err) => {
       this.logger.error('Error keeping alive PostgreSQL clusters', err.message)
     })
   }
