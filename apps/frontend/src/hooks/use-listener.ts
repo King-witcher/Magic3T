@@ -5,7 +5,7 @@ import {
 } from '@socket.io/component-emitter'
 import { DependencyList, useEffect } from 'react'
 import { Socket } from 'socket.io-client'
-import { Console } from '@/lib/console'
+import { Console } from '@/lib/shell'
 import { Gateway } from './use-gateway'
 
 export type DisconnectDescription =

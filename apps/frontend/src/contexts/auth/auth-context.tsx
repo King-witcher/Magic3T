@@ -11,8 +11,8 @@ import {
 } from 'react'
 import { useRegisterCommand } from '@/hooks/use-register-command'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
-import { Console } from '@/lib/console'
 import { firebaseClient } from '@/lib/firebase-client'
+import { Console } from '@/lib/shell'
 import { apiClient } from '@/services/clients/api-client'
 import { toAuthError } from './errors'
 

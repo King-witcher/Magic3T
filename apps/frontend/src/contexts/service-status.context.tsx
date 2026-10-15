@@ -1,6 +1,6 @@
 import { createContext, type ReactNode, useContext, useMemo } from 'react'
 import { useClientQuery } from '@/hooks/use-client-query'
-import { cvars, SystemCvarId } from '@/lib/console'
+import { cvars, SystemCvarId } from '@/lib/shell'
 import { apiClient } from '@/services/clients/api-client'
 
 export enum ServerStatus {

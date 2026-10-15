@@ -1,5 +1,5 @@
 import { Choice } from '@magic3t/common-types'
-import { cvars, SystemCvarId } from '@/lib/console'
+import { cvars, SystemCvarId } from '@/lib/shell'
 import { cn } from '@/utils/utils'
 import { CellState, DemoCell } from './demo-cell'
 

@@ -2,7 +2,7 @@ import { EventNames, EventParams, EventsMap } from '@socket.io/component-emitter
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
 import { useAuth } from '@/contexts/auth/auth-context'
-import { Console, cvars, SystemCvarId } from '@/lib/console'
+import { Console, cvars, SystemCvarId } from '@/lib/shell'
 
 export type Gateway<ServerEvents extends EventsMap, ClientEvents extends EventsMap> = {
   readonly name: string

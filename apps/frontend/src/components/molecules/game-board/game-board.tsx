@@ -1,7 +1,7 @@
 import { Choice } from '@magic3t/common-types'
 import { ComponentProps, useCallback, useMemo } from 'react'
 import { Panel } from '@/components/atoms'
-import { cvars, SystemCvarId } from '@/lib/console'
+import { cvars, SystemCvarId } from '@/lib/shell'
 import { cn } from '@/lib/utils'
 import { getTriple } from '@/utils/find-triple'
 import { NumberCell } from './number-cell'

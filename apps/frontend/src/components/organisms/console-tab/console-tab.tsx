@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { twMerge } from 'tailwind-merge'
 import Console1 from '@/assets/textures/console1.png'
 import Console2 from '@/assets/textures/console2.jpg'
-import { ConStyle, Console, cvars, SystemCvarId } from '@/lib/console'
+import { ConStyle, Console, cvars, SystemCvarId } from '@/lib/shell'
 import { ConsoleInput } from './console-input'
 import styles from './styles.module.css'
 
