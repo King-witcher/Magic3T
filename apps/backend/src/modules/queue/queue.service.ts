@@ -51,14 +51,12 @@ export class QueueService {
     }
   }
 
-  /** Adds a user to the queue in the specified mode. */
-  enqueue(userId: string, mode: 'casual' | 'ranked') {
-    this.enqueueInternal(userId, mode)
+  async enqueue(userId: string, mode: 'casual' | 'ranked') {
+    await this.enqueueInternal(userId, mode)
     const userQueueModes = this.getQueueModes(userId)
     this.websocketEmitterService.send(userId, 'queue', 'queueModes', userQueueModes)
   }
 
-  /** Gets the queue modes a user is currently in. */
   getQueueModes(uid: string) {
     return {
       casual: this.casualPendingUid === uid,
@@ -66,7 +64,6 @@ export class QueueService {
     }
   }
 
-  /** Determines if a user is already in the queue. */
   isInQueue(uuid: string) {
     return this.casualPendingUid === uuid || this.rankedPendingUid === uuid
   }
@@ -87,7 +84,6 @@ export class QueueService {
     this.websocketEmitterService.send(uuid, 'queue', 'queueModes', userQueueModes)
   }
 
-  /** Gets the count of users currently in each queue mode. */
   getUserCount() {
     return {
       casual: this.casualPendingUid ? 1 : 0,
@@ -95,7 +91,6 @@ export class QueueService {
     }
   }
 
-  /** Creates a match between a user and a specified bot. */
   async joinVsBot(userId: string, botId: BotId) {
     // Create a match
     const matchId = await this.matchService.createPlayerVsBot(userId, botId)

@@ -16,30 +16,18 @@ export class ApiUserClient extends BaseApiClient<'user'> {
     // empty
   }
 
-  /**
-   * Gets a user by ID.
-   */
   async getById(id: string, signal?: AbortSignal): Promise<GetUserResult> {
     return this.get(`id/${id}`, { signal })
   }
 
-  /**
-   * Gets a user by nickname slug.
-   */
   async getByNickname(slug: string, signal?: AbortSignal): Promise<GetUserResult> {
     return this.get<GetUserResult>(`nickname/${slug}`, { signal })
   }
 
-  /**
-   * Gets the user ranking.
-   */
   async getRanking(signal?: AbortSignal): Promise<ListUsersResult> {
     return this.get<ListUsersResult>('ranking', { signal })
   }
 
-  /**
-   * Gets the authenticated user's available icons.
-   */
   async getMyIcons(signal?: AbortSignal): Promise<number[]> {
     return this.get<number[]>('me/icons', { signal })
   }
@@ -55,17 +43,11 @@ export class ApiUserClient extends BaseApiClient<'user'> {
     await this.post<RegisterUserCommand, void>('register', data)
   }
 
-  /**
-   * Updates the authenticated user's icon.
-   */
   async updateIcon(icon: number): Promise<void> {
     const payload: ChangeIconCommand = { iconId: icon }
     await this.patch<ChangeIconCommand, void>('me/icon', payload)
   }
 
-  /**
-   * Updates the authenticated user's nickname.
-   */
   async updateNickname(nickname: string): Promise<void> {
     const payload: ChangeNicknameCommand = { nickname }
     await this.patch<ChangeNicknameCommand, void>('me/nickname', payload)

@@ -5,6 +5,7 @@ import z from 'zod'
 import { BODY_SCHEMA } from '../decorators/body-schema.decorator'
 import { respondError } from '../errors'
 
+// Codigo morto por ora. BodySchema sozinho ja valida.
 export class ValidationInterceptor implements NestInterceptor {
   constructor(private readonly reflector: Reflector) {}
 

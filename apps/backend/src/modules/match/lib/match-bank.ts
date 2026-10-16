@@ -17,7 +17,6 @@ export class MatchStore {
 
   constructor(private databaseService: FirestoreService) {}
 
-  /** Create a match, assign it an internal id, register it in the bank and return the match id. */
   createAndRegisterMatch(...params: ConstructorParameters<typeof Match>): {
     id: string
     match: Match
@@ -74,7 +73,6 @@ export class MatchStore {
     return { orderPerspective, chaosPerspective }
   }
 
-  /** Returns the opponent user id for a given user id. */
   getOpponent(userUuid: string): string | null {
     const opponentUid = this.opponents.get(userUuid)
     return opponentUid ?? null

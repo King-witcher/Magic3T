@@ -9,11 +9,8 @@ export class ErrorResponseException<T extends string = string>
   extends Error
   implements ErrorResponse<T>
 {
-  /** A unique error code identifying the error */
   public readonly errorCode: T
-  /** The HTTP status code to be sent in HTTP responses */
   public readonly httpStatus: number
-  /** Additional metadata related to the error */
   public readonly metadata?: any
 
   constructor(errorCode: T, httpStatus = 400, metadata?: any) {
@@ -25,9 +22,6 @@ export class ErrorResponseException<T extends string = string>
     this.httpStatus = httpStatus
   }
 
-  /**
-   * Gets the error response object to be sent to the client.
-   */
   get response(): ErrorResponse<T> {
     return {
       errorCode: this.errorCode,

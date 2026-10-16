@@ -3,14 +3,6 @@ import { ThrottlerGuard, ThrottlerRequest } from '@nestjs/throttler'
 import { Socket } from 'socket.io'
 import { unexpected } from '../errors'
 
-/**
- * Guard de throttling para WebSockets.
- *
- * Implementa controle de taxa (rate limiting) para conexões WebSocket.
- * Quando um cliente ultrapassa o limite configurado, é bloqueado temporariamente.
- *
- * @extends ThrottlerGuard
- */
 @Injectable()
 export class WsThrottlerGuard extends ThrottlerGuard {
   async handleRequest(requestProps: ThrottlerRequest): Promise<boolean> {

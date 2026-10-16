@@ -15,7 +15,6 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@n
 import { ApiOperation } from '@nestjs/swagger'
 import { Throttle } from '@nestjs/throttler'
 import z from 'zod'
-import { ZodBodyValidationPipe } from '@/common'
 import { BodySchema } from '@/common/decorators/body-schema.decorator'
 import { ResponseSchema } from '@/common/decorators/response-schema.decorator'
 import { NICKNAME_SCHEMA } from '@/shared/validation'
@@ -33,9 +32,6 @@ export class AuthController {
     private passwordService: PasswordService
   ) {}
 
-  /**
-   * Signs in a user using a Firebase token.
-   */
   @Post('firebase/login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -220,9 +216,7 @@ export class AuthController {
     }),
   })
   @Throttle({ short: { limit: 10 }, medium: { limit: 120 } })
-  async passwordStrength(
-    @Body(new ZodBodyValidationPipe(PASSWORD_STRENGTH_SCHEMA)) body: PasswordStrengthCommand
-  ): Promise<PasswordStrengthResult> {
+  async passwordStrength(@Body() body: PasswordStrengthCommand): Promise<PasswordStrengthResult> {
     return this.passwordService.checkStrength(body)
   }
 

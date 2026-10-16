@@ -37,9 +37,9 @@ This is the Magic3T monorepo, which includes the backend, the frontend and some 
 - **Debugging:** [VSCode Launch Configurations](https://code.visualstudio.com/docs/debugtest/debugging) and a bunch of [Tasks](https://code.visualstudio.com/docs/debugtest/tasks) + [Problem Matchers](https://code.visualstudio.com/docs/debugtest/tasks#_defining-a-problem-matcher) (see `.vscode` folder)
 
 ## Projects
-- **[backend](./backend)**: The backend server built with NestJS.
-- **[frontend](./frontend)**: The frontend application built with React and Vite.
-- **[migrations](./packages/migrations)**: SQL migrations for PostgreSQL schema management. See [MIGRATIONS.md](./packages/migrations/MIGRATIONS.md).
+- **[backend](./apps/backend)**: The backend server built with NestJS.
+- **[frontend](./apps/frontend)**: The frontend application built with React and Vite.
+- **[migrations](./apps/migrations)**: SQL migrations for PostgreSQL schema management.
 
 ## Running Locally
 

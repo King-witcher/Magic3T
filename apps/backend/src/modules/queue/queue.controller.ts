@@ -7,7 +7,6 @@ import { AuthGuard } from '@/modules/auth'
 import { UserId } from '@/modules/auth/decorators'
 import { QueueService } from './queue.service'
 
-/** Bot difficulties a player can queue against. */
 const BOT_IDS = ['elite', 'legend', 'recruit', 'soldier'] as const
 
 @Controller('queue')

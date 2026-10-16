@@ -14,24 +14,15 @@ function toClientRank(r: UserRatingFields): ClientRank {
   }
 }
 
-/**
- * Service responsible for syncing match state and results to clients.
- */
 @Injectable()
 export class ClientSyncService {
   constructor(private readonly websocketEmitterService: WebsocketEmitterService) {}
 
-  /**
-   * Sends the current match state report to a player.
-   */
   // Since this is the only method that cares about StateReportPayload, we call it directly instead of emitting an event.
   sendStateReport(userId: string, stateReport: StateReportPayload) {
     this.websocketEmitterService.send(userId, 'match', 'state-report', stateReport)
   }
 
-  /**
-   * Sends the final match summary to players after the match is finished.
-   */
   @OnEvent('match.finished')
   async sendMatchSummary(summary: FinishedMatchSummary) {
     const socketSummary: MatchReportPayload = {

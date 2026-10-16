@@ -13,9 +13,6 @@ export class Channel<T> {
   private senders: Sender<T>[] = []
   private receivers: Receiver<T>[] = []
 
-  /**
-   * Returns the number of items currently in the channel's queue.
-   */
   get length(): number {
     return this.senders.length
   }
@@ -38,9 +35,6 @@ export class Channel<T> {
     })
   }
 
-  /**
-   * Returns an async generator that yields values as they are received.
-   */
   async *iter(): AsyncGenerator<T> {
     while (true) {
       yield await this.receive()

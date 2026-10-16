@@ -1,10 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common'
 import { ErrorResponseException } from '../errors'
 
-/**
- * Handles ErrorResponseException and sends appropriate responses based on the context (HTTP, WebSocket, RPC).
- * @see ErrorResponseException
- */
 @Catch(ErrorResponseException)
 export class ResponseErrorFilter implements ExceptionFilter {
   catch(error: ErrorResponseException, argumentsHost: ArgumentsHost) {

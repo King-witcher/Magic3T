@@ -46,7 +46,6 @@ export namespace Match {
     // pagination: {}
   }
 
-  /** Represents possible errors that can occur in the match domain */
   export type MatchError =
     | 'AlreadyInMatch'
     | 'BotNotFound'

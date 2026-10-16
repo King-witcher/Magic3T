@@ -19,7 +19,6 @@ import { toAuthError } from './errors'
 export const enum AuthState {
   /** Initial state. The authentication session is being loaded */
   LoadingSession = 'loading-session',
-  /** The user is not signed in */
   NotSignedIn = 'not-signed-in',
   /** Means that the user is signed in but has not completed the registration process (e.g., choosing a nickname). */
   SignedInUnregistered = 'unregistered',
