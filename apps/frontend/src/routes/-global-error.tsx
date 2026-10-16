@@ -1,36 +1,9 @@
-import { ErrorComponentProps, Link } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { MdDangerous } from 'react-icons/md'
 import { Button } from '@/components/ui/button'
 import { ErrorPanel } from '@/components/ui/error-panel'
-import { apiClient } from '@/services/clients/api-client'
 
-export function GlobalErrorTemplate({ error, info }: ErrorComponentProps) {
-  const [_errorSent, setErrorSent] = useState(false)
-
-  useEffect(() => {
-    if (import.meta.env.DEV) {
-      console.error('Global error caught:', error, info)
-      return
-    }
-
-    // Send crash report
-    apiClient
-      .reportCrash({
-        errorCode: 'unnamed',
-        description: (error as Error).message,
-        metadata: {
-          timestamp: new Date().toISOString(),
-          url: window.location.href,
-          userAgent: navigator.userAgent,
-          tsrInfo: info,
-        },
-      })
-      .catch((reportError) => {
-        console.error('Failed to send crash report:', reportError)
-      })
-      .then(() => setErrorSent(true))
-  }, [error, info])
+export function GlobalErrorTemplate() {
 
   return (
     <div className="flex items-center justify-center min-h-dvh bg-hextech-black p-4">

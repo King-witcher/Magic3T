@@ -25,11 +25,11 @@ export type BodySchemaOptions = {
 export function BodySchema(options: BodySchemaOptions): MethodDecorator {
   const bodySchema = options.schema?.toJSONSchema() as SchemaObject
   return applyDecorators(
-    SetMetadata(BODY_SCHEMA, options.schema),
+    // SetMetadata(BODY_SCHEMA, options.schema),
     ApiBody({
       description: options.description,
       schema: bodySchema,
-    })
-    // UsePipes(new ZodValidationPipe(options.schema))
+    }),
+    UsePipes(new ZodBodyValidationPipe(options.schema))
   )
 }

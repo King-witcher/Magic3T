@@ -7,7 +7,7 @@ import {
 import { Body, Controller, Get, HttpStatus, Param, Patch, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import z from 'zod'
-import { BodySchema, ResponseSchema } from '@/common'
+import { BodySchema, ResponseSchema, ZodValidationPipe } from '@/common'
 import { AuthGuard } from '@/modules/auth/auth.guard'
 import { UserId } from '@/modules/auth/decorators/user-id.decorator'
 import { NICKNAME_SCHEMA } from '@/shared/validation'
@@ -23,7 +23,9 @@ export class UserController {
   @ResponseSchema({
     schema: GET_USER_SCHEMA,
   })
-  async getById(@Param('uuid') uuid: string): Promise<GetUserResult> {
+  async getById(
+    @Param('uuid', new ZodValidationPipe(z.uuid())) uuid: string
+  ): Promise<GetUserResult> {
     return this.userService.getById(uuid)
   }
 

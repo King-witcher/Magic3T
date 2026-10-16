@@ -1,7 +1,8 @@
 import { Admin } from '@magic3t/api-types'
 import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
-import { BodySchema, ResponseSchema, ZodBodyValidationPipe, ZodValidationPipe } from '@/common'
+import z from 'zod'
+import { BodySchema, ResponseSchema, ZodValidationPipe } from '@/common'
 import { IconRepository } from '@/infra/database/repositories/icon-repository'
 import { Session } from '@/modules/auth'
 import { SessionData } from '@/shared/types/session-data'
@@ -59,7 +60,9 @@ export class AdminController {
     description: 'The full user information.',
     schema: ADMIN_USER_DETAIL_SCHEMA,
   })
-  async getUser(@Param('id') id: string): Promise<Admin.AdminUserDetail> {
+  async getUser(
+    @Param('id', new ZodValidationPipe(z.uuid())) id: string
+  ): Promise<Admin.AdminUserDetail> {
     return this.adminUserService.getUser(id)
   }
 
@@ -91,8 +94,8 @@ export class AdminController {
     schema: ADMIN_USER_DETAIL_SCHEMA,
   })
   async updateUser(
-    @Param('id') id: string,
-    @Body(new ZodBodyValidationPipe(UPDATE_USER_SCHEMA)) command: Admin.UpdateUserCommand,
+    @Param('id', new ZodValidationPipe(z.uuid())) id: string,
+    @Body() command: Admin.UpdateUserCommand,
     @Session() session: SessionData
   ): Promise<Admin.AdminUserDetail> {
     return this.adminUserService.updateUser(session.role, id, command)

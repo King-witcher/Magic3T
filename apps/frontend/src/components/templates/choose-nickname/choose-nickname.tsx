@@ -95,7 +95,7 @@ export function ChooseNicknameTemplate({ redirect, onChooseNickname }: Props) {
               className="text-center font-serif text-2xl h-14 tracking-wide"
             />
             <div className="flex justify-between text-xs text-grey-1">
-              <span>3-16 characters</span>
+              <span>4-16 characters</span>
               <span className={nickname.length > 16 ? 'text-red-400' : ''}>
                 {nickname.length}/16
               </span>
@@ -120,7 +120,7 @@ export function ChooseNicknameTemplate({ redirect, onChooseNickname }: Props) {
           {/* Submit Button */}
           <Button
             type="submit"
-            disabled={registerMutation.isPending || nickname.length < 3}
+            disabled={registerMutation.isPending || nickname.length < 4}
             size="lg"
             className="w-full"
           >
