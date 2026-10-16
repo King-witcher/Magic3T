@@ -2,7 +2,7 @@
   "configurations": [
     {
       "command": "npm run dev --workspace=apps/backend",
-      "name": "Backend",
+      "name": "Backend (pure)",
       "request": "launch",
       "type": "node-terminal",
       "presentation": {
@@ -11,18 +11,7 @@
     },
     {
       "command": "npm run dev --workspace=apps/backend",
-      "name": "Backend (Docker)",
-      "request": "launch",
-      "type": "node-terminal",
-      "preLaunchTask": "infra: up",
-      "postDebugTask": "infra: down",
-      "presentation": {
-        "hidden": true
-      },
-    },
-    {
-      "command": "npm run dev --workspace=apps/backend",
-      "name": "Backend",
+      "name": "Backend (with Docker)",
       "request": "launch",
       "type": "node-terminal",
       "preLaunchTask": "infra: up",
@@ -78,12 +67,12 @@
   ],
   "compounds": [
     {
-      "name": "Magic3T",
-      "configurations": ["Backend", "Frontend (Dev)"],
+      "name": "Magic3T (pure)",
+      "configurations": ["Backend (pure)", "Frontend (Dev)"],
     },
     {
-      "name": "Magic3T (Docker)",
-      "configurations": ["Backend (Docker)", "Frontend (Dev)"],
+      "name": "Magic3T (with Docker)",
+      "configurations": ["Backend (with Docker)", "Frontend (Dev)"],
     },
   ],
   "version": "0.2.0"
