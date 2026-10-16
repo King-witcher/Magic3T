@@ -1,8 +1,8 @@
 import { Channel } from '../channel'
 import { Observer } from '../observable'
-import { CVar, cvars } from './cvar'
 import { ExposedEmitter } from './defs/exposed-emitter'
 import { Cmd, CmdCtxConsole, DEFAULT_CMDS } from './slib/command'
+import { CVar, cvars } from './slib/cvar'
 import { ParseError, parseText } from './slib/parser'
 
 const BUFFER_SIZE = 128

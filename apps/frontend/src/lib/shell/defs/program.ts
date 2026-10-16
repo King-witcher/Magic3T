@@ -12,7 +12,7 @@ export type Process = {
   exitCode: Promise<number>
 }
 
-export type Sys = {
+export type System = {
   spawn: (process: string, args?: string[], opts?: SpawnOptions) => Process
   getcvar: (key: string) => CVar | null
 }
@@ -25,11 +25,10 @@ export type ProgramCtx = {
   stdout: WritableStream<string>
   stderr: WritableStream<string>
   sig: AbortSignal
-  sys: Sys
 }
 
 export type Program = {
   name: string
   description?: string
-  run: (ctx: ProgramCtx) => Promise<number>
+  run: (ctx: ProgramCtx, system: System) => Promise<number>
 }
