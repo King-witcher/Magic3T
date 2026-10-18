@@ -1,4 +1,4 @@
-import { CVar } from '../slib/cvar'
+import { CVar } from '../oldlib/cvar'
 
 export type SpawnOptions = {
   stdin?: ReadableStream

@@ -1,3 +1,3 @@
 export * from './console'
-export * from './slib/command'
-export { ConStyle, cvars, SystemCvarId } from './slib/cvar'
+export * from './oldlib/command'
+export { ConStyle, cvars, SystemCvarId } from './oldlib/cvar'
