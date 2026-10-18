@@ -4,7 +4,7 @@ export type SpawnOptions = {
   stdin?: ReadableStream
   stdout?: WritableStream
   stderr?: WritableStream
-  sig?: AbortSignal
+  signal?: AbortSignal
 }
 
 export type Process = {
@@ -17,18 +17,18 @@ export type System = {
   getcvar: (key: string) => CVar | null
 }
 
-export type ProgramCtx = {
+export type ProcessCtx = {
   pid: number
   env: Map<string, string>
   args: string[]
   stdin: ReadableStream<string>
   stdout: WritableStream<string>
   stderr: WritableStream<string>
-  sig: AbortSignal
+  signal: AbortSignal
 }
 
 export type Program = {
   name: string
   description?: string
-  run: (ctx: ProgramCtx, system: System) => Promise<number>
+  run: (proc: ProcessCtx, system: System) => Promise<number | undefined>
 }

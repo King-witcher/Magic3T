@@ -13,11 +13,6 @@ interface ConsoleEventsMap {
 
 export type CommandHandler = (args: string[]) => void | Promise<void>
 
-// Exported as a singleton instance (see `Console` below) rather than a static
-// class: the console must be globally reachable — the http client reads its auth
-// tokens from here and this reaches the http client — but staying a normal,
-// instantiable class keeps it resettable in tests and free of import-time
-// global state.
 class ConsoleClass {
   //#region public
   constructor() {

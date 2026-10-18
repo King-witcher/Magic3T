@@ -3,7 +3,7 @@ import { lineSplitter } from '../defs/streams'
 
 export const Grep: Program = {
   name: 'grep',
-  run: async ({ stdin, stdout, stderr, sig, args }) => {
+  run: async ({ stdin, stdout, stderr, signal, args }) => {
     const out = stdout.getWriter()
     const err = stderr.getWriter()
 
@@ -14,7 +14,7 @@ export const Grep: Program = {
         return 2
       }
 
-      const reader = stdin.pipeThrough(lineSplitter(), { signal: sig }).getReader()
+      const reader = stdin.pipeThrough(lineSplitter(), { signal }).getReader()
       let matched = false
 
       while (true) {
