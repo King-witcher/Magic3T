@@ -1,8 +1,8 @@
 import { CanActivate, ExecutionContext, Injectable, NotFoundException } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Request } from 'express'
+import { HONEYPOT_KEY } from '../../modules/honeypot/honeypot.decorator'
 import { getClientIp } from './client-ip'
-import { HONEYPOT_KEY } from './honeypot.decorator'
 import { IpBlocklistService } from './ip-blocklist.service'
 
 @Injectable()

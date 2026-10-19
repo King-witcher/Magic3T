@@ -1,5 +1,2 @@
-export * from './client-ip'
 export * from './honeypot.decorator'
 export { HoneypotModule } from './honeypot.module'
-export * from './ip-blocklist.guard'
-export * from './ip-blocklist.service'

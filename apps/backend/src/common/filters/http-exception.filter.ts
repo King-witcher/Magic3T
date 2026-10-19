@@ -2,7 +2,7 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from '@n
 import * as Sentry from '@sentry/node'
 import { Request, Response } from 'express'
 import { Socket } from 'socket.io'
-import { getClientIp, IpBlocklistService } from '@/modules/honeypot'
+import { getClientIp, IpBlocklistService } from '@/infra/firewall'
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {

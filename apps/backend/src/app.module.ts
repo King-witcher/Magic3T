@@ -20,11 +20,12 @@ import { AdminModule, AuthModule, QueueModule, RatingModule, UserModule } from '
 import { AppController } from './app.controller'
 import { AppGateway } from './app.gateway'
 import { HttpExceptionFilter } from './common/filters/http-exception.filter'
+import { IpBlocklistGuard } from './infra/firewall/ip-blocklist.guard'
 import { InfrastructureModule } from './infra/infrastructure.module'
 import { MigrationModule } from './infra/migrations/migrations.module'
 import { RUNTIME_MIGRATIONS } from './migrations'
 import { AuthMiddleware } from './modules/auth/auth.middleware'
-import { HoneypotModule, IpBlocklistGuard } from './modules/honeypot'
+import { HoneypotModule } from './modules/honeypot'
 
 const EXTERNAL_MODULES: (
   | DynamicModule
