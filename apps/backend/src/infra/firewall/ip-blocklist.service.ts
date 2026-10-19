@@ -43,6 +43,11 @@ export class IpBlocklistService {
     this.strikes.delete(ip)
   }
 
+  unban(ip: string) {
+    this.bans.set(ip, false)
+    this.strikes.delete(ip)
+  }
+
   strike(ip: string, path: string) {
     let paths = this.strikes.get<Set<string>>(ip)
     if (!paths) {

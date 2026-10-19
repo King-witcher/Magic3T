@@ -18,6 +18,12 @@ export class AppController {
   @ApiExcludeEndpoint()
   root() {}
 
+  @Get('favicon.ico')
+  @ApiExcludeEndpoint()
+  favicon() {
+    respondError('No favicon', 404)
+  }
+
   @ApiOperation({
     summary: 'Teapot endpoint',
     description: 'Fails with HTTP status code 418.',

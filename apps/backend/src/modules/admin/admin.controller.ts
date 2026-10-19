@@ -4,6 +4,7 @@ import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import z from 'zod'
 import { BodySchema, ResponseSchema, ZodValidationPipe } from '@/common'
 import { IconRepository } from '@/infra/database/repositories/icon-repository'
+import { IpBlocklistService } from '@/infra/firewall'
 import { Session } from '@/modules/auth'
 import { SessionData } from '@/shared/types/session-data'
 import { AuthGuard } from '../auth'
@@ -23,7 +24,8 @@ import { AdminUserService } from './admin-user.service'
 export class AdminController {
   constructor(
     private readonly iconRepository: IconRepository,
-    private readonly adminUserService: AdminUserService
+    private readonly adminUserService: AdminUserService,
+    private readonly ipBlocklistService: IpBlocklistService
   ) {}
 
   @ApiOperation({
@@ -33,6 +35,23 @@ export class AdminController {
   @Post('sync-icons')
   async syncIcons() {
     await this.iconRepository.syncIcons()
+  }
+
+  @ApiOperation({
+    summary: 'Ban ipv4',
+    description: 'Don`t ban yourself!',
+  })
+  @Post('ban-ip/:ip')
+  banIp(@Param('ip', new ZodValidationPipe(z.ipv4().or(z.ipv6()))) ip: string) {
+    this.ipBlocklistService.ban(ip, 'Banned ip from ban-ip endpoint')
+  }
+
+  @ApiOperation({
+    summary: 'Unban ipv4',
+  })
+  @Post('unban-ip/:ip')
+  unbanIp(@Param('ip', new ZodValidationPipe(z.ipv4().or(z.ipv6()))) ip: string) {
+    this.ipBlocklistService.unban(ip)
   }
 
   @ApiOperation({
