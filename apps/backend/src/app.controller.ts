@@ -28,8 +28,6 @@ export class AppController {
   })
   @Get('teapot')
   async teapot() {
-    await this.userRepository.createWithNickname('Test User')
-
     logger.debug('Teapot endpoint called', { endpoint: 'teapot' })
     respondError('Teapot', 418, 'I am a teapot')
   }
