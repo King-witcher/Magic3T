@@ -41,6 +41,7 @@ export const DEFAULT_CMDS: Cmd[] = [
       }
       try {
         await apiClient.admin.banIp(ip)
+        console.print('banned')
       } catch {
         console.print(`failed to ban IP ${ip}`)
       }
@@ -167,6 +168,7 @@ export const DEFAULT_CMDS: Cmd[] = [
       }
       try {
         await apiClient.admin.unbanIp(ip)
+        console.print('unbanned')
       } catch {
         console.print(`failed to unban IP ${ip}`)
       }
