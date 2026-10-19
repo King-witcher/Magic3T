@@ -8,14 +8,10 @@ import { captureException, logger } from '@sentry/nestjs'
 import * as z from 'zod'
 import { BodySchema, respondError } from '@/common'
 import { CrashReportsRepository } from '@/infra'
-import { UserRepository } from './infra/database/repositories'
 
 @Controller()
 export class AppController {
-  constructor(
-    private readonly crashReportRepository: CrashReportsRepository,
-    private userRepository: UserRepository
-  ) {}
+  constructor(private readonly crashReportRepository: CrashReportsRepository) {}
 
   @Get('/')
   @Redirect('/api')
