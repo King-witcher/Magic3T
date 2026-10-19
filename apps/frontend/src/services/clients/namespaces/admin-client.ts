@@ -6,6 +6,14 @@ export class AdminApiClient extends BaseApiClient<'admin'> {
     super('admin')
   }
 
+  async banIp(ip: string, signal?: AbortSignal): Promise<void> {
+    await this.post(`ban-ip/${ip}`, { signal })
+  }
+
+  async unbanIp(ip: string, signal?: AbortSignal): Promise<void> {
+    await this.post(`unban-ip/${ip}`, { signal })
+  }
+
   /**
    * Lists platform users with optional free-text search (nickname or UUID), sorting and pagination.
    */

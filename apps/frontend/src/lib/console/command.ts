@@ -32,6 +32,22 @@ export const DEFAULT_CMDS: Cmd[] = [
     },
   },
   {
+    name: 'banip',
+    description: 'Bans an IP address. Requires admin privileges.',
+    async handler({ args: [ip], console }: CmdCtx) {
+      if (!ip) {
+        console.print('usage: banip <ip>')
+        return 1
+      }
+      try {
+        await apiClient.admin.banIp(ip)
+      } catch {
+        console.print(`failed to ban IP ${ip}`)
+      }
+      return 0
+    },
+  },
+  {
     name: 'clear',
     description: 'Clears the console buffer',
     async handler({ console }: CmdCtx) {
@@ -137,6 +153,22 @@ export const DEFAULT_CMDS: Cmd[] = [
       } catch (e) {
         console.print(e instanceof Error ? e.message : String(e))
         return 1
+      }
+      return 0
+    },
+  },
+  {
+    name: 'unbanip',
+    description: 'Unbans an IP address. Requires admin privileges.',
+    async handler({ args: [ip], console }: CmdCtx) {
+      if (!ip) {
+        console.print('usage: unbanip <ip>')
+        return 1
+      }
+      try {
+        await apiClient.admin.unbanIp(ip)
+      } catch {
+        console.print(`failed to unban IP ${ip}`)
       }
       return 0
     },
