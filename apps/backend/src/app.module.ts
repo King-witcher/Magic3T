@@ -24,7 +24,7 @@ import { InfrastructureModule } from './infra/infrastructure.module'
 import { MigrationModule } from './infra/migrations/migrations.module'
 import { RUNTIME_MIGRATIONS } from './migrations'
 import { AuthMiddleware } from './modules/auth/auth.middleware'
-import { HoneypotModule } from './modules/honeypot'
+import { HoneypotModule, IpBlocklistGuard } from './modules/honeypot'
 
 const EXTERNAL_MODULES: (
   | DynamicModule
@@ -106,6 +106,11 @@ const FILTERS: Provider[] = [
   imports: [...EXTERNAL_MODULES, ...MODULES],
   controllers: [AppController],
   providers: [
+    // Must run before the ThrottlerGuard so banned IPs get a 404 instead of a 429
+    {
+      provide: APP_GUARD,
+      useClass: IpBlocklistGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

@@ -14,6 +14,7 @@ import { ApiExcludeController } from '@nestjs/swagger'
 import { SkipThrottle } from '@nestjs/throttler'
 import { logger } from '@sentry/nestjs'
 import { Response } from 'express'
+import { Honeypot } from './honeypot.decorator'
 import {
   adminDashboardPage,
   adminDbConfigPage,
@@ -52,6 +53,7 @@ function logHoneypotAccess(ip: string, path: string, extra?: Record<string, unkn
  */
 @ApiExcludeController()
 @SkipThrottle()
+@Honeypot()
 @Controller()
 export class HoneypotController {
   // ──────────────────────── admin.php ────────────────────────
