@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common'
+import { Cron } from '@nestjs/schedule'
 import { captureException, logger } from '@sentry/nestjs'
 import { CacheableMemory } from 'cacheable'
 import { REDIS, RedisClient } from '../redis'
@@ -34,9 +35,10 @@ export class IpBlocklistService implements OnModuleInit {
   })
 
   async onModuleInit() {
-    const bans = await this.redis.sMembers(BANLIST_KEY)
-    for (const ip of bans) {
-      this.bans.set(ip, true)
+    const now = Date.now()
+    const bans = await this.redis.zRangeByScoreWithScores(BANLIST_KEY, now, Infinity)
+    for (const { value: ip, score: expires } of bans) {
+      this.bans.set(ip, true, expires - now)
     }
     this.logger.log(`Restored ${bans.length} IP bans`)
   }
@@ -52,14 +54,15 @@ export class IpBlocklistService implements OnModuleInit {
       logger.warn(message, { ip, reason })
     }
 
-    this.bans.set(ip, true)
-    this.persist(this.redis.sadd(BANLIST_KEY, ip))
+    const deadline = Date.now() + BAN_DURATION
+    this.bans.set(ip, true, BAN_DURATION)
+    this.persist(this.redis.zAdd(BANLIST_KEY, { value: ip, score: deadline }))
     this.strikes.delete(ip)
   }
 
   unban(ip: string) {
     this.bans.set(ip, false)
-    this.persist(this.redis.srem(BANLIST_KEY, ip))
+    this.persist(this.redis.zRem(BANLIST_KEY, ip))
     this.strikes.delete(ip)
   }
 
@@ -74,6 +77,11 @@ export class IpBlocklistService implements OnModuleInit {
     if (paths.size >= STRIKE_THRESHOLD) {
       this.ban(ip, `requested ${paths.size} nonexistent routes`)
     }
+  }
+
+  @Cron('*/3 * * * *')
+  async cleanupExpired() {
+    await this.redis.zRemRangeByScore(BANLIST_KEY, -Infinity, Date.now())
   }
 
   private async persist(command: Promise<unknown>): Promise<void> {

@@ -19,6 +19,8 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule)
 
+  app.enableShutdownHooks()
+
   // Security middleware
   app.use(
     helmet({
