@@ -50,30 +50,7 @@ export class AppController {
     summary: 'Report a crash',
     description: 'Endpoint to report crashes from the client.',
   })
-  @BodySchema({
-    description: 'The crash details reported by the client.',
-    schema: z.object({
-      errorCode: z
-        .string()
-        .describe('Unique error code identifying the crash')
-        .default('auth/unknown-error'),
-      description: z.string().describe('Detailed description of the crash'),
-      metadata: z.optional(z.unknown()).describe('Any extra context about the crash'),
-    }),
-  })
   @Throttle({ medium: { limit: 5, ttl: 60 * 60 * 1000 } })
   @Post('crash-report')
-  reportCrash(@Body() command: CrashReportCommand) {
-    const row: CrashReportRow = {
-      source: 'client',
-      date: new Date(),
-      error: {
-        errorCode: command.errorCode,
-        description: command.description,
-      },
-      metadata: command.metadata ?? null,
-    }
-
-    this.crashReportRepository.create(row)
-  }
+  reportCrash() {}
 }
