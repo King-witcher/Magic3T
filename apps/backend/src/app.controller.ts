@@ -35,17 +35,6 @@ export class AppController {
   }
 
   @ApiOperation({
-    summary: 'Trigger a test error',
-    description: 'Captures a test exception in Sentry to verify error reporting is working.',
-  })
-  @Get('error')
-  error() {
-    const error = new Error('Test error for Sentry')
-    error.name = 'TestError'
-    captureException(error)
-  }
-
-  @ApiOperation({
     summary: 'Service status',
     description: 'Returns the service status for tracking downtimes.',
   })
