@@ -99,6 +99,18 @@ export class AdminController {
   }
 
   @ApiOperation({
+    summary: 'List ip bans',
+  })
+  @Get('ip-bans')
+  @ResponseSchema({
+    description: 'The full icon catalogue.',
+    schema: LIST_ICONS_RESULT_SCHEMA,
+  })
+  listIpBans(): Admin.ListIpBansResultItem[] {
+    return this.ipBlocklistService.listBans()
+  }
+
+  @ApiOperation({
     summary: 'Update user (admin)',
     description:
       'Updates a user from the admin panel. Only the provided fields are changed. Role changes require a superuser.',

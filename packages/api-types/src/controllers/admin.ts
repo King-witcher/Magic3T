@@ -35,6 +35,11 @@ export namespace Admin {
     total: number | null
   }
 
+  export type ListIpBansResultItem = {
+    ip: string
+    expires: number
+  }
+
   export type AdminUserDetail = {
     id: string
     nickname: string

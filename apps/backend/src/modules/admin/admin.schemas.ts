@@ -143,3 +143,10 @@ export const LIST_ICONS_RESULT_SCHEMA = z.object({
     })
   ),
 })
+
+export const IP_BAN_LIST = z.array(
+  z.object({
+    ip: z.ipv4(),
+    expires: z.number(),
+  })
+)

@@ -35,6 +35,10 @@ export class AdminApiClient extends BaseApiClient<'admin'> {
     return this.get<Admin.AdminUserDetail>(`users/${id}`, { signal })
   }
 
+  listIpBans(signal?: AbortSignal): Promise<Admin.ListIpBansResultItem[]> {
+    return this.get<Admin.ListIpBansResultItem[]>(`ip-bans`, { signal })
+  }
+
   /**
    * Lists the full game icon catalogue, ordered by release date.
    */

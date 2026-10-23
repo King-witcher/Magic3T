@@ -116,6 +116,18 @@ export const DEFAULT_CMDS: Cmd[] = [
     },
   },
   {
+    name: 'listipbans',
+    description: 'Prints the provided arguments to the console',
+    async handler({ console }: CmdCtx) {
+      const ipbans = await apiClient.admin.listIpBans()
+      for (const ban of ipbans) {
+        const date = new Date(ban.expires).toString()
+        console.print(`${ban.ip} | ${date}`)
+      }
+      return 0
+    },
+  },
+  {
     name: 'resetcvars',
     description: 'Resets all cvars to their default values',
     async handler({ console }: CmdCtx) {

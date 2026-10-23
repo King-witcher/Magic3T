@@ -47,6 +47,21 @@ export class IpBlocklistService implements OnModuleInit {
     return this.bans.has(ip)
   }
 
+  listBans(): { ip: string; expires: number }[] {
+    const bans: { ip: string; expires: number }[] = []
+
+    for (const ban of this.bans.items) {
+      if (!ban.value || !ban.expires) continue
+
+      bans.push({
+        ip: ban.key,
+        expires: ban.expires,
+      })
+    }
+
+    return bans
+  }
+
   ban(ip: string, reason: string) {
     if (!this.bans.has(ip)) {
       const message = `Banning IP ${ip} for ${BAN_DURATION / 60_000} minutes: ${reason}`
