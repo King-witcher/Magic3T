@@ -117,7 +117,7 @@ export const DEFAULT_CMDS: Cmd[] = [
   },
   {
     name: 'listipbans',
-    description: 'Prints the provided arguments to the console',
+    description: 'Lists ip bans. For admin only.',
     async handler({ console }: CmdCtx) {
       const ipbans = await apiClient.admin.listIpBans()
       for (const ban of ipbans) {
