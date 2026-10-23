@@ -4,7 +4,7 @@ import { captureException, logger } from '@sentry/nestjs'
 import { CacheableMemory } from 'cacheable'
 import { REDIS, RedisClient } from '../redis'
 
-export const BAN_DURATION = 6 * 60 * 60 * 1000 // 6 hours
+export const BAN_DURATION = 7 * 24 * 60 * 60 * 1000 // 7 days
 
 export const STRIKE_THRESHOLD = 8
 export const STRIKE_WINDOW = 10 * 60 * 1000 // 10 minutes
